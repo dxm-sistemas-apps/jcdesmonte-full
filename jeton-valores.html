@@ -112,14 +112,16 @@
             </h1>
           </div>
           <p class="text-sm sm:text-base text-slate-400 font-medium">
-            CONCILIAÇÃO ENTRE JETCONTROL, CONTRACHEQUE E DGAD COM CÁLCULO DE DIFERENÇAS E IRPF.
+            REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
           </p>
         </div>
         <div class="flex items-center gap-2">
           <label for="inputAnoFiltro" class="text-xs font-bold text-slate-400 uppercase">ANO:</label>
           <input 
             type="number" 
-            id="inputAnoFiltro" 
+            id="inputAnoFiltro"
+            readonly 
+            disabled 
             class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-brand-500"
           />
         </div>
@@ -181,13 +183,13 @@
 
       <form id="formLancamentoJeton" class="space-y-4" onsubmit="event.preventDefault(); salvarLancamento();">
         <div>
-          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Escolha o Ciclo *</label>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Ciclo *</label>
           <input 
-            type="text" 
+            type="text" readonly disabled 
             id="formCiclo" 
             list="lista-ciclos-opcoes"
             placeholder="SELECIONE OU DIGITE O CICLO"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500 uppercase"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none cursor-not-allowed focus:border-brand-500 uppercase"
             required
           />
           <datalist id="lista-ciclos-opcoes">
@@ -224,7 +226,7 @@
             <input 
               type="text" readonly disabled
               id="formJetonJetcontrol"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none focus:border-brand-500"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500"
             />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
           </div>
@@ -267,12 +269,15 @@
         </div>
 
         <div class="pt-4 flex justify-end">
-          <button 
-            type="submit" 
-            class="w-full bg-brand-600 hover:bg-brand-500 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wide"
-          >
-            <i class="fa-solid fa-floppy-disk"></i> Salvar Lançamento
-          </button>
+          <!-- SUBSTITUA O BOTÃO ATUAL POR ESTE: -->
+<button 
+  type="submit" 
+  id="btnSalvarLancamento"
+  disabled
+  class="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-600 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wide"
+>
+  <i class="fa-solid fa-floppy-disk"></i> Salvar Lançamento
+</button>
         </div>
       </form>
     </section>
@@ -304,7 +309,7 @@
           onclick="exportarRelatorioCompletoPDF()" 
           class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition"
         >
-          <i class="fa-solid fa-file-pdf"></i> Gerar Relatório Consolidado (Todos os Anos)
+          <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO CONSOLIDADO (TODOS OS ANOS)
         </button>
       </div>
 
@@ -418,73 +423,126 @@
 
     // Leitura dos dados do sistema JETCONTROL
     function obterDadosSistema() {
-      try {
-        const cicloObj = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO) || '{}');
-        const escalasArr = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_ESCALAS) || '[]');
+        try {
+          const cicloObj = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO) || '{}');
+          const escalasArr = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_ESCALAS) || '[]');
 
-        let cicloLabel = '';
-        let mesRec = '';
+          let cicloLabel = '';
+          let mesRec = '';
+          let anoRec = '';
 
-        if (cicloObj.dataAbertura && cicloObj.dataFechamento) {
-          const pA = cicloObj.dataAbertura.split('-');
-          const pF = cicloObj.dataFechamento.split('-');
-          if (pA.length === 3 && pF.length === 3) {
-            cicloLabel = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+          if (cicloObj.dataAbertura && cicloObj.dataFechamento) {
+            const pA = cicloObj.dataAbertura.split('-');
+            const pF = cicloObj.dataFechamento.split('-');
+            if (pA.length === 3 && pF.length === 3) {
+              cicloLabel = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+            }
           }
+
+          if (cicloObj.recebimentoEm) {
+            const partesRec = cicloObj.recebimentoEm.split('/');
+            mesRec = partesRec[0].trim().toUpperCase();
+            if (partesRec.length > 1) {
+              anoRec = partesRec[1].trim(); // Extrai o ano do mês de recebimento
+            }
+          }
+
+          let totalJeton = 0;
+          escalasArr.forEach(esc => {
+            const jM = parseFloat(esc.jetonManha) || 0;
+            const jT = parseFloat(esc.jetonTarde) || 0;
+            const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+            totalJeton += (jM + jT + jN);
+          });
+
+          return {
+            ciclo: cicloLabel || '',
+            mesRecebimento: mesRec || '',
+            anoRecebimento: anoRec || new Date().getFullYear().toString(),
+            totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
+            irpf: '22'
+          };
+        } catch (_) {
+          return { 
+            ciclo: '', 
+            mesRecebimento: '', 
+            anoRecebimento: new Date().getFullYear().toString(), 
+            totalJeton: '0.00', 
+            irpf: '22' 
+          };
         }
-
-        if (cicloObj.recebimentoEm) {
-          mesRec = cicloObj.recebimentoEm.split('/')[0].trim().toUpperCase();
-        }
-
-        let totalJeton = 0;
-        escalasArr.forEach(esc => {
-          const jM = parseFloat(esc.jetonManha) || 0;
-          const jT = parseFloat(esc.jetonTarde) || 0;
-          const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
-          totalJeton += (jM + jT + jN);
-        });
-
-        return {
-          ciclo: cicloLabel || '',
-          mesRecebimento: mesRec || '',
-          totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
-          irpf: '22'
-        };
-      } catch (_) {
-        return { ciclo: '', mesRecebimento: '', totalJeton: '0.00', irpf: '22' };
       }
-    }
 
+    // FUNÇÃO QUE VERIFICA SE OS 5 CAMPOS ESTÃO PREENCHIDOS
+function validarCamposFormulario() {
+  const ciclo = (document.getElementById('formCiclo')?.value || '').trim();
+  const jetcontrol = (document.getElementById('formJetonJetcontrol')?.value || '').trim();
+  const irpf = (document.getElementById('formIrpf')?.value || '').trim();
+  const contracheque = (document.getElementById('formJetonContracheque')?.value || '').trim();
+  const dgad = (document.getElementById('formJetonDgad')?.value || '').trim();
+  const btn = document.getElementById('btnSalvarLancamento');
+
+  const todosPreenchidos = ciclo !== '' && 
+                           jetcontrol !== '' && 
+                           irpf !== '' && 
+                           contracheque !== '' && 
+                           dgad !== '';
+
+  if (btn) {
+    btn.disabled = !todosPreenchidos;
+  }
+}
+      
     function puxarDadosDoSistema(forcar) {
-      const sis = obterDadosSistema();
-      const campoCiclo = document.getElementById('formCiclo');
-      const campoMes = document.getElementById('formMesRecebimento');
-      const campoJeton = document.getElementById('formJetonJetcontrol');
-      const campoIrpf = document.getElementById('formIrpf');
-      const hint = document.getElementById('hintCicloSistema');
+        const sis = obterDadosSistema();
+        const campoCiclo = document.getElementById('formCiclo');
+        const campoMes = document.getElementById('formMesRecebimento');
+        const campoJeton = document.getElementById('formJetonJetcontrol');
+        const campoIrpf = document.getElementById('formIrpf');
+        const hint = document.getElementById('hintCicloSistema');
 
-      if (forcar || !campoCiclo.value) campoCiclo.value = sis.ciclo;
-      if (forcar || !campoMes.value) campoMes.value = sis.mesRecebimento;
-      if (forcar || !campoJeton.value || campoJeton.value === 'R$ 0,00') campoJeton.value = formatMoeda(sis.totalJeton);
-      if (forcar || !campoIrpf.value) campoIrpf.value = sis.irpf;
+        // Atualiza o ano com o ano do recebimento do ciclo
+        if (sis.anoRecebimento) {
+          anoAtual = sis.anoRecebimento;
+          const inputAno = document.getElementById('inputAnoFiltro');
+          if (inputAno) inputAno.value = anoAtual;
+          const tituloForm = document.getElementById('tituloFormularioAno');
+          if (tituloForm) tituloForm.textContent = `Lançamento de Ciclo (${anoAtual})`;
+        }
 
-      if (hint && sis.ciclo) {
-        hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> CICLO ATUAL NO SISTEMA: <strong>${sis.ciclo}</strong>`;
+        if (forcar || !campoCiclo.value) {
+          campoCiclo.value = sis.ciclo;
+        }
+        if (forcar || !campoMes.value) {
+          campoMes.value = sis.mesRecebimento;
+        }
+        if (forcar || !campoJeton.value || campoJeton.value === 'R$ 0,00') {
+          campoJeton.value = formatMoeda(sis.totalJeton);
+        }
+        if (forcar || !campoIrpf.value) {
+          campoIrpf.value = sis.irpf;
+        }
+
+        if (hint && sis.ciclo) {
+          hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> CICLO ATUAL NO SISTEMA: <strong>${sis.ciclo}</strong>`;
+        }
+        validarCamposFormulario();
       }
-    }
 
     function configurarMascaraMoeda(input) {
-      input.addEventListener('input', function (e) {
-        let limpo = e.target.value.replace(/\D/g, "");
-        if (!limpo) {
-          e.target.value = "R$ 0,00";
-          return;
-        }
-        let num = (parseFloat(limpo) / 100);
-        e.target.value = formatMoeda(num);
-      });
+  if (!input) return;
+  input.addEventListener('input', function (e) {
+    let limpo = e.target.value.replace(/\D/g, "");
+    if (!limpo) {
+      e.target.value = "";
+      validarCamposFormulario(); // <-- ADICIONE ESTA LINHA
+      return;
     }
+    let num = (parseFloat(limpo) / 100);
+    e.target.value = formatMoeda(num);
+    validarCamposFormulario();   // <-- ADICIONE ESTA LINHA
+  });
+}
 
     function desformatarMoeda(valStr) {
       if (!valStr) return '0.00';
@@ -549,6 +607,8 @@
       document.getElementById('formJetonContracheque').value = 'R$ 0,00';
       document.getElementById('formJetonDgad').value = 'R$ 0,00';
       document.getElementById('formIrpf').value = '22';
+
+      validarCamposFormulario();
 
       alert("LANÇAMENTO DE JETON SALVO COM SUCESSO!");
       mudarAba('tabela');
@@ -1017,42 +1077,44 @@
     }
 
     window.addEventListener('DOMContentLoaded', function () {
-      inicializarMenuRodape();
+        inicializarMenuRodape();
 
-      const inputAno = document.getElementById('inputAnoFiltro');
-      inputAno.value = anoAtual;
-      inputAno.addEventListener('change', function (e) {
-        anoAtual = e.target.value.toString();
-        document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
-        if (abaAtiva === 'tabela') renderizarTabelaAno();
-        if (abaAtiva === 'dashboard') renderizarEstatisticasAno();
-      });
-
-      const campoCiclo = document.getElementById('formCiclo');
-      campoCiclo.addEventListener('change', function (e) {
-        const v = e.target.value.trim().toUpperCase();
-        const achou = LISTA_CICLOS_PADRAO.find(c => c.label === v);
-        if (achou) {
-          document.getElementById('formMesRecebimento').value = achou.rec;
+        const sis = obterDadosSistema();
+        if (sis.anoRecebimento) {
+          anoAtual = sis.anoRecebimento;
         }
-      });
 
-      configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
-      configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
-      configurarMascaraMoeda(document.getElementById('formJetonDgad'));
+        const inputAno = document.getElementById('inputAnoFiltro');
+        if (inputAno) inputAno.value = anoAtual;
 
-      const mobileBtn = document.getElementById('mobile-menu-btn');
-      const mobileMenu = document.getElementById('mobile-menu');
-      if (mobileBtn && mobileMenu) {
-        mobileBtn.addEventListener('click', () => {
-          mobileMenu.classList.toggle('hidden');
+        const campoCiclo = document.getElementById('formCiclo');
+        campoCiclo.addEventListener('change', function (e) {
+          const v = e.target.value.trim().toUpperCase();
+          const achou = LISTA_CICLOS_PADRAO.find(c => c.label === v);
+          if (achou) {
+            document.getElementById('formMesRecebimento').value = achou.rec;
+          }
         });
-      }
 
-      document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
-      puxarDadosDoSistema(false);
-      mudarAba(abaAtiva);
-    });
+        configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
+        configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
+        configurarMascaraMoeda(document.getElementById('formJetonDgad'));
+
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileBtn && mobileMenu) {
+          mobileBtn.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+          });
+        }
+
+        document.getElementById('formCiclo').addEventListener('input', validarCamposFormulario);
+        document.getElementById('formIrpf').addEventListener('input', validarCamposFormulario);
+        document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
+        puxarDadosDoSistema(false);
+        mudarAba(abaAtiva);
+        validarCamposFormulario();
+      });
 
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {

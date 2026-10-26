@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JETCONTROL">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <script src="pwa.js" defer></script>
+  <title>JETCONTROL 2026®™ - VALORES DO JETON</title>
+  <script src="jetcontrol-sync.js"></script>
+
+  <!-- Tailwind CSS CDN & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- jsPDF & Autotable -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { text-transform: uppercase; font-family: 'Inter', sans-serif; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">
+
+  <!-- HEADER / MENU SUPERIOR RESPONSIVO -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+        </div>
+
+        <!-- Navigation Desktop -->
+        <nav class="hidden md:flex space-x-1">
+          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
+          <a href="cotas-extras.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS EXTRAS</a>
+          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
+          <a href="jeton-valores.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">VALORES JETON</a>
+          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
+          <a href="resetar-dados.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR DADOS</a>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
+      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
+      <a href="cotas-extras.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS EXTRAS</a>
+      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
+      <a href="jeton-valores.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">VALORES JETON</a>
+      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
+      <a href="resetar-dados.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR DADOS</a>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8 flex-grow">
+    
+    <!-- BANNER DA PÁGINA -->
+    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-3 mb-2">
+            <i class="fa-solid fa-file-invoice-dollar text-brand-500 text-2xl"></i>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
+              GESTÃO DE <span class="text-brand-500">VALORES DO JETON</span>
+            </h1>
+          </div>
+          <p class="text-sm sm:text-base text-slate-400 font-medium">
+            CONCILIAÇÃO ENTRE JETCONTROL, CONTRACHEQUE E DGAD COM CÁLCULO DE DIFERENÇAS E IRPF.
+          </p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label for="inputAnoFiltro" class="text-xs font-bold text-slate-400 uppercase">ANO:</label>
+          <input 
+            type="number" 
+            id="inputAnoFiltro" 
+            class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-brand-500"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVEGAÇÃO DE ABAS INTERNAS -->
+    <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+      <button 
+        type="button"
+        id="tab-btn-lancamentos"
+        onclick="mudarAba('lancamentos')" 
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-600 text-white shadow-lg"
+      >
+        <i class="fa-solid fa-pen-to-square"></i> Lançamento de Ciclo
+      </button>
+      <button 
+        type="button"
+        id="tab-btn-tabela"
+        onclick="mudarAba('tabela')" 
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
+      >
+        <i class="fa-solid fa-table-list"></i> Tabela de Lançamentos
+      </button>
+      <button 
+        type="button"
+        id="tab-btn-dashboard"
+        onclick="mudarAba('dashboard')" 
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
+      >
+        <i class="fa-solid fa-chart-pie"></i> Estatísticas
+      </button>
+      <button 
+        type="button"
+        id="tab-btn-ciclos"
+        onclick="mudarAba('ciclos')" 
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
+      >
+        <i class="fa-solid fa-box-archive"></i> Ciclos Lançados
+      </button>
+    </div>
+
+    <!-- ABA 1: FORMULÁRIO DE LANÇAMENTO -->
+    <section id="aba-lancamentos" class="aba-conteudo bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-calculator text-brand-500 text-xl"></i>
+          <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo</h2>
+        </div>
+        <button 
+          type="button" 
+          onclick="puxarDadosDoSistema(true)" 
+          title="Recarregar dados com base no ciclo vigente"
+          class="text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-arrows-rotate"></i> Puxar do Sistema
+        </button>
+      </div>
+
+      <form id="formLancamentoJeton" class="space-y-4" onsubmit="event.preventDefault(); salvarLancamento();">
+        <div>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Escolha o Ciclo *</label>
+          <input 
+            type="text" 
+            id="formCiclo" 
+            list="lista-ciclos-opcoes"
+            placeholder="SELECIONE OU DIGITE O CICLO"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500 uppercase"
+            required
+          />
+          <datalist id="lista-ciclos-opcoes">
+            <option value="26/01 A 25/02"></option>
+            <option value="26/02 A 25/03"></option>
+            <option value="26/03 A 25/04"></option>
+            <option value="26/04 A 25/05"></option>
+            <option value="26/05 A 25/06"></option>
+            <option value="26/06 A 25/07"></option>
+            <option value="26/07 A 25/08"></option>
+            <option value="26/08 A 25/09"></option>
+            <option value="26/09 A 25/10"></option>
+            <option value="26/10 A 25/11"></option>
+            <option value="26/11 A 25/12"></option>
+            <option value="26/12 A 25/01"></option>
+          </datalist>
+          <span id="hintCicloSistema" class="text-[10px] text-slate-500 mt-1 block font-mono"></span>
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Mês de Recebimento</label>
+          <input 
+            type="text" 
+            id="formMesRecebimento"
+            readonly 
+            placeholder="MÊS DE RECEBIMENTO AUTOMÁTICO"
+            class="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none cursor-not-allowed uppercase font-semibold"
+          />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton JETCONTROL (Bruto)</label>
+            <input 
+              type="text" readonly disabled
+              id="formJetonJetcontrol"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none focus:border-brand-500"
+            />
+            <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
+          </div>
+
+          <div>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota de IRPF (%)</label>
+            <input 
+              type="text" 
+              id="formIrpf"
+              value="22"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 text-center"
+              required
+            />
+            <span class="text-[10px] text-slate-500 mt-1 block">Padrão: 22% sobre o Jeton</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
+          <div>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton Contracheque (Bruto) *</label>
+            <input 
+              type="text" 
+              id="formJetonContracheque"
+              placeholder="R$ 0,00" 
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500"
+            />
+            <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
+          </div>
+
+          <div>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton DGAD (Bruto) *</label>
+            <input 
+              type="text" 
+              id="formJetonDgad"
+              placeholder="R$ 0,00" 
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500"
+            />
+            <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-end">
+          <button 
+            type="submit" 
+            class="w-full bg-brand-600 hover:bg-brand-500 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wide"
+          >
+            <i class="fa-solid fa-floppy-disk"></i> Salvar Lançamento
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ABA 2: TABELA DE LANÇAMENTOS -->
+    <section id="aba-tabela" class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+      <div id="containerTabelaAno"></div>
+    </section>
+
+    <!-- ABA 3: ESTATÍSTICAS -->
+    <section id="aba-dashboard" class="aba-conteudo hidden space-y-6">
+      <div id="containerEstatisticasAno"></div>
+    </section>
+
+    <!-- ABA 4: CICLOS LANÇADOS (CONSOLIDADO) -->
+    <section id="aba-ciclos" class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-layer-group text-brand-500 text-xl"></i>
+          <h2 class="text-lg font-bold uppercase tracking-wide text-white">Histórico Consolidado de Todos os Ciclos</h2>
+        </div>
+      </div>
+
+      <div id="containerConsolidadoResumo"></div>
+
+      <div class="pt-2">
+        <button 
+          type="button" 
+          onclick="exportarRelatorioCompletoPDF()" 
+          class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition"
+        >
+          <i class="fa-solid fa-file-pdf"></i> Gerar Relatório Consolidado (Todos os Anos)
+        </button>
+      </div>
+
+      <div id="containerConsolidadoTabelas" class="space-y-8 pt-2"></div>
+    </section>
+
+  </main>
+
+  <!-- MENU INFERIOR FIXO / BOTTOM NAVIGATION BAR -->
+  <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
+      <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
+      </a>
+      <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
+      </a>
+      <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
+      </a>
+      <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
+      </a>
+      <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
+      </a>
+      <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
+      </a>
+      <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
+      </a>
+      <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- LÓGICA JAVASCRIPT NATIVA -->
+  <script>
+    const STORAGE_KEY_SISTEMA_CICLO = 'jetcontrol_ciclo_dados';
+    const STORAGE_KEY_SISTEMA_ESCALAS = 'jetcontrol_escalas_dados';
+    const STORAGE_KEY_JETON_VALORES = 'jetcontrol_jeton_valores';
+    const STORAGE_KEY_LEGACY = 'jetonData';
+
+    const LISTA_CICLOS_PADRAO = [
+      { label: '26/01 A 25/02', rec: 'ABRIL' }, { label: '26/02 A 25/03', rec: 'MAIO' },
+      { label: '26/03 A 25/04', rec: 'JUNHO' }, { label: '26/04 A 25/05', rec: 'JULHO' },
+      { label: '26/05 A 25/06', rec: 'AGOSTO' }, { label: '26/06 A 25/07', rec: 'SETEMBRO' },
+      { label: '26/07 A 25/08', rec: 'OUTUBRO' }, { label: '26/08 A 25/09', rec: 'NOVEMBRO' },
+      { label: '26/09 A 25/10', rec: 'DEZEMBRO' }, { label: '26/10 A 25/11', rec: 'JANEIRO' },
+      { label: '26/11 A 25/12', rec: 'FEVEREIRO' }, { label: '26/12 A 25/01', rec: 'MARÇO' }
+    ];
+
+    let anoAtual = new Date().getFullYear().toString();
+    let abaAtiva = sessionStorage.getItem('currentView_jeton') || 'lancamentos';
+
+    function obterBancoDados() {
+      try {
+        const salvos = localStorage.getItem(STORAGE_KEY_JETON_VALORES) || localStorage.getItem(STORAGE_KEY_LEGACY);
+        return salvos ? JSON.parse(salvos) : {};
+      } catch (_) {
+        return {};
+      }
+    }
+
+    function salvarBancoDados(dados) {
+      const json = JSON.stringify(dados);
+      localStorage.setItem(STORAGE_KEY_JETON_VALORES, json);
+      localStorage.setItem(STORAGE_KEY_LEGACY, json);
+    }
+
+    function formatMoeda(val) {
+      const num = parseFloat(val);
+      if (isNaN(num)) return 'R$ 0,00';
+      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatNumeroFloat(val) {
+      const num = parseFloat(val);
+      return isNaN(num) ? 0 : num;
+    }
+
+    function calcLiq(val, irpf) {
+      const v = formatNumeroFloat(val);
+      if (v === 0) return 0;
+      return v * (1 - (formatNumeroFloat(irpf) / 100));
+    }
+
+    function getDiff(jc, cc) {
+      return formatNumeroFloat(cc) - formatNumeroFloat(jc);
+    }
+
+    function getStatus(jc, cc) {
+      const valJC = formatNumeroFloat(jc);
+      const valCC = formatNumeroFloat(cc);
+      if (valJC === 0 && valCC === 0) return { texto: 'SEM JETON', cor: 'text-slate-400 bg-slate-800' };
+      const diff = getDiff(jc, cc);
+      if (diff < 0) return { texto: 'JETON EM DÉFICIT', cor: 'text-red-400 bg-red-950/60 border border-red-800' };
+      if (diff === 0) return { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
+      return { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
+    }
+
+    // Leitura dos dados do sistema JETCONTROL
+    function obterDadosSistema() {
+      try {
+        const cicloObj = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO) || '{}');
+        const escalasArr = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_ESCALAS) || '[]');
+
+        let cicloLabel = '';
+        let mesRec = '';
+
+        if (cicloObj.dataAbertura && cicloObj.dataFechamento) {
+          const pA = cicloObj.dataAbertura.split('-');
+          const pF = cicloObj.dataFechamento.split('-');
+          if (pA.length === 3 && pF.length === 3) {
+            cicloLabel = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+          }
+        }
+
+        if (cicloObj.recebimentoEm) {
+          mesRec = cicloObj.recebimentoEm.split('/')[0].trim().toUpperCase();
+        }
+
+        let totalJeton = 0;
+        escalasArr.forEach(esc => {
+          const jM = parseFloat(esc.jetonManha) || 0;
+          const jT = parseFloat(esc.jetonTarde) || 0;
+          const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+          totalJeton += (jM + jT + jN);
+        });
+
+        return {
+          ciclo: cicloLabel || '',
+          mesRecebimento: mesRec || '',
+          totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
+          irpf: '22'
+        };
+      } catch (_) {
+        return { ciclo: '', mesRecebimento: '', totalJeton: '0.00', irpf: '22' };
+      }
+    }
+
+    function puxarDadosDoSistema(forcar) {
+      const sis = obterDadosSistema();
+      const campoCiclo = document.getElementById('formCiclo');
+      const campoMes = document.getElementById('formMesRecebimento');
+      const campoJeton = document.getElementById('formJetonJetcontrol');
+      const campoIrpf = document.getElementById('formIrpf');
+      const hint = document.getElementById('hintCicloSistema');
+
+      if (forcar || !campoCiclo.value) campoCiclo.value = sis.ciclo;
+      if (forcar || !campoMes.value) campoMes.value = sis.mesRecebimento;
+      if (forcar || !campoJeton.value || campoJeton.value === 'R$ 0,00') campoJeton.value = formatMoeda(sis.totalJeton);
+      if (forcar || !campoIrpf.value) campoIrpf.value = sis.irpf;
+
+      if (hint && sis.ciclo) {
+        hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> CICLO ATUAL NO SISTEMA: <strong>${sis.ciclo}</strong>`;
+      }
+    }
+
+    function configurarMascaraMoeda(input) {
+      input.addEventListener('input', function (e) {
+        let limpo = e.target.value.replace(/\D/g, "");
+        if (!limpo) {
+          e.target.value = "R$ 0,00";
+          return;
+        }
+        let num = (parseFloat(limpo) / 100);
+        e.target.value = formatMoeda(num);
+      });
+    }
+
+    function desformatarMoeda(valStr) {
+      if (!valStr) return '0.00';
+      const limpo = valStr.toString().replace(/\D/g, "");
+      return (parseFloat(limpo || '0') / 100).toFixed(2);
+    }
+
+    function mudarAba(novaAba) {
+      abaAtiva = novaAba;
+      sessionStorage.setItem('currentView_jeton', novaAba);
+
+      document.querySelectorAll('.aba-btn').forEach(b => {
+        b.classList.remove('bg-brand-600', 'text-white', 'shadow-lg');
+        b.classList.add('bg-slate-900/60', 'text-slate-400');
+      });
+      const btnAtivo = document.getElementById(`tab-btn-${novaAba}`);
+      if (btnAtivo) {
+        btnAtivo.classList.remove('bg-slate-900/60', 'text-slate-400');
+        btnAtivo.classList.add('bg-brand-600', 'text-white', 'shadow-lg');
+      }
+
+      document.querySelectorAll('.aba-conteudo').forEach(c => c.classList.add('hidden'));
+      const secaoAtiva = document.getElementById(`aba-${novaAba}`);
+      if (secaoAtiva) secaoAtiva.classList.remove('hidden');
+
+      if (novaAba === 'tabela') renderizarTabelaAno();
+      if (novaAba === 'dashboard') renderizarEstatisticasAno();
+      if (novaAba === 'ciclos') renderizarConsolidado();
+    }
+
+    function salvarLancamento() {
+      const ciclo = document.getElementById('formCiclo').value.trim().toUpperCase();
+      const mesRecebimento = document.getElementById('formMesRecebimento').value.trim().toUpperCase();
+      const jetcontrol = desformatarMoeda(document.getElementById('formJetonJetcontrol').value);
+      const contracheque = desformatarMoeda(document.getElementById('formJetonContracheque').value);
+      const dgad = desformatarMoeda(document.getElementById('formJetonDgad').value);
+      const irpf = document.getElementById('formIrpf').value.trim();
+
+      if (!ciclo || irpf === '') {
+        alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
+        return;
+      }
+
+      const banco = obterBancoDados();
+      const listaAno = banco[anoAtual] || [];
+      const indexExistente = listaAno.findIndex(item => item.ciclo === ciclo);
+
+      const novoItem = { ciclo, mesRecebimento, jetcontrol, contracheque, dgad, irpf };
+
+      if (indexExistente !== -1) {
+        listaAno[indexExistente] = novoItem;
+      } else {
+        listaAno.push(novoItem);
+      }
+
+      banco[anoAtual] = listaAno;
+      salvarBancoDados(banco);
+
+      document.getElementById('formCiclo').value = '';
+      document.getElementById('formMesRecebimento').value = '';
+      document.getElementById('formJetonJetcontrol').value = 'R$ 0,00';
+      document.getElementById('formJetonContracheque').value = 'R$ 0,00';
+      document.getElementById('formJetonDgad').value = 'R$ 0,00';
+      document.getElementById('formIrpf').value = '22';
+
+      alert("LANÇAMENTO DE JETON SALVO COM SUCESSO!");
+      mudarAba('tabela');
+    }
+
+    function renderizarTabelaAno() {
+      const container = document.getElementById('containerTabelaAno');
+      const banco = obterBancoDados();
+      const lista = banco[anoAtual] || [];
+
+      let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+      lista.forEach(d => {
+        const jc = formatNumeroFloat(d.jetcontrol);
+        const cc = formatNumeroFloat(d.contracheque);
+        totais.jc += jc;
+        totais.jcL += calcLiq(jc, d.irpf);
+        totais.cc += cc;
+        totais.ccL += calcLiq(cc, d.irpf);
+        totais.dg += formatNumeroFloat(d.dgad);
+        totais.diff += getDiff(jc, cc);
+      });
+
+      let linhasHTML = '';
+      if (lista.length === 0) {
+        linhasHTML = `<tr><td colspan="10" class="py-6 text-slate-500 italic text-center">NENHUM LANÇAMENTO REGISTRADO PARA O ANO ${anoAtual}.</td></tr>`;
+      } else {
+        linhasHTML = lista.map((d, i) => {
+          const st = getStatus(d.jetcontrol, d.contracheque);
+          const diff = getDiff(d.jetcontrol, d.contracheque);
+          const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
+          return `
+            <tr class="hover:bg-slate-800/40 transition">
+              <td class="px-3 py-2.5 font-bold text-slate-200">${d.ciclo}</td>
+              <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
+              <td class="px-3 py-2.5 text-slate-400">${d.irpf}%</td>
+              <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
+              <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
+              <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
+              <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(calcLiq(d.contracheque, d.irpf))}</td>
+              <td class="px-3 py-2.5 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
+              <td class="px-3 py-2.5 font-black ${diffColor}">${formatMoeda(diff)}</td>
+              <td class="px-3 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-base font-bold text-brand-500">ANO FISCAL: ${anoAtual}</span>
+            <span class="text-xs text-slate-400 font-semibold">${lista.length} CICLOS LANÇADOS</span>
+          </div>
+
+          <div class="overflow-x-auto rounded-xl border border-slate-800">
+            <table class="w-full text-center text-xs divide-y divide-slate-800">
+              <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[11px]">
+                <tr>
+                  <th class="px-3 py-3">CICLO</th>
+                  <th class="px-3 py-3">MÊS REC.</th>
+                  <th class="px-3 py-3">ALÍQ. IR</th>
+                  <th class="px-3 py-3">JETCONTROL</th>
+                  <th class="px-3 py-3">JETCONTROL LÍQ.</th>
+                  <th class="px-3 py-3">CONTRACHEQUE</th>
+                  <th class="px-3 py-3">CONTRACHEQUE LÍQ.</th>
+                  <th class="px-3 py-3">JETON DGAD</th>
+                  <th class="px-3 py-3">DIFERENÇA</th>
+                  <th class="px-3 py-3">STATUS</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60 bg-slate-900/40 font-medium">
+                ${linhasHTML}
+                ${lista.length > 0 ? `
+                  <tr class="bg-slate-950 font-bold border-t-2 border-slate-700">
+                    <td class="px-3 py-3 text-white font-black">TOTAL</td>
+                    <td class="px-3 py-3"></td>
+                    <td class="px-3 py-3"></td>
+                    <td class="px-3 py-3 text-emerald-400 font-black">${formatMoeda(totais.jc)}</td>
+                    <td class="px-3 py-3 text-emerald-400 font-black">${formatMoeda(totais.jcL)}</td>
+                    <td class="px-3 py-3 text-cyan-400 font-black">${formatMoeda(totais.cc)}</td>
+                    <td class="px-3 py-3 text-cyan-400 font-black">${formatMoeda(totais.ccL)}</td>
+                    <td class="px-3 py-3 text-amber-400 font-black">${formatMoeda(totais.dg)}</td>
+                    <td class="px-3 py-3 font-black ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
+                    <td class="px-3 py-3"></td>
+                  </tr>
+                ` : ''}
+              </tbody>
+            </table>
+          </div>
+
+          ${lista.length > 0 ? `
+            <div class="flex flex-wrap gap-3 pt-2">
+              <button onclick="exportarRelatorioAnoPDF('${anoAtual}')" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
+                <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO PDF
+              </button>
+              <button onclick="limparTabelaAno('${anoAtual}')" class="bg-red-700/80 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
+                <i class="fa-solid fa-trash-can"></i> LIMPAR TABELA
+              </button>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderizarEstatisticasAno() {
+      const container = document.getElementById('containerEstatisticasAno');
+      const banco = obterBancoDados();
+      const lista = banco[anoAtual] || [];
+
+      if (lista.length === 0) {
+        container.innerHTML = `
+          <div class="bg-brand-card p-8 rounded-2xl border border-slate-800 text-center text-slate-500 italic">
+            NENHUM DADO REGISTRADO NO ANO ${anoAtual} PARA GERAR ESTATÍSTICAS.
+          </div>
+        `;
+        return;
+      }
+
+      const jc = lista.map(d => formatNumeroFloat(d.jetcontrol));
+      const irpf = lista.map(d => formatNumeroFloat(d.irpf));
+      const maxJC = Math.max(...jc);
+      const minJC = Math.min(...jc);
+      const avgJC = jc.reduce((a, b) => a + b, 0) / jc.length;
+
+      container.innerHTML = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+              <i class="fa-solid fa-chart-simple text-brand-500 text-xl"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">JETCONTROL (BRUTO) - ${anoAtual}</h3>
+            </div>
+            <div class="space-y-3 text-xs">
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">MÊS DE MAIOR VALOR</span>
+                <span class="text-emerald-400 font-black text-sm">
+                  ${formatMoeda(maxJC)} (${lista[jc.indexOf(maxJC)]?.mesRecebimento || '-'})
+                </span>
+              </div>
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR</span>
+                <span class="text-red-400 font-black text-sm">
+                  ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
+                </span>
+              </div>
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">VALOR MÉDIO ANUAL</span>
+                <span class="text-brand-400 font-black text-sm">${formatMoeda(avgJC)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+              <i class="fa-solid fa-percent text-amber-400 text-xl"></i>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">ALÍQUOTA DE IRPF - ${anoAtual}</h3>
+            </div>
+            <div class="space-y-3 text-xs">
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">MAIOR ALÍQUOTA</span>
+                <span class="text-emerald-400 font-black text-sm">${Math.max(...irpf)}%</span>
+              </div>
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA</span>
+                <span class="text-red-400 font-black text-sm">${Math.min(...irpf)}%</span>
+              </div>
+              <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                <span class="text-slate-400 font-semibold">MÉDIA ANUAL</span>
+                <span class="text-brand-400 font-black text-sm">${(irpf.reduce((a, b) => a + b, 0) / irpf.length).toFixed(0)}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderizarConsolidado() {
+      const containerResumo = document.getElementById('containerConsolidadoResumo');
+      const containerTabelas = document.getElementById('containerConsolidadoTabelas');
+      const banco = obterBancoDados();
+      const anos = Object.keys(banco).filter(y => Array.isArray(banco[y]) && banco[y].length > 0).sort((a, b) => b - a);
+
+      if (anos.length === 0) {
+        containerResumo.innerHTML = '';
+        containerTabelas.innerHTML = `<div class="p-8 text-center text-slate-500 italic">NENHUM CICLO LANÇADO NO HISTÓRICO ATÉ O MOMENTO.</div>`;
+        return;
+      }
+
+      const stats = anos.map(year => {
+        const sum = banco[year].reduce((a, b) => a + formatNumeroFloat(b.jetcontrol), 0);
+        return { year, sum };
+      });
+      const max = stats.reduce((prev, curr) => (curr.sum > prev.sum ? curr : prev), stats[0]);
+      const min = stats.reduce((prev, curr) => (curr.sum < prev.sum ? curr : prev), stats[0]);
+      const avg = stats.reduce((a, b) => a + b.sum, 0) / stats.length;
+
+      containerResumo.innerHTML = `
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-900/60 rounded-xl border border-slate-800">
+          <div class="p-3 text-center sm:border-r border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Maior Jeton Anual</p>
+            <p class="text-base font-black text-emerald-400 mt-1">${formatMoeda(max.sum)} (${max.year})</p>
+          </div>
+          <div class="p-3 text-center sm:border-r border-slate-800">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Menor Jeton Anual</p>
+            <p class="text-base font-black text-red-400 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
+          </div>
+          <div class="p-3 text-center">
+            <p class="text-[11px] font-bold text-slate-400 uppercase">Média Geral Anual</p>
+            <p class="text-base font-black text-brand-400 mt-1">${formatMoeda(avg)}</p>
+          </div>
+        </div>
+      `;
+
+      containerTabelas.innerHTML = anos.map(ano => {
+        const lista = banco[ano] || [];
+        let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+        lista.forEach(d => {
+          const jc = formatNumeroFloat(d.jetcontrol);
+          const cc = formatNumeroFloat(d.contracheque);
+          totais.jc += jc;
+          totais.jcL += calcLiq(jc, d.irpf);
+          totais.cc += cc;
+          totais.ccL += calcLiq(cc, d.irpf);
+          totais.dg += formatNumeroFloat(d.dgad);
+          totais.diff += getDiff(jc, cc);
+        });
+
+        return `
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800/80 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-sm text-brand-400">ANO ${ano}</span>
+              <span class="text-xs text-slate-400">${lista.length} ciclo(s)</span>
+            </div>
+            <div class="overflow-x-auto rounded-lg border border-slate-800">
+              <table class="w-full text-center text-xs divide-y divide-slate-800">
+                <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
+                  <tr>
+                    <th class="p-2">CICLO</th>
+                    <th class="p-2">MÊS REC.</th>
+                    <th class="p-2">ALÍQ.</th>
+                    <th class="p-2">JETCONTROL</th>
+                    <th class="p-2">CONTRACHEQUE</th>
+                    <th class="p-2">JETON DGAD</th>
+                    <th class="p-2">DIFERENÇA</th>
+                    <th class="p-2">STATUS</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/50 bg-slate-900/20">
+                  ${lista.map(d => {
+                    const st = getStatus(d.jetcontrol, d.contracheque);
+                    const diff = getDiff(d.jetcontrol, d.contracheque);
+                    const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
+                    return `
+                      <tr>
+                        <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
+                        <td class="p-2 text-slate-400">${d.mesRecebimento || '-'}</td>
+                        <td class="p-2 text-slate-400">${d.irpf}%</td>
+                        <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
+                        <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
+                        <td class="p-2 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
+                        <td class="p-2 font-black ${diffColor}">${formatMoeda(diff)}</td>
+                        <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${st.cor}">${st.texto}</span></td>
+                      </tr>
+                    `;
+                  }).join('')}
+                  <tr class="bg-slate-950 font-black border-t border-slate-700">
+                    <td class="p-2 text-white">TOTAL</td>
+                    <td class="p-2"></td>
+                    <td class="p-2"></td>
+                    <td class="p-2 text-emerald-400">${formatMoeda(totais.jc)}</td>
+                    <td class="p-2 text-cyan-400">${formatMoeda(totais.cc)}</td>
+                    <td class="p-2 text-amber-400">${formatMoeda(totais.dg)}</td>
+                    <td class="p-2 ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
+                    <td class="p-2"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function limparTabelaAno(ano) {
+      if (confirm(`DESEJA REALMENTE LIMPAR TODOS OS LANÇAMENTOS DO ANO ${ano}?`)) {
+        const banco = obterBancoDados();
+        banco[ano] = [];
+        salvarBancoDados(banco);
+        renderizarTabelaAno();
+      }
+    }
+
+    function exportarRelatorioAnoPDF(ano) {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Biblioteca de PDF indisponível no momento.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'mm', 'a4');
+      doc.setFontSize(14);
+      doc.text(`JETCONTROL 2026 - RELATÓRIO DE VALORES DO JETON (${ano})`, 14, 15);
+
+      const banco = obterBancoDados();
+      const lista = banco[ano] || [];
+
+      let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+      const body = lista.map(d => {
+        const jc = formatNumeroFloat(d.jetcontrol);
+        const cc = formatNumeroFloat(d.contracheque);
+        totais.jc += jc;
+        totais.jcL += calcLiq(jc, d.irpf);
+        totais.cc += cc;
+        totais.ccL += calcLiq(cc, d.irpf);
+        totais.dg += formatNumeroFloat(d.dgad);
+        totais.diff += getDiff(jc, cc);
+
+        return [
+          d.ciclo, d.mesRecebimento || '-', (d.irpf || '22') + '%',
+          formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
+          formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
+          formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),
+          getStatus(jc, cc).texto
+        ];
+      });
+
+      body.push([
+        'TOTAL', '', '', formatMoeda(totais.jc), formatMoeda(totais.jcL),
+        formatMoeda(totais.cc), formatMoeda(totais.ccL), formatMoeda(totais.dg),
+        formatMoeda(totais.diff), ''
+      ]);
+
+      doc.autoTable({
+        head: [['CICLO', 'MÊS REC.', 'ALÍQ. IR', 'JETCONTROL BRUTO', 'JETCONTROL LÍQ.', 'CONTRACHEQUE BRUTO', 'CONTRACHEQUE LÍQ.', 'JETON DGAD', 'DIFERENÇA', 'STATUS']],
+        body: body,
+        startY: 22,
+        theme: 'grid',
+        styles: { halign: 'center', valign: 'middle', fontSize: 8, font: 'helvetica' },
+        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        didParseCell: function(dCell) {
+          if (dCell.section === 'body' && dCell.row.index === body.length - 1) {
+            dCell.cell.styles.fontStyle = 'bold';
+            dCell.cell.styles.fillColor = [30, 41, 59];
+            dCell.cell.styles.textColor = [52, 211, 153];
+          }
+        }
+      });
+
+      doc.save(`JETCONTROL_Relatorio_Jeton_${ano}.pdf`);
+    }
+
+    function exportarRelatorioCompletoPDF() {
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Biblioteca de PDF indisponível no momento.");
+        return;
+      }
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('l', 'mm', 'a4');
+      doc.setFontSize(14);
+      doc.text("JETCONTROL 2026 - RELATÓRIO CONSOLIDADO DE TODOS OS ANOS", 14, 15);
+
+      const banco = obterBancoDados();
+      const anos = Object.keys(banco).filter(y => Array.isArray(banco[y]) && banco[y].length > 0).sort();
+
+      let startY = 24;
+
+      anos.forEach((ano, idx) => {
+        const lista = banco[ano] || [];
+        if (startY > 175) {
+          doc.addPage();
+          startY = 20;
+        }
+
+        doc.setFontSize(11);
+        doc.text(`ANO FISCAL: ${ano}`, 14, startY);
+        startY += 5;
+
+        let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+        const body = lista.map(d => {
+          const jc = formatNumeroFloat(d.jetcontrol);
+          const cc = formatNumeroFloat(d.contracheque);
+          totais.jc += jc;
+          totais.jcL += calcLiq(jc, d.irpf);
+          totais.cc += cc;
+          totais.ccL += calcLiq(cc, d.irpf);
+          totais.dg += formatNumeroFloat(d.dgad);
+          totais.diff += getDiff(jc, cc);
+
+          return [
+            d.ciclo, d.mesRecebimento || '-', (d.irpf || '22') + '%',
+            formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
+            formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
+            formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),
+            getStatus(jc, cc).texto
+          ];
+        });
+
+        body.push([
+          'TOTAL', '', '', formatMoeda(totais.jc), formatMoeda(totais.jcL),
+          formatMoeda(totais.cc), formatMoeda(totais.ccL), formatMoeda(totais.dg),
+          formatMoeda(totais.diff), ''
+        ]);
+
+        doc.autoTable({
+          head: [['CICLO', 'MÊS REC.', 'ALÍQ. IR', 'JETCONTROL', 'JETCONTROL LÍQ.', 'CONTRACHEQUE', 'CONTRACHEQUE LÍQ.', 'JETON DGAD', 'DIFERENÇA', 'STATUS']],
+          body: body,
+          startY: startY,
+          theme: 'grid',
+          styles: { halign: 'center', fontSize: 7, font: 'helvetica' },
+          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+          didParseCell: function(dCell) {
+            if (dCell.section === 'body' && dCell.row.index === body.length - 1) {
+              dCell.cell.styles.fontStyle = 'bold';
+              dCell.cell.styles.fillColor = [30, 41, 59];
+              dCell.cell.styles.textColor = [52, 211, 153];
+            }
+          }
+        });
+
+        startY = doc.lastAutoTable.finalY + 10;
+      });
+
+      doc.save("JETCONTROL_Relatorio_Consolidado_Geral.pdf");
+    }
+
+    // Inicialização do menu inferior
+    function inicializarMenuRodape() {
+      let paginaAtual = window.location.pathname.split('/').pop().toLowerCase();
+      if (!paginaAtual || paginaAtual === '') {
+        paginaAtual = 'index.html';
+      }
+
+      const itens = document.querySelectorAll('.bottom-nav-item');
+      let itemAtivo = null;
+
+      itens.forEach(item => {
+        const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
+        const icone = item.querySelector('i');
+        
+        if (paginaItem === paginaAtual || (paginaAtual === '' && paginaItem === 'index.html')) {
+          itemAtivo = item;
+          item.classList.remove('text-slate-400');
+          item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-brand-500', 'text-slate-400');
+            icone.classList.add('text-white');
+          }
+        } else {
+          item.classList.add('text-slate-400');
+          item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-white');
+            icone.classList.add('text-brand-500');
+          }
+        }
+      });
+
+      if (itemAtivo) {
+        setTimeout(() => {
+          itemAtivo.scrollIntoView({
+            behavior: 'smooth',
+            inline: 'center',
+            block: 'nearest'
+          });
+        }, 150);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      inicializarMenuRodape();
+
+      const inputAno = document.getElementById('inputAnoFiltro');
+      inputAno.value = anoAtual;
+      inputAno.addEventListener('change', function (e) {
+        anoAtual = e.target.value.toString();
+        document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
+        if (abaAtiva === 'tabela') renderizarTabelaAno();
+        if (abaAtiva === 'dashboard') renderizarEstatisticasAno();
+      });
+
+      const campoCiclo = document.getElementById('formCiclo');
+      campoCiclo.addEventListener('change', function (e) {
+        const v = e.target.value.trim().toUpperCase();
+        const achou = LISTA_CICLOS_PADRAO.find(c => c.label === v);
+        if (achou) {
+          document.getElementById('formMesRecebimento').value = achou.rec;
+        }
+      });
+
+      configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
+      configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
+      configurarMascaraMoeda(document.getElementById('formJetonDgad'));
+
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+
+      document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
+      puxarDadosDoSistema(false);
+      mudarAba(abaAtiva);
+    });
+
+    if (window.JetSyncOnChange) {
+      window.JetSyncOnChange(function () {
+        puxarDadosDoSistema(false);
+        if (abaAtiva === 'tabela') renderizarTabelaAno();
+        if (abaAtiva === 'dashboard') renderizarEstatisticasAno();
+        if (abaAtiva === 'ciclos') renderizarConsolidado();
+      });
+    }
+  </script>
+</body>
+</html>

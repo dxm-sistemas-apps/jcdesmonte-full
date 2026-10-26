@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JETCONTROL">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <script src="pwa.js" defer></script>
+  <title>JETCONTROL 2026®™ - COTAS EXTRAS</title>
+  <script src="jetcontrol-sync.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Oculta a barra de rolagem visual do menu no rodapé mantendo a rolagem ativa */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col uppercase antialiased pb-20">
+
+  <!-- HEADER / MENU SUPERIOR RESPONSIVO -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+        </div>
+        
+        <!-- Navigation Desktop -->
+        <nav class="hidden md:flex space-x-1">
+          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
+          <a href="cotas-extras.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">COTAS EXTRAS</a>
+          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
+          <a href="jeton-valores.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">VALORES JETON</a>
+          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
+          <a href="resetar-dados.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR DADOS</a>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
+      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
+      <a href="cotas-extras.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">COTAS EXTRAS</a>
+      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
+      <a href="jeton-valores.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">VALORES JETON</a>
+      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
+      <a href="resetar-dados.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR DADOS</a>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+
+    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
+      <div class="flex items-center space-x-3 mb-2">
+        <i class="fa-solid fa-money-bill-trend-up text-brand-500 text-2xl"></i>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
+          COTAS EXTRAS <br> <span class="text-brand-500">AUXÍLIOS E DIÁRIAS</span>
+        </h1>
+      </div>
+      <p class="text-sm sm:text-base text-slate-400 font-medium">
+        CONTROLE AUTOMÁTICO DE AUXÍLIOS E DIÁRIAS DE ACORDO COM LOCAIS E DATAS ELEGÍVEIS.
+      </p>
+    </section>
+
+    <section class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+      <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+        <i class="fa-solid fa-map-location-dot text-amber-400 text-xl"></i>
+        <h2 class="text-lg font-bold uppercase tracking-wide text-white">
+          LOCAIS ELEGÍVEIS À DIÁRIAS
+        </h2>
+      </div>
+
+      <div class="space-y-4">
+        <p class="text-justify text-xs sm:text-sm text-slate-300 leading-relaxed font-medium bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <strong class="text-amber-400 uppercase">MUNICÍPIOS FORA DA REGIÃO METROPOLITANA - RJ</strong><br>
+          <br>
+          DÃO DIREITO A DIÁRIA (QUANDO O TEMPO DE DESLOCAMENTO - IDA E VOLTA - FOR SUPERIOR A 4 HORAS), PERNOITE (QUANDO HOUVER HOSPEDAGEM) E TRASLADO (QUANDO O DESLOCAMENTO NÃO FOR POR VIATURA OFICIAL), 
+          CASO O DESLOCAMENTO SEJA SUPERIOR A 50 KM DO MUNICÍPIO DE SEDE (CAPITAL) E EXIJA AFASTAMENTO TEMPORÁRIO DENTRO DAS REGRAS DESCRITAS EM CADA ITEM:
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-umbrella-beach"></i> REGIÃO DOS LAGOS
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">ARARUAMA, ARMAÇÃO DOS BÚZIOS, ARRAIAL DO CABO, CABO FRIO, IGUABA GRANDE, SÃO PEDRO DA ALDEIA, SAQUAREMA.</p>
+          </div>
+
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-mountain"></i> REGIÃO SERRANA
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">BOM JARDIM, CACHOEIRAS DE MACACU, CANTAGALO, CORDEIRO, GUAPIMIRIM, NOVA FRIBURGO, PETRÓPOLIS, TERESÓPOLIS.</p>
+          </div>
+
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-industry"></i> MÉDIO PARAÍBA / SUL FLUMINENSE
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">BARRA DO PIRAÍ, BARRA MANSA, ITATIAIA, PIRAÍ, RESENDE, VALENÇA, VASSOURAS, VOLTA REDONDA.</p>
+          </div>
+
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-compass"></i> NORTE FLUMINENSE
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">CAMPOS DOS GOYTACAZES, CONCEIÇÃO DE MACABU, MACAÉ, QUISSAMÃ, SÃO JOÃO DA BARRA.</p>
+          </div>
+
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-location-arrow"></i> NOROESTE FLUMINENSE
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">BOM JESUS DO ITABAPOANA, ITAOCARA, ITAPERUNA, MIRACEMA, SANTO ANTÔNIO DE PÁDUA.</p>
+          </div>
+
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-anchor"></i> COSTA VERDE
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">ANGRA DOS REIS, MANGARATIBA, PARATY.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="secao-organograma-diarias" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-hotel text-amber-400 text-xl"></i>
+          <h2 class="text-lg font-bold uppercase tracking-wide text-white">ORGANOGRAMA DAS DIÁRIAS</h2>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-center text-sm text-slate-300">
+          <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-center">Nº DA ESCALA</th>
+              <th scope="col" class="px-4 py-3">LOCAL</th>
+              <th scope="col" class="px-4 py-3 text-center">DATA</th>
+              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE ALIMENTAÇÃO</th>
+              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE PERNOITE</th>
+              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE TRASLADO</th>
+              <th scope="col" class="px-4 py-3 text-right">TOTAL DIÁRIO</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaDiariasBody" class="divide-y divide-slate-800">
+            <tr>
+              <td colspan="7" class="px-4 py-8 text-center text-slate-500 italic">
+                NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA ATÉ O MOMENTO.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center space-x-4 shadow-inner">
+          <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">TOTAL GERAL DE DIÁRIAS:</span>
+          <span id="totalDiarias" class="text-amber-400 font-black text-lg">R$ 0,00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+      <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
+        <i class="fa-solid fa-calendar-check text-amber-400 text-xl"></i>
+        <h2 class="text-lg font-bold uppercase tracking-wide text-white">
+          ESCALAS ELEGÍVEIS AOS AUXÍLIOS
+        </h2>
+      </div>
+
+      <div class="space-y-4">
+        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+          <strong class="text-amber-400 uppercase">DATA "ESPECIAL" DE ATIVIDADE</strong><br>
+          <br>
+          DÃO DIREITO AOS AUXÍLIOS ALIMENTAÇÃO E TRANSPORTE:
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
+            <span class="text-xs font-bold text-brand-500 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-calendar"></i> DIAS ELEGÍVEIS
+            </span>
+            <br>
+            <p class="text-justify text-xs text-slate-300">SÁBADO, DOMINGO OU FERIADO.</p>
+          </div>
+      </div>
+    </section>
+    
+    <section id="secao-organograma-auxilios" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-utensils text-amber-400 text-xl"></i>
+          <i class="fa-solid fa-car text-amber-400 text-xl"></i>
+          <h2 class="text-lg font-bold uppercase tracking-wide text-white">ORGANOGRAMA DOS AUXÍLIOS</h2>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-center text-sm text-slate-300">
+          <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-800">
+            <tr>
+              <th scope="col" class="px-4 py-3 text-center">Nº DA ESCALA</th>
+              <th scope="col" class="px-4 py-3">LOCAL</th>
+              <th scope="col" class="px-4 py-3 text-center">DATA</th>
+              <th scope="col" class="px-4 py-3 text-right">AUXÍLIO ALIMENTAÇÃO</th>
+              <th scope="col" class="px-4 py-3 text-right">AUXÍLIO TRANSPORTE</th>
+              <th scope="col" class="px-4 py-3 text-right">TOTAL DIÁRIO</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaAuxiliosBody" class="divide-y divide-slate-800">
+            <tr>
+              <td colspan="6" class="px-4 py-8 text-center text-slate-500 italic">
+                NENHUMA ESCALA COM DATA ELEGÍVEL AO AUXÍLIOS CADASTRADA ATÉ O MOMENTO.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center space-x-4 shadow-inner">
+          <span class="text-xs uppercase font-bold text-slate-400 tracking-wider">TOTAL GERAL DE AUXÍLIOS:</span>
+          <span id="totalAuxilios" class="text-amber-400 font-black text-lg">R$ 0,00</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MENU INFERIOR FIXO / BOTTOM NAVIGATION BAR -->
+  <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
+      
+      <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
+      </a>
+
+      <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
+      </a>
+
+      <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
+      </a>
+
+      <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
+      </a>
+
+      <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
+      </a>
+
+      <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
+      </a>
+
+      <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
+      </a>
+
+      <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
+      </a>
+
+    </div>
+  </nav>
+
+  <script>
+    // Menu Mobile
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    if (mobileBtn && mobileMenu) {
+      mobileBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+    }
+
+    const STORAGE_KEY_ESCALAS = 'jetcontrol_escalas_dados';
+    const STORAGE_KEY_VALORES = 'jetcontrol_valores_custom';
+    const STORAGE_KEY_COTAS_EXTRAS = 'jetcontrol_cotas_extras_dados';
+
+    const MUNICIPIOS_ELEGIVEIS = [
+      "CABO FRIO", "ARMAÇÃO DOS BÚZIOS", "BUZIOS", "ARRAIAL DO CABO", "SÃO PEDRO DA ALDEIA", "ARARUAMA", "SAQUAREMA", "IGUABA GRANDE",
+      "PETRÓPOLIS", "PETROPOLIS", "TERESÓPOLIS", "TERESOPOLIS", "NOVA FRIBURGO", "GUAPIMIRIM", "CACHOEIRAS DE MACACU", "CANTAGALO", "CORDEIRO", "BOM JARDIM",
+      "VOLTA REDONDA", "BARRA MANSA", "RESENDE", "ITATIAIA", "PIRAÍ", "PIRAI", "BARRA DO PIRAÍ", "BARRA DO PIRAI", "VALENÇA", "VALENCA", "VASSOURAS",
+      "CAMPOS DOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA", 
+      "ITAOCARA", "ITAPERUNA", "SANTO ANTÔNIO DE PÁDUA", "SANTO ANTONIO DE PADUA", "BOM JESUS DO ITABAPOANA", "MIRACEMA",
+      "ANGRA DOS REIS", "PARATY", "PARATI", "MANGARATIBA"
+    ];
+
+    function formatarMoeda(valor) {
+      return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function converterValorMonetario(val) {
+      if (typeof val === 'number') return val;
+      if (!val) return 0.00;
+      let limpo = val.toString().trim();
+      limpo = limpo.replace(/^R\$\s*/i, '').replace(/\./g, '').replace(',', '.');
+      const num = parseFloat(limpo);
+      return isNaN(num) ? 0.00 : num;
+    }
+
+    // Cor dos valores de diárias/auxílios: vermelho se negativo; amber-400 se zero ou positivo.
+    function classeCorValorDiariaAux(v) {
+      return (Number(v) || 0) < -0.004 ? 'text-red-400' : 'text-amber-400';
+    }
+
+    function verificarElegibilidade(localStr) {
+      if (!localStr) return false;
+      const upper = String(localStr).toUpperCase().trim();
+      return MUNICIPIOS_ELEGIVEIS.some(mun => upper.includes(mun));
+    }
+
+    // MESMA REGRA usada em escalas.html (obterValoresExtrasEscala), para que os
+    // totais desta página, do dashboard e da página de escalas sempre coincidam.
+    function obterValoresExtrasEscala(escala, valoresSalvos) {
+      const conv = (valor, padrao) => {
+        if (typeof valor === 'number') return valor;
+        if (!valor) return padrao;
+        return parseFloat(String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.')) || padrao;
+      };
+      const valDiariaAlimentacao = conv(valoresSalvos.diariaAlimentacao, 52.00);
+      const valDiariaHospedagem = conv(valoresSalvos.diariaHospedagem, 274.10);
+      const valDiariaTraslado = conv(valoresSalvos.diariaTraslado, 0.00);
+      const valAuxAlimentacao = conv(valoresSalvos.alimentacao, 57.70);
+      const valAuxTransporte = conv(valoresSalvos.transporte, 31.08);
+
+      const turnos = [
+        { local: escala.localManha || escala.local, pernoite: escala.pernoiteManha || escala.pernoite },
+        { local: escala.localTarde, pernoite: escala.pernoiteTarde },
+        { local: escala.localNoite, pernoite: escala.pernoiteNoite }
+      ];
+      const elegivel = turnos.some(t => verificarElegibilidade(t.local));
+      const possuiPernoite = turnos.some(t => verificarElegibilidade(t.local) && ['SIM', 'TRUE', '1', 'S'].includes(String(t.pernoite || '').toUpperCase().trim()));
+      const d = escala.data ? new Date(escala.data + 'T00:00:00') : null;
+      const diaEspecial = d ? (d.getDay() === 0 || d.getDay() === 6 || escala.isFeriado === true) : false;
+
+      return {
+        elegivel, possuiPernoite, diaEspecial,
+        diariaAlimentacao: elegivel ? valDiariaAlimentacao : 0,
+        diariaPernoite: possuiPernoite ? valDiariaHospedagem : 0,
+        diariaTraslado: elegivel ? valDiariaTraslado : 0,
+        auxAlimentacao: diaEspecial ? valAuxAlimentacao : 0,
+        auxTransporte: diaEspecial ? valAuxTransporte : 0,
+        turnos
+      };
+    }
+
+    function renderizarOrganogramas() {
+      const escalasSalvas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]') || [];
+      const valoresSalvos = JSON.parse(localStorage.getItem(STORAGE_KEY_VALORES) || '{}') || {};
+
+      const tbodyDiarias = document.getElementById('tabelaDiariasBody');
+      const tbodyAuxilios = document.getElementById('tabelaAuxiliosBody');
+
+      let htmlDiarias = '';
+      let htmlAuxilios = '';
+      let somaTotalDiarias = 0;
+      let somaTotalAuxilios = 0;
+
+      escalasSalvas.forEach((escala, index) => {
+        const numEscala = escala.numero || `#${index + 1}`;
+        const dataObj = escala.data ? new Date(escala.data + 'T00:00:00') : null;
+        const dataTxt = dataObj ? dataObj.toLocaleDateString('pt-BR') : '-';
+        const ex = obterValoresExtrasEscala(escala, valoresSalvos);
+
+        if (ex.elegivel) {
+          const totalLinhaDiaria = ex.diariaAlimentacao + ex.diariaPernoite + ex.diariaTraslado;
+          somaTotalDiarias += totalLinhaDiaria;
+          const descricaoLocais = [...new Set(ex.turnos.filter(t => verificarElegibilidade(t.local)).map(t => t.local))].join(' / ');
+
+          htmlDiarias += `
+            <tr class="hover:bg-slate-800/50 transition uppercase">
+              <td class="px-4 py-3 text-center font-bold text-brand-500">${numEscala}</td>
+              <td class="px-4 py-3 font-semibold text-white">${descricaoLocais}</td>
+              <td class="px-4 py-3 text-center">${dataTxt}</td>
+              <td class="px-4 py-3 text-right ${classeCorValorDiariaAux(ex.diariaAlimentacao)}">${formatarMoeda(ex.diariaAlimentacao)}</td>
+              <td class="px-4 py-3 text-right ${classeCorValorDiariaAux(ex.diariaPernoite)}">${formatarMoeda(ex.diariaPernoite)}</td>
+              <td class="px-4 py-3 text-right ${classeCorValorDiariaAux(ex.diariaTraslado)}">${formatarMoeda(ex.diariaTraslado)}</td>
+              <td class="px-4 py-3 text-right font-bold ${classeCorValorDiariaAux(totalLinhaDiaria)}">${formatarMoeda(totalLinhaDiaria)}</td>
+            </tr>
+          `;
+        }
+
+        if (ex.diaEspecial) {
+          const totalLinhaAuxilio = ex.auxAlimentacao + ex.auxTransporte;
+          somaTotalAuxilios += totalLinhaAuxilio;
+          const locaisEscala = ex.turnos.map(t => t.local).filter(l => l && String(l).trim() !== '');
+          const locaisFormatados = locaisEscala.length ? locaisEscala.join(' / ') : '-';
+
+          htmlAuxilios += `
+            <tr class="hover:bg-slate-800/50 transition uppercase">
+              <td class="px-4 py-3 text-center font-bold text-brand-500">${numEscala}</td>
+              <td class="px-4 py-3 font-semibold text-white">${locaisFormatados}</td>
+              <td class="px-4 py-3 text-center">${dataTxt}</td>
+              <td class="px-4 py-3 text-right ${classeCorValorDiariaAux(ex.auxAlimentacao)}">${formatarMoeda(ex.auxAlimentacao)}</td>
+              <td class="px-4 py-3 text-right ${classeCorValorDiariaAux(ex.auxTransporte)}">${formatarMoeda(ex.auxTransporte)}</td>
+              <td class="px-4 py-3 text-right font-bold ${classeCorValorDiariaAux(totalLinhaAuxilio)}">${formatarMoeda(totalLinhaAuxilio)}</td>
+            </tr>
+          `;
+        }
+      });
+
+      tbodyDiarias.innerHTML = htmlDiarias !== '' ? htmlDiarias :
+        `<tr><td colspan="7" class="text-center py-4 text-slate-500">NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA ATÉ O MOMENTO.</td></tr>`;
+      tbodyAuxilios.innerHTML = htmlAuxilios !== '' ? htmlAuxilios :
+        `<tr><td colspan="6" class="text-center py-4 text-slate-500">NENHUMA ESCALA COM DATA ELEGÍVEL AO AUXÍLIOS CADASTRADA ATÉ O MOMENTO.</td></tr>`;
+
+      const elTotalDiarias = document.getElementById('totalDiarias');
+      elTotalDiarias.innerText = formatarMoeda(somaTotalDiarias);
+      elTotalDiarias.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400');
+      elTotalDiarias.classList.add(classeCorValorDiariaAux(somaTotalDiarias));
+      const elTotalAuxilios = document.getElementById('totalAuxilios');
+      elTotalAuxilios.innerText = formatarMoeda(somaTotalAuxilios);
+      elTotalAuxilios.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400');
+      elTotalAuxilios.classList.add(classeCorValorDiariaAux(somaTotalAuxilios));
+
+      // Grava MESCLANDO com o que já existe (escalas.html guarda ali também os
+      // totais recebíveis, pernoites etc., que não podem ser perdidos) e só
+      // grava se algo mudou, para não gerar sincronizações desnecessárias.
+      let dadosCotasExtras = {};
+      try { dadosCotasExtras = JSON.parse(localStorage.getItem(STORAGE_KEY_COTAS_EXTRAS) || '{}') || {}; } catch (_) {}
+      Object.assign(dadosCotasExtras, {
+        totalDiarias: somaTotalDiarias,
+        totalAuxilios: somaTotalAuxilios,
+        diarias: somaTotalDiarias,
+        auxilios: somaTotalAuxilios,
+        organogramaDiariasHTML: document.getElementById('secao-organograma-diarias')?.outerHTML || '',
+        organogramaAuxiliosHTML: document.getElementById('secao-organograma-auxilios')?.outerHTML || ''
+      });
+      const gravarSeMudou = (chave, texto) => {
+        if (localStorage.getItem(chave) !== texto) localStorage.setItem(chave, texto);
+      };
+      gravarSeMudou(STORAGE_KEY_COTAS_EXTRAS, JSON.stringify(dadosCotasExtras));
+      gravarSeMudou('jetcontrol_organograma_diarias_html', dadosCotasExtras.organogramaDiariasHTML);
+      gravarSeMudou('jetcontrol_organograma_auxilios_html', dadosCotasExtras.organogramaAuxiliosHTML);
+
+      // Avisa a página de escalas (que abre esta página num quadro invisível)
+      // que a atualização terminou.
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ tipo: 'jetcontrol-cotas-renderizado' }, location.origin);
+        }
+      } catch (_) {}
+    }
+
+    // ATIVAÇÃO E ROLAGEM AUTOMÁTICA DO MENU DO RODAPÉ
+    function inicializarMenuRodape() {
+      let paginaAtual = window.location.pathname.split('/').pop().toLowerCase();
+      if (!paginaAtual || paginaAtual === '') {
+        paginaAtual = 'index.html';
+      }
+
+      const itens = document.querySelectorAll('.bottom-nav-item');
+      let itemAtivo = null;
+
+      itens.forEach(item => {
+        const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
+        const icone = item.querySelector('i');
+        
+        if (paginaItem === paginaAtual || (paginaAtual === '' && paginaItem === 'index.html')) {
+          itemAtivo = item;
+          item.classList.remove('text-slate-400');
+          item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-brand-500', 'text-slate-400');
+            icone.classList.add('text-white');
+          }
+        } else {
+          item.classList.add('text-slate-400');
+          item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-white');
+            icone.classList.add('text-brand-500');
+          }
+        }
+      });
+
+      if (itemAtivo) {
+        setTimeout(() => {
+          itemAtivo.scrollIntoView({
+            behavior: 'smooth',
+            inline: 'center',
+            block: 'nearest'
+          });
+        }, 150);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      inicializarMenuRodape();
+      var prosseguir = function () { renderizarOrganogramas(); };
+      if (window.JetSyncReady && typeof window.JetSyncReady.finally === 'function') {
+        window.JetSyncReady.finally(prosseguir);
+      } else {
+        prosseguir();
+      }
+    });
+
+    // Atualiza sozinha quando as escalas/valores mudarem (outra aba/janela,
+    // nuvem) ou quando a página voltar a ficar visível / sair do cache.
+    var _timerAtualizacao = null;
+    function agendarAtualizacao() {
+      clearTimeout(_timerAtualizacao);
+      _timerAtualizacao = setTimeout(renderizarOrganogramas, 150);
+    }
+    window.addEventListener('storage', function (e) {
+      if (!e.key || e.key === STORAGE_KEY_ESCALAS || e.key === STORAGE_KEY_VALORES || e.key === 'valores') agendarAtualizacao();
+    });
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) agendarAtualizacao(); });
+    window.addEventListener('pageshow', function (e) { if (e.persisted) agendarAtualizacao(); });
+    window.addEventListener('focus', agendarAtualizacao);
+
+    if (window.JetSyncOnChange) {
+      window.JetSyncOnChange(function () { renderizarOrganogramas(); });
+    }
+  </script>
+</body>
+</html>

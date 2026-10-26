@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JETCONTROL">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <script src="pwa.js" defer></script>
+  <title>JETCONTROL 2026®™ - RESETAR DADOS</title>
+
+  <!-- Tailwind CSS CDN & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { text-transform: uppercase; font-family: 'Inter', sans-serif; }
+    .ok { color: #34d399 !important; }
+    .erro { color: #f87171 !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">
+
+  <!-- HEADER / MENU SUPERIOR RESPONSIVO -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+        </div>
+
+        <nav class="hidden md:flex space-x-1">
+          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
+          <a href="cotas-extras.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS EXTRAS</a>
+          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
+          <a href="jeton-valores.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">VALORES JETON</a>
+          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
+          <a href="resetar-dados.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">RESETAR DADOS</a>
+        </nav>
+
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
+      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
+      <a href="cotas-extras.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS EXTRAS</a>
+      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
+      <a href="jeton-valores.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">VALORES JETON</a>
+      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
+      <a href="resetar-dados.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">RESETAR DADOS</a>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-2xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8 mb-8">
+      <div class="flex items-center space-x-3">
+        <i class="fa-solid fa-trash-can text-red-500 text-2xl"></i>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Resetar Todos os Dados</h1>
+      </div>
+    </section>
+
+    <section class="bg-brand-card rounded-2xl border border-slate-800 shadow-xl p-6 sm:p-8 space-y-5">
+      <div>
+        <p class="text-sm font-bold text-red-400 uppercase mb-2">Isso apaga permanentemente, sem volta:</p>
+        <ul class="text-xs text-slate-400 uppercase list-disc pl-5 space-y-1.5">
+          <li>Todos os dados salvos neste navegador (ciclos, escalas, cotas extras, valores, lançamentos de jetons etc.)</li>
+          <li>Todos os dados salvos na nuvem (Firestore), usados para sincronizar entre aparelhos</li>
+          <li class="text-emerald-400">Seus BACKUPS NÃO são apagados — ficam guardados na página BACKUPS (um backup automático é criado antes de resetar)</li>
+        </ul>
+      </div>
+
+      <div class="bg-slate-900/60 border border-emerald-900 rounded-xl p-4">
+        <p class="text-xs text-emerald-400 uppercase leading-relaxed">
+          <i class="fa-solid fa-circle-check mr-1"></i>
+          <strong>Reset a partir da origem:</strong> execute isto UMA VEZ. Todos os outros aparelhos sincronizados serão limpos automaticamente ao abrirem o sistema.
+        </p>
+      </div>
+
+      <div>
+        <label for="confirmacao" class="block text-xs font-bold uppercase text-slate-300 mb-1.5">Para confirmar, digite <span class="text-red-400">APAGAR</span> no campo abaixo:</label>
+        <input type="text" id="confirmacao" placeholder="Digite APAGAR"
+          class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-red-500 uppercase">
+      </div>
+
+      <button id="btnResetar" disabled
+        class="w-full bg-red-600 hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-red-600 text-white font-black text-sm uppercase rounded-xl py-3 transition">
+        <i class="fa-solid fa-trash-can mr-2"></i>Resetar Tudo Agora
+      </button>
+
+      <div id="status" class="text-xs space-y-1.5 normal-case"></div>
+    </section>
+  </main>
+
+  <!-- MENU INFERIOR FIXO -->
+  <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
+      <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
+      </a>
+      <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
+      </a>
+      <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
+      </a>
+      <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
+      </a>
+      <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
+      </a>
+      <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
+      </a>
+      <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
+      </a>
+      <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
+      </a>
+    </div>
+  </nav>
+
+<script src="jetcontrol-backup.js"></script>
+<script>
+  function inicializarMenuRodape() {
+    let paginaAtual = window.location.pathname.split('/').pop().toLowerCase() || 'index.html';
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
+      const icone = item.querySelector('i');
+      if (paginaItem === paginaAtual) {
+        item.classList.remove('text-slate-400');
+        item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+        if (icone) { icone.classList.remove('text-brand-500', 'text-slate-400'); icone.classList.add('text-white'); }
+      } else {
+        item.classList.add('text-slate-400');
+        item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+        if (icone) { icone.classList.remove('text-white'); icone.classList.add('text-brand-500'); }
+      }
+    });
+  }
+  inicializarMenuRodape();
+
+  const mobileBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (mobileBtn && mobileMenu) {
+    mobileBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+  }
+
+  const campoConfirmacao = document.getElementById('confirmacao');
+  const botao = document.getElementById('btnResetar');
+  const status = document.getElementById('status');
+
+  campoConfirmacao.addEventListener('input', () => {
+    botao.disabled = campoConfirmacao.value.trim().toUpperCase() !== 'APAGAR';
+  });
+
+  function log(msg, classe) {
+    const linha = document.createElement('div');
+    linha.className = classe || '';
+    linha.textContent = msg;
+    status.appendChild(linha);
+  }
+
+  async function obterConfigDoSync() {
+    try {
+      const resp = await fetch('jetcontrol-sync.js', { cache: 'no-cache' });
+      const texto = await resp.text();
+      const idMatch = texto.match(/FIREBASE_PROJECT_ID\s*=\s*'([^']*)'/);
+      const secretMatch = texto.match(/SYNC_SECRET\s*=\s*'([^']*)'/);
+      const projectId = idMatch ? idMatch[1] : '';
+      const secret = secretMatch ? secretMatch[1] : '';
+      return (projectId && secret && !projectId.includes('COLOQUE-AQUI')) ? { projectId, secret } : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function listarTodosOsDocumentos(base) {
+    let documentos = [];
+    let pageToken = null;
+    do {
+      const url = base + '?pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
+      const resp = await fetch(url);
+      if (!resp.ok) break;
+      const dados = await resp.json();
+      documentos = documentos.concat((dados && dados.documents) || []);
+      pageToken = dados && dados.nextPageToken;
+    } while (pageToken);
+    return documentos;
+  }
+
+  botao.addEventListener('click', async () => {
+    botao.disabled = true;
+    status.innerHTML = '';
+    log('A preparar reset do sistema...');
+
+    // 1. Backup de segurança
+    try {
+      if (window.JetBackup) {
+        await JetBackup.criar('Automático — antes de resetar', 'auto-reset');
+        log('Backup de segurança gerado.', 'ok');
+      }
+    } catch (_) {}
+
+    // Desativa temporariamente o interceptor de Storage para não reenviar enquanto limpa
+    Storage.prototype.setItem = Object.getPrototypeOf(localStorage).setItem;
+    Storage.prototype.removeItem = Object.getPrototypeOf(localStorage).removeItem;
+
+    // 2. Limpeza local profunda
+    const chavesParaRemover = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k) chavesParaRemover.push(k);
+    }
+    chavesParaRemover.forEach(k => {
+      if (k.startsWith('jetcontrol_') || k.startsWith('__jetcontrol') || k === 'valores' || k === 'jetonData') {
+        localStorage.removeItem(k);
+      }
+    });
+    log('Armazenamento local limpo.', 'ok');
+
+    // 3. Limpeza na nuvem (Firestore)
+    const config = await obterConfigDoSync();
+    const agora = Date.now() + 5000; // carimbo futuro para anular qualquer requisição em trânsito
+
+    if (config) {
+      log('A eliminar dados na nuvem...');
+      const base = 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(config.projectId) +
+        '/databases/(default)/documents/jetcontrol_sync/' + encodeURIComponent(config.secret) + '/dados';
+
+      try {
+        const docs = await listarTodosOsDocumentos(base);
+        for (const doc of docs) {
+          const partes = doc.name.split('/');
+          const chave = partes[partes.length - 1];
+          if (chave === 'sistema_reset_marker') continue;
+
+          await fetch(base + '/' + encodeURIComponent(chave) +
+            '?updateMask.fieldPaths=deleted&updateMask.fieldPaths=atualizadoEm', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              fields: {
+                deleted: { booleanValue: true },
+                atualizadoEm: { integerValue: String(agora) }
+              }
+            })
+          });
+        }
+
+        // Grava marcador de reset definitivo
+        await fetch(base + '/sistema_reset_marker?updateMask.fieldPaths=value&updateMask.fieldPaths=atualizadoEm&updateMask.fieldPaths=deleted', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              value: { stringValue: 'reset' },
+              atualizadoEm: { integerValue: String(agora) },
+              deleted: { booleanValue: false }
+            }
+          })
+        });
+        log('Base de dados em nuvem limpa e sincronizada.', 'ok');
+      } catch (err) {
+        log('Erro na nuvem: ' + err.message, 'erro');
+      }
+    }
+
+    localStorage.setItem('jetcontrol_reset_aplicado_em', String(agora));
+    log('Reset concluído com sucesso. Redirecionando...', 'ok');
+
+    setTimeout(() => {
+      window.location.href = 'index.html';
+    }, 1200);
+  });
+</script>
+</body>
+</html>

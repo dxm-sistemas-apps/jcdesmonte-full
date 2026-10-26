@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="JETCONTROL">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <script src="pwa.js" defer></script>
+  <title>JETCONTROL 2026®™ - BACKUPS</title>
+
+  <!-- Tailwind CSS CDN & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Fontes Google -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { text-transform: uppercase; font-family: 'Inter', sans-serif; }
+    .ok { color: #34d399 !important; }
+    .bk-card { background:#1e293b; border:1px solid #1e293b; border-radius:1rem; }
+    .bk-chip { font-size:10px; font-weight:800; padding:2px 8px; border-radius:9999px; letter-spacing:.03em; }
+    .bk-btn { font-size:11px; font-weight:800; text-transform:uppercase; padding:8px 14px; border-radius:.75rem; transition:.15s; }
+
+    .erro { color: #f87171 !important; }
+    
+    /* Oculta a barra de rolagem visual do menu no rodapé mantendo a rolagem ativa */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+
+<body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">
+
+  <!-- HEADER / MENU SUPERIOR RESPONSIVO -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center space-x-3">
+          <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+        </div>
+
+        <!-- Navigation Desktop -->
+        <nav class="hidden md:flex space-x-1">
+          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
+          <a href="cotas-extras.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS EXTRAS</a>
+          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
+          <a href="jeton-valores.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">VALORES JETON</a>
+          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">BACKUPS</a>
+          <a href="resetar-dados.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR DADOS</a>
+        </nav>
+
+        <!-- Mobile Menu Button -->
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+            <i class="fa-solid fa-bars text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Navigation -->
+    <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
+      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
+      <a href="cotas-extras.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS EXTRAS</a>
+      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
+      <a href="jeton-valores.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">VALORES JETON</a>
+      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">BACKUPS</a>
+      <a href="resetar-dados.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR DADOS</a>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+
+    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
+      <div class="flex items-center space-x-3 mb-2">
+        <i class="fa-solid fa-cloud-arrow-up text-brand-500 text-2xl"></i>
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Backups</h1>
+      </div>
+      <p class="text-sm text-slate-400 font-medium text-justify">
+        Guarde uma cópia de todos os dados salvos (escalas, ciclos, cotas extras, valores e conciliações de jetons) e restaure quando precisar.
+        O botão RESETAR <strong class="text-emerald-400">não apaga</strong> os backups. São mantidos os <span id="maxBackups">10</span> backups mais recentes[cite: 1, 7].
+      </p>
+    </section>
+
+    <!-- CRIAR / IMPORTAR -->
+    <section class="bk-card p-5 sm:p-6 space-y-4">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input id="nomeBackup" type="text" maxlength="80" placeholder="NOME DO BACKUP (OPCIONAL) — EX.: ANTES DE FECHAR O CICLO"
+          class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500 uppercase">
+        <button id="btnCriar" class="bk-btn bg-brand-600 hover:bg-brand-500 text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Criar backup agora</button>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <label class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer border border-slate-700">
+          <i class="fa-solid fa-file-import mr-2"></i>Importar arquivo (.json)
+          <input id="arquivoImportar" type="file" accept=".json,application/json" class="hidden">
+        </label>
+        <span class="text-[11px] text-slate-500 normal-case">Use para trazer um backup baixado antes (ele entra na lista abaixo).</span>
+      </div>
+      <div id="avisoNuvem" class="hidden text-xs normal-case rounded-xl p-4 border"></div>
+      <div id="status" class="text-xs space-y-1.5 normal-case"></div>
+    </section>
+
+    <!-- LISTA -->
+    <section class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-black uppercase tracking-wide text-white"><i class="fa-solid fa-list mr-2 text-brand-500"></i>Backups guardados <span id="contagem" class="text-slate-400 font-semibold"></span></h2>
+        <button id="btnAtualizar" class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"><i class="fa-solid fa-rotate mr-2"></i>Atualizar</button>
+      </div>
+      <div id="lista" class="space-y-4"><div class="text-slate-500 text-sm normal-case">Carregando...</div></div>
+    </section>
+  </main>
+
+  <!-- MODAL DE CONFIRMAÇÃO -->
+  <div id="modal" class="hidden fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
+    <div class="bg-brand-card border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
+      <h3 id="modalTitulo" class="text-lg font-black text-white uppercase"></h3>
+      <div id="modalTexto" class="text-sm text-slate-300 normal-case leading-relaxed"></div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button id="modalCancelar" class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Cancelar</button>
+        <button id="modalOk" class="bk-btn bg-brand-600 hover:bg-brand-500 text-white">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MENU INFERIOR FIXO / BOTTOM NAVIGATION BAR -->
+  <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+    <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
+      
+      <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
+      </a>
+
+      <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
+      </a>
+
+      <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
+      </a>
+
+      <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
+      </a>
+
+      <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
+      </a>
+
+      <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
+      </a>
+
+      <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
+      </a>
+
+      <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
+        <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
+      </a>
+
+    </div>
+  </nav>
+
+<script src="jetcontrol-backup.js"></script>
+<script>
+  // ---------------- MENU ----------------
+  function inicializarMenuRodape() {
+    let paginaAtual = window.location.pathname.split('/').pop().toLowerCase() || 'index.html';
+    let itemAtivo = null;
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+      const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
+      const icone = item.querySelector('i');
+      if (paginaItem === paginaAtual) {
+        itemAtivo = item;
+        item.classList.remove('text-slate-400');
+        item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+        if (icone) { icone.classList.remove('text-brand-500', 'text-slate-400'); icone.classList.add('text-white'); }
+      } else {
+        item.classList.add('text-slate-400');
+        item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+        if (icone) { icone.classList.remove('text-white'); icone.classList.add('text-brand-500'); }
+      }
+    });
+    if (itemAtivo) setTimeout(() => itemAtivo.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }), 150);
+  }
+  inicializarMenuRodape();
+  const mobileBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  if (mobileBtn && mobileMenu) mobileBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+
+  // ---------------- UTILIDADES ----------------
+  const $ = (id) => document.getElementById(id);
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const moeda = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  const dataHora = (ms) => new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const tamanho = (b) => b > 1048576 ? (b / 1048576).toFixed(2) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB';
+  $('maxBackups').textContent = JetBackup.MAX_BACKUPS;
+
+  function msg(texto, tipo) {
+    const d = document.createElement('div');
+    d.className = tipo === 'erro' ? 'text-red-400' : (tipo === 'ok' ? 'ok' : 'text-slate-300');
+    d.textContent = texto;
+    $('status').innerHTML = '';
+    $('status').appendChild(d);
+  }
+
+  function confirmar(titulo, htmlTexto, textoOk, perigo) {
+    return new Promise(resolve => {
+      $('modalTitulo').textContent = titulo;
+      $('modalTexto').innerHTML = htmlTexto;
+      $('modalOk').textContent = textoOk || 'Confirmar';
+      $('modalOk').className = 'bk-btn text-white ' + (perigo ? 'bg-red-600 hover:bg-red-500' : 'bg-brand-600 hover:bg-brand-500');
+      $('modal').classList.remove('hidden');
+      const fechar = (v) => { $('modal').classList.add('hidden'); $('modalOk').onclick = $('modalCancelar').onclick = null; resolve(v); };
+      $('modalOk').onclick = () => fechar(true);
+      $('modalCancelar').onclick = () => fechar(false);
+    });
+  }
+
+  // ---------------- LISTA ----------------
+  function chipTipo(tipo) {
+    const cores = { 'manual': 'bg-blue-900/50 text-blue-300', 'arquivo': 'bg-purple-900/50 text-purple-300' };
+    return `<span class="bk-chip ${cores[tipo] || 'bg-amber-900/40 text-amber-300'}">${esc(JetBackup.TIPOS[tipo] || tipo)}</span>`;
+  }
+  function chipLocal(b) {
+    const nuvem = b.nuvem ? '<span class="bk-chip bg-emerald-900/50 text-emerald-400"><i class="fa-solid fa-cloud mr-1"></i>NA NUVEM</span>' : '<span class="bk-chip bg-slate-700/60 text-slate-300">SÓ NESTE APARELHO</span>';
+    const local = b.local === false ? '<span class="bk-chip bg-slate-700/60 text-slate-300">NÃO BAIXADO AQUI</span>' : '';
+    return nuvem + ' ' + local;
+  }
+  function itemResumo(rotulo, valor) {
+    return `<div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3"><span class="block text-[10px] font-bold text-slate-400 uppercase">${rotulo}</span><span class="text-sm font-black text-white">${valor}</span></div>`;
+  }
+  function itemResumoDestaque(rotulo, valor) {
+    return `<div class="col-span-2 bg-slate-900/80 border-2 border-brand-500/60 rounded-xl p-3 shadow-md shadow-brand-500/10 flex flex-col justify-center"><span class="block text-[10px] font-bold text-brand-400 uppercase tracking-wide">${rotulo}</span><span class="text-sm font-black text-cyan-300">${valor}</span></div>`;
+  }
+
+  async function renderizar() {
+    const res = await JetBackup.listar();
+    $('contagem').textContent = '(' + res.itens.length + '/' + JetBackup.MAX_BACKUPS + ')';
+    const aviso = $('avisoNuvem');
+    aviso.className = 'hidden';
+    if (!res.nuvemConfigurada) {
+      aviso.className = 'text-xs normal-case rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400';
+      aviso.textContent = 'Nuvem não configurada: os backups ficam guardados apenas neste aparelho.';
+    } else if (!res.nuvemOk) {
+      aviso.className = 'text-xs normal-case rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400 space-y-2';
+      const rules = "match /jetcontrol_backups/{secret}/{colecao}/{doc} {\n  allow read, write: if secret == 'SEU_SYNC_SECRET';\n}";
+      aviso.innerHTML = '<div><i class="fa-solid fa-triangle-exclamation mr-1"></i>Não foi possível acessar a nuvem para os backups (erro ' + esc(res.erroNuvem) + '). Os backups estão sendo guardados neste aparelho. ' +
+        (String(res.erroNuvem) === '403' ? 'O erro 403 indica que as regras do Firestore ainda não liberam a coleção de backups. Adicione esta regra (trocando SEU_SYNC_SECRET pelo mesmo código usado nas regras atuais) e publique:' : 'Verifique a internet.') + '</div>' +
+        (String(res.erroNuvem) === '403' ? '<pre class="bg-slate-950 text-slate-300 rounded-lg p-3 overflow-x-auto normal-case">' + esc(rules.replace(/\\n/g, '\n')) + '</pre>' : '');
+    }
+    const cont = $('lista');
+    if (!res.itens.length) {
+      cont.innerHTML = '<div class="bk-card p-6 text-center text-slate-400 text-sm normal-case">Nenhum backup ainda. Clique em "Criar backup agora".</div>';
+      return;
+    }
+    cont.innerHTML = res.itens.map(b => {
+      const r = b.resumo || {};
+      const textoJeton = (r.lancamentosJeton && r.lancamentosJeton > 0)
+        ? `${r.lancamentosJeton} LANÇAMENTO(S)${r.anoJeton ? ' (ANO ' + r.anoJeton + ')' : ''}`
+        : 'NENHUM LANÇAMENTO REGISTRADO';
+
+      return `
+      <div class="bk-card p-5 space-y-4" data-id="${esc(b.id)}">
+        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <div>
+            <div class="text-base font-black text-white">${esc(b.nome)}</div>
+            <div class="text-xs text-slate-400 mt-0.5"><i class="fa-solid fa-clock mr-1"></i>${dataHora(b.criadoEm)}</div>
+          </div>
+          <div class="flex flex-wrap gap-1.5">${chipTipo(b.tipo)} ${chipLocal(b)}</div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          ${itemResumo('Escalas ciclo vigente', r.escalasAbertas ?? 0)}
+          ${itemResumo('Ciclos fechados', r.ciclosFechados ?? 0)}
+          ${itemResumo('Escalas arquivadas', r.escalasArquivadas ?? 0)}
+          ${itemResumo('Jeton bruto total', moeda(r.jetonTotal))}
+          ${itemResumo('Itens de dados', r.itens ?? 0)}
+          ${itemResumo('Tamanho', tamanho(r.tamanho || 0))}
+          ${itemResumoDestaque('★ Conciliação de Jetons', textoJeton)}
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button class="bk-btn bg-emerald-600 hover:bg-emerald-500 text-white" data-acao="restaurar"><i class="fa-solid fa-rotate-left mr-2"></i>Restaurar</button>
+          <button class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700" data-acao="detalhes"><i class="fa-solid fa-magnifying-glass mr-2"></i>Detalhes</button>
+          <button class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700" data-acao="baixar"><i class="fa-solid fa-download mr-2"></i>Baixar arquivo</button>
+          <button class="bk-btn bg-slate-800 hover:bg-red-700 text-red-300 hover:text-white border border-slate-700" data-acao="excluir"><i class="fa-solid fa-trash mr-2"></i>Excluir</button>
+        </div>
+        <div class="detalhes hidden text-xs normal-case text-slate-300 bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-2"></div>
+      </div>`;
+    }).join('');
+  }
+
+  async function detalhesHtml(id) {
+    const rec = await JetBackup.obter(id);
+    const dados = rec.dados || {};
+    const ler = (k, p) => { try { const v = JSON.parse(dados[k]); return v == null ? p : v; } catch (e) { return p; } };
+    const ciclos = ler('jetcontrol_ciclos_fechados', []);
+    const abertas = ler('jetcontrol_escalas_dados', []);
+    const jetonVal = ler('jetcontrol_jeton_valores', ler('jetonData', {}));
+
+    let h = '<div class="font-bold text-white uppercase">Ciclos fechados</div>';
+    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${(c.escalasData || []).length} escala(s)</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
+    h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${abertas.length} escala(s) cadastrada(s)</div>`;
+
+    // Detalhamento dos lançamentos de Valores de Jeton
+    let totalJetonLanc = 0;
+    const anosJeton = Object.keys(jetonVal || {}).sort();
+    anosJeton.forEach(ano => { if (Array.isArray(jetonVal[ano])) totalJetonLanc += jetonVal[ano].length; });
+    h += `<div class="font-bold text-white uppercase pt-1">Valores de Jeton (Conciliação)</div>`;
+    if (totalJetonLanc > 0) {
+      h += '<ul class="list-disc pl-5 space-y-0.5">' + anosJeton.map(ano => `<li>Ano ${esc(ano)}: ${(jetonVal[ano] || []).length} lançamento(s) registrado(s)</li>`).join('') + '</ul>';
+    } else {
+      h += '<div class="text-slate-500">Nenhum lançamento registrado.</div>';
+    }
+
+    h += '<div class="font-bold text-white uppercase pt-1">Dados guardados</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 font-mono text-[11px]">' +
+      Object.keys(dados).sort().map(k => `<div class="flex justify-between gap-2"><span class="truncate">${esc(k)}</span><span class="text-slate-500">${tamanho((dados[k] || '').length)}</span></div>`).join('') + '</div>';
+    return h;
+  }
+
+  $('lista').addEventListener('click', async (ev) => {
+    const btn = ev.target.closest('[data-acao]');
+    if (!btn) return;
+    const card = btn.closest('[data-id]');
+    const id = card.dataset.id;
+    const nome = card.querySelector('.text-base').textContent;
+    const acao = btn.dataset.acao;
+    try {
+      if (acao === 'detalhes') {
+        const box = card.querySelector('.detalhes');
+        if (!box.classList.contains('hidden')) { box.classList.add('hidden'); return; }
+        box.innerHTML = 'Carregando...'; box.classList.remove('hidden');
+        box.innerHTML = await detalhesHtml(id);
+      } else if (acao === 'baixar') {
+        await JetBackup.baixar(id);
+        msg('Arquivo do backup baixado.', 'ok');
+      } else if (acao === 'excluir') {
+        const ok = await confirmar('Excluir backup', 'Excluir definitivamente o backup <strong>' + esc(nome) + '</strong>? Isso não pode ser desfeito.', 'Excluir', true);
+        if (!ok) return;
+        await JetBackup.excluir(id);
+        msg('Backup excluído.', 'ok');
+        await renderizar();
+      } else if (acao === 'restaurar') {
+        const ok = await confirmar('Restaurar backup',
+          'Os dados atuais do sistema serão <strong>substituídos</strong> pelos do backup <strong>' + esc(nome) + '</strong> (' + esc(card.querySelector('.text-xs').textContent.trim()) + ').<br><br>' +
+          'Antes de restaurar, o sistema cria automaticamente um backup do estado atual, para você poder voltar atrás.', 'Restaurar agora');
+        if (!ok) return;
+        msg('Restaurando, aguarde...');
+        const r = await JetBackup.restaurar(id);
+        msg('Backup restaurado (' + r.itens + ' itens). Os dados do sistema foram atualizados; abra as outras páginas para ver o resultado.', 'ok');
+        await renderizar();
+      }
+    } catch (e) {
+      msg('Erro: ' + (e && e.message || e), 'erro');
+    }
+  });
+
+  $('btnCriar').addEventListener('click', async () => {
+    $('btnCriar').disabled = true;
+    try {
+      const b = await JetBackup.criar($('nomeBackup').value, 'manual');
+      $('nomeBackup').value = '';
+      msg('Backup criado' + (b.nuvem ? ' e enviado para a nuvem.' : ' neste aparelho' + (b.erroNuvem ? ' (nuvem indisponível agora; será reenviado depois).' : '.')), 'ok');
+      await renderizar();
+    } catch (e) { msg('Erro ao criar o backup: ' + (e && e.message || e), 'erro'); }
+    $('btnCriar').disabled = false;
+  });
+
+  $('arquivoImportar').addEventListener('change', async (ev) => {
+    const arq = ev.target.files && ev.target.files[0];
+    ev.target.value = '';
+    if (!arq) return;
+    try {
+      await JetBackup.importarArquivo(arq);
+      msg('Arquivo importado como novo backup.', 'ok');
+      await renderizar();
+    } catch (e) { msg('Erro: ' + (e && e.message || e), 'erro'); }
+  });
+
+  $('btnAtualizar').addEventListener('click', () => renderizar());
+
+  JetBackup.sincronizarPendentes().then(renderizar, renderizar);
+</script>
+</body>
+</html>

@@ -1,29 +1,21 @@
 /* ============================================================================
    JETCONTROL 2026®™ — BACKUPS (criar / listar / restaurar / baixar / excluir)
-   ============================================================================
-   ONDE OS BACKUPS FICAM GUARDADOS (e por que o "Resetar" não os apaga):
-     1) IndexedDB deste navegador (banco "jetcontrol_backups_db") — o Resetar
-        só apaga o localStorage e a coleção "jetcontrol_sync" da nuvem.
-     2) Nuvem (Firestore), em uma coleção SEPARADA:
-          jetcontrol_backups/<SYNC_SECRET>/itens   (um documento por backup)
-          jetcontrol_backups/<SYNC_SECRET>/partes  (os dados, em pedaços)
-        Isso permite ver/restaurar os backups em qualquer aparelho.
-        ATENÇÃO: as regras de segurança do Firestore precisam liberar essa
-        coleção (veja o aviso na página BACKUPS). Sem isso o backup continua
-        sendo guardado neste aparelho, só não vai para a nuvem.
-
-   LIMITE: MAX_BACKUPS (os mais antigos são removidos; os automáticos saem
-   primeiro, e o backup que está sendo restaurado nunca é removido).
    ============================================================================ */
 (function () {
   'use strict';
 
-  var MAX_BACKUPS = 10;          // <— quantidade máxima de backups guardados
-  var TAM_PARTE = 300000;        // caracteres por documento (Firestore aceita ~1 MB por documento)
+  var MAX_BACKUPS = 10;          // Quantidade máxima de backups guardados
+  var TAM_PARTE = 300000;        // Caracteres por documento Firestore
   var DB_NOME = 'jetcontrol_backups_db';
   var STORE = 'backups';
   var PREFIXO = 'jetcontrol_';
   var CHAVES_IGNORADAS = { 'jetcontrol_reset_aplicado_em': true };
+
+  // Credenciais de reserva direta para contornar restrições de fetch local (file:///)
+  var CONFIG_PADRAO = {
+    projectId: 'jetcontrol-2026-desmonte',
+    secret: 'jetcontrol-2026-desmonte2009'
+  };
 
   // ----------------------------- IndexedDB ---------------------------------
   function abrirDb() {
@@ -54,15 +46,24 @@
   var configCache = null;
   function obterConfig() {
     if (configCache) return Promise.resolve(configCache);
-    return fetch('jetcontrol-sync.js', { cache: 'no-cache' }).then(function (r) { return r.text(); }).then(function (t) {
-      var a = t.match(/FIREBASE_PROJECT_ID\s*=\s*'([^']*)'/);
-      var b = t.match(/SYNC_SECRET\s*=\s*'([^']*)'/);
-      var pid = a ? a[1] : '', sec = b ? b[1] : '';
+
+    return fetch('jetcontrol-sync.js', { cache: 'no-cache' }).then(function (r) {
+      if (!r.ok) throw new Error('Não foi possível ler jetcontrol-sync.js');
+      return r.text();
+    }).then(function (t) {
+      var a = t.match(/FIREBASE_PROJECT_ID\s*=\s*['"]([^'"]*)['"]/);
+      var b = t.match(/SYNC_SECRET\s*=\s*['"]([^'"]*)['"]/);
+      var pid = a ? a[1].trim() : '', sec = b ? b[1].trim() : '';
       var ok = pid && sec && pid.indexOf('COLOQUE-AQUI') === -1 && sec.indexOf('COLOQUE-AQUI') === -1;
-      configCache = ok ? { projectId: pid, secret: sec } : null;
+      configCache = ok ? { projectId: pid, secret: sec } : CONFIG_PADRAO;
       return configCache;
-    }).catch(function () { return null; });
+    }).catch(function () {
+      // Em caso de abertura por file:/// ou falha de leitura, usa as credenciais padrão diretamente
+      configCache = CONFIG_PADRAO;
+      return configCache;
+    });
   }
+
   function baseNuvem(cfg) {
     return 'https://firestore.googleapis.com/v1/projects/' + encodeURIComponent(cfg.projectId) +
       '/databases/(default)/documents/jetcontrol_backups/' + encodeURIComponent(cfg.secret);

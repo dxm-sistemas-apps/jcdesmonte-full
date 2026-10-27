@@ -22,10 +22,11 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Fontes Google & Chart.js -->
+  <!-- Fontes Google & Chart.js / ECharts -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -508,7 +509,7 @@
       </div>
     </section>
 
-    <!-- PAINEL DE GRÁFICOS - LINHA 2 -->
+    <!-- PAINEL DE GRÁFICOS - LINHA 2 (TIPOLOGIA, TURNOS E FUNÇÕES) -->
     <section class="dashboard-grid">
       <div class="chart-card col-4">
         <div class="chart-card-header">
@@ -520,7 +521,7 @@
       </div>
       <div class="chart-card col-4">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTurnos">Alocação de Turnos Operacionais</div>
+          <div class="chart-card-title" id="title-chartTurnos">Alocação de Turnos Operacionais (Rosca)</div>
         </div>
         <div class="chart-container">
           <canvas id="chartTurnos"></canvas>
@@ -528,11 +529,28 @@
       </div>
       <div class="chart-card col-4">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartFuncoes">Distribuição de Funções</div>
+          <div class="chart-card-title" id="title-chartFuncoes">Distribuição de Funções (Rosca)</div>
         </div>
         <div class="chart-container">
           <canvas id="chartFuncoes"></canvas>
         </div>
+      </div>
+    </section>
+
+    <!-- PAINEL DE GRÁFICOS - EXPLOSÃO SOLAR HIERÁRQUICA (SUNBURST) -->
+    <section class="dashboard-grid">
+      <div class="chart-card col-12">
+        <div class="chart-card-header">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-sun text-amber-400 text-lg"></i>
+            <div class="chart-card-title">Explosão Solar Hierárquica (Sunburst)</div>
+          </div>
+          <span class="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-mono font-bold">HIERARQUIA MULTINÍVEL</span>
+        </div>
+        <div class="kpi-subtext mb-3">
+          Navegue pelas camadas concêntricas (Ciclo &rarr; Turnos &rarr; Locais/Atividades). Clique nos anéis para expandir os valores em zoom interativo.
+        </div>
+        <div id="chartSunburstContainer" style="min-height: 480px; width: 100%;"></div>
       </div>
     </section>
 
@@ -819,6 +837,7 @@
     let chartTipologiaInstance = null;
     let chartTurnosInstance = null;
     let chartFuncoesInstance = null;
+    let instSunburst = null;
 
     let graficosExtras = {
       locais: null,
@@ -1155,6 +1174,95 @@
       return { diariaAlimentacao: parseFloat(esc.valorDiarias) || 0, diariaPernoite: 0, diariaTraslado: 0, auxAlimentacao: parseFloat(esc.valorAuxilios) || 0, auxTransporte: 0 };
     }
 
+    // RENDERIZADOR DO GRÁFICO SUNBURST HIERÁRQUICO
+    function renderizarGraficoSunburst(escalas) {
+      const dom = document.getElementById('chartSunburstContainer');
+      if (!dom) return;
+      if (instSunburst) instSunburst.dispose();
+      instSunburst = echarts.init(dom, 'dark');
+
+      const turnosMap = {
+        'MANHÃ': {},
+        'TARDE': {},
+        'NOITE': {}
+      };
+
+      (escalas || []).forEach(esc => {
+        const jM = parseFloat(esc.jetonManha) || 0;
+        const jT = parseFloat(esc.jetonTarde) || 0;
+        const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+        const subJeton = jM + jT + jN;
+
+        const turnoStr = (esc.turno || 'MANHÃ').toUpperCase();
+        const turnoKey = turnosMap[turnoStr] ? turnoStr : 'MANHÃ';
+        const local = (esc.local || esc.localManha || esc.atividade || 'OPERACIONAL').toUpperCase();
+
+        turnosMap[turnoKey][local] = (turnosMap[turnoKey][local] || 0) + (subJeton || 100);
+      });
+
+      const coresTurno = { 'MANHÃ': '#0284c7', 'TARDE': '#059669', 'NOITE': '#7c3aed' };
+
+      const dadosHierarquia = [{
+        name: 'Ciclo Vigente',
+        itemStyle: { color: '#0f172a' },
+        children: Object.keys(turnosMap).map(turno => {
+          const locais = turnosMap[turno];
+          return {
+            name: `Turno ${turno}`,
+            itemStyle: { color: coresTurno[turno] },
+            children: Object.keys(locais).map(loc => ({
+              name: loc,
+              value: Math.round(locais[loc])
+            }))
+          };
+        }).filter(t => t.children.length > 0)
+      }];
+
+      const option = {
+        backgroundColor: 'transparent',
+        tooltip: {
+          trigger: 'item',
+          formatter: (p) => {
+            const val = p.value ? `<br/>Subtotal Jeton: ${formatMoeda(p.value)}` : '';
+            return `<strong>${p.name}</strong>${val}`;
+          }
+        },
+        series: [{
+          type: 'sunburst',
+          data: dadosHierarquia[0].children.length ? dadosHierarquia : [{ name: 'Sem escalas registradas no ciclo', value: 1 }],
+          radius: [0, '92%'],
+          emphasis: { focus: 'ancestor' },
+          levels: [
+            {},
+            {
+              r0: '0%',
+              r: '24%',
+              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
+              label: { rotate: 'radial', fontSize: 11, fontWeight: 'bold', color: '#ffffff' }
+            },
+            {
+              r0: '24%',
+              r: '58%',
+              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
+              label: { rotate: 'radial', fontSize: 10, color: '#f8fafc', fontWeight: 'bold' }
+            },
+            {
+              r0: '58%',
+              r: '88%',
+              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
+              label: { position: 'outside', padding: 3, fontSize: 9, color: '#cbd5e1' }
+            }
+          ]
+        }]
+      };
+
+      instSunburst.setOption(option);
+    }
+
+    window.addEventListener('resize', () => {
+      if (instSunburst) instSunburst.resize();
+    });
+
     function carregarEProcessarDados() {
       limparConversoesGraficos();
 
@@ -1204,7 +1312,7 @@
         auxAlimentacao: 0,
         auxTransporte: 0,
         turnos: { Manhã: 0, Tarde: 0, Noite: 0 },
-        funcoes: { AGENTE: 0, Relator: 0, Motorista: 0, Coordenador: 0  }
+        funcoes: { AGENTE: 0, Relator: 0, Motorista: 0, Coordenador: 0 }
       };
 
       const ciclosFechados = JSON.parse(localStorage.getItem('jetcontrol_ciclos_fechados')) || [];
@@ -1740,6 +1848,9 @@
       renderizarGraficoFuncoes(acumuladoGeral.funcoes);
       renderizarTabelaCiclos(listaCiclosProcessados);
 
+      // Renderiza o Sunburst Hierárquico com as escalas do ciclo vigente
+      renderizarGraficoSunburst(escalasVigentes);
+
       renderizarGraficoLocais(top10Locais);
       renderizarGraficoGanhoCiclos(top6MaiorGanho);
       renderizarGraficoAtividadePorCiclo('chartAtividadeSimples', 'simples', top6Simples, 'simples', '#3b82f6', 'Atividades Simples');
@@ -1875,55 +1986,67 @@
       });
     }
 
+    // ROSCA (DONUT) POR PADRÃO: ALOCAÇÃO DE TURNOS
     function renderizarGraficoTurnos(turnos) {
       const ctx = document.getElementById('chartTurnos').getContext('2d');
       if (chartTurnosInstance) chartTurnosInstance.destroy();
 
       chartTurnosInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
           labels: ['MANHÃ', 'TARDE', 'NOITE'],
           datasets: [{
             label: 'ESCALAS',
             data: [turnos.Manhã, turnos.Tarde, turnos.Noite],
             backgroundColor: ['#f59e0b', '#3b82f6', '#8b5cf6'],
+            borderColor: '#1e293b',
+            borderWidth: 2,
             borderRadius: 6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1, precision: 0 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          cutout: '65%',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
+            }
           }
         }
       });
     }
 
+    // ROSCA (DONUT) POR PADRÃO: DISTRIBUIÇÃO DE FUNÇÕES
     function renderizarGraficoFuncoes(funcoes) {
       const ctx = document.getElementById('chartFuncoes').getContext('2d');
       if (chartFuncoesInstance) chartFuncoesInstance.destroy();
 
       chartFuncoesInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
-          labels: ['AGENTE', 'RELATOR', 'MOTORISTA', 'COORDENADOR' ],
+          labels: ['AGENTE', 'RELATOR', 'MOTORISTA', 'COORDENADOR'],
           datasets: [{
             label: 'ATUAÇÕES',
-            data: [funcoes.AGENTE, funcoes.Relator, funcoes.Motorista, funcoes.Coordenador ],
-            backgroundColor: '#10b981',
+            data: [funcoes.AGENTE, funcoes.Relator, funcoes.Motorista, funcoes.Coordenador],
+            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'],
+            borderColor: '#1e293b',
+            borderWidth: 2,
             borderRadius: 6
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1, precision: 0 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          cutout: '65%',
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
+            }
           }
         }
       });
@@ -2081,9 +2204,11 @@
       if (!st) { st = document.createElement('style'); st.id = 'estilo-colunas-historico'; document.head.appendChild(st); }
       const t = '#tabela-historico-ciclos';
       const soma = COLUNAS_HISTORICO.map(c => `${c.largura}`).join(' + ');
-      let css = `${t} { table-layout: fixed; width: calc(${soma}); min-width: 100%; }\n`;
+      let css = `${t} { table-layout: fixed; width: calc(${soma}); min-width: 100%; }
+`;
       COLUNAS_HISTORICO.forEach((c, i) => {
-        css += `${t} th:nth-child(${i + 1}), ${t} td:nth-child(${i + 1}) { width: ${c.largura}; text-align: ${c.alinhar}; white-space: ${c.quebra === 'nowrap' ? 'nowrap' : 'normal'}; overflow-wrap: anywhere; }\n`;
+        css += `${t} th:nth-child(${i + 1}), ${t} td:nth-child(${i + 1}) { width: ${c.largura}; text-align: ${c.alinhar}; white-space: ${c.quebra === 'nowrap' ? 'nowrap' : 'normal'}; overflow-wrap: anywhere; }
+`;
       });
       st.textContent = css;
     }
@@ -2162,7 +2287,7 @@
       }
     }
 
-    const TIPOS_GRAFICO = [['original', 'Padrão'], ['bar', 'Barras'], ['pie', 'Pizza'], ['line', 'Linha'], ['hist', 'Histograma']];
+    const TIPOS_GRAFICO = [['original', 'Padrão'], ['bar', 'Barras'], ['doughnut', 'rosca'], ['line', 'Linha'], ['hist', 'Histograma']];
     const CHAVE_TIPOS_GRAFICO = 'jetcontrol_dash_tipos_grafico';
     const PALETA_FATIAS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444', '#ec4899', '#84cc16', '#f97316', '#14b8a6'];
     const snapshotsGraficos = {};
@@ -2205,20 +2330,25 @@
       if (tipo === 'original') {
         return { type: snap.type, data: { labels: snap.labels, datasets: clonar() }, options: optsOrig };
       }
-      if (tipo === 'pie') {
+      if (tipo === 'doughnut') {
         const n = snap.labels.length;
         const ds = clonar().map(d => ({
-          label: d.label, data: d.data,
+          label: d.label,
+          data: d.data,
           backgroundColor: Array.from({ length: n }, (_, i) => PALETA_FATIAS[i % PALETA_FATIAS.length]),
-          borderColor: '#0f172a', borderWidth: 2
+          borderColor: '#1e293b',
+          borderWidth: 2,
+          borderRadius: 6
         }));
         return {
-          type: 'pie',
+          type: 'doughnut',
           data: { labels: snap.labels.map(rotuloPlano), datasets: ds },
           options: {
-            responsive: true, maintainAspectRatio: false,
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '68%',
             plugins: {
-              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10 } },
+              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } } },
               tooltip: { callbacks: { label: (item) => `${item.dataset.label ? item.dataset.label + ' — ' : ''}${item.label}: ${fmtValor(item.parsed)}` } }
             }
           }
@@ -2301,7 +2431,7 @@
             partes.push(k + '=' + localStorage.getItem(k));
           }
         }
-        return partes.sort().join('\u0001');
+        return partes.sort().join(' ');
       } catch (_) { return ''; }
     }
     let assinaturaRenderizada = null;

@@ -264,6 +264,39 @@
     .badge-green { background: rgba(16, 185, 129, 0.2); color: #34d399; }
     .badge-yellow { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
   </style>
+
+  <!-- Oculta o aviso "sincronizando... N pendente" (gerado por jetcontrol-sync.js) -->
+  <style id="jet-oculta-sync">.jet-sync-oculto{display:none !important;}</style>
+  <script>
+  (function () {
+    var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
+    var agendado = false;
+    function varrer() {
+      agendado = false;
+      if (!document.body) return;
+      var els = document.body.querySelectorAll('*');
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+        if (el.children.length > 3) continue;
+        var t = el.textContent || '';
+        if (t.length > 100 || !RE.test(t)) continue;
+        var alvo = el;
+        while (alvo.parentElement && alvo.parentElement !== document.body) {
+          var pt = alvo.parentElement.textContent || '';
+          if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+        }
+        alvo.classList.add('jet-sync-oculto');
+      }
+    }
+    function agendar() { if (!agendado) { agendado = true; (window.requestAnimationFrame || setTimeout)(varrer); } }
+    function iniciar() {
+      varrer();
+      new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+  })();
+  </script>
 </head>
 
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">
@@ -654,6 +687,19 @@
       </div>
     </section>
 
+    <!-- TOP 12 ESCALAS COM MAIS DE 2 ATIVIDADES -->
+    <section class="dashboard-grid">
+      <div class="chart-card col-12">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="title-chartTop12Atividades">Top 12 Escalas com 2 ou Mais Atividades no Mesmo Período</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="chartTop12Atividades"></canvas>
+        </div>
+        <div id="tabelaTop12Atividades" style="overflow-x:auto; margin-top:12px;"></div>
+      </div>
+    </section>
+
     <!-- PAINEL DE GRÁFICOS - LINHA 7 (RANKINGS DE CICLOS) -->
     <section class="dashboard-grid">
       <div class="chart-card col-6">
@@ -849,6 +895,7 @@
       top10Horas: null,
       top10ValorHora: null,
       top10ValorRealJetonEscala: null,
+      top12Atividades: null,
       top6ValorRealJetonCiclo: null,
       top6ValorMedioEscala: null,
       top6ValorMedioAtividade: null,
@@ -1021,8 +1068,8 @@
 
         card.querySelectorAll('p').forEach(p => {
           const forte = p.querySelector('strong');
-          if (forte && forte.textContent.trim() === 'LOCAL:') {
-            const localTexto = p.textContent.replace('LOCAL:', '').trim();
+          if (forte && /^LOCAL(\s*\(\d+ª ATIVIDADE\))?:$/.test(forte.textContent.trim())) {
+            const localTexto = p.textContent.replace(forte.textContent, '').trim();
             if (localTexto) metricas.locais.push(localTexto);
           }
         });
@@ -1070,7 +1117,7 @@
 
         const jetonBruto = jetonTxt !== null ? parseMoeda(jetonTxt) : 0;
         const diarias = computarDiariasEAuxilios && diariasTxt !== null ? parseMoeda(diariasTxt) : 0;
-        const auxilios = computarDiariasEAuxilios && auxiliosTxt !== null ? parseMoeda(auxliosTxt) : 0;
+        const auxilios = computarDiariasEAuxilios && auxiliosTxt !== null ? parseMoeda(auxiliosTxt) : 0;
 
         let horas = 0;
         if (horasTxt) {
@@ -1084,12 +1131,25 @@
           : (realTxt !== null ? parseMoeda(realTxt) : ((jetonBruto * 0.78) + diarias + auxilios));
         const valorHora = horas > 0 ? (valorRealAposIR / horas) : 0;
 
+        let atividades = 0, periodoAtiv = '';
+        [['i.fa-sun', 'MANHÃ'], ['i.fa-cloud-sun', 'TARDE'], ['i.fa-moon', 'NOITE']].forEach(([sel, nome]) => {
+          const ic = card.querySelector(sel);
+          const forteP = ic && ic.closest('strong');
+          const bloco = forteP && forteP.parentElement && forteP.parentElement.parentElement;
+          if (!bloco) return;
+          const q = 1 + bloco.querySelectorAll('.atividade-extra').length;
+          if (q > atividades) { atividades = q; periodoAtiv = nome; }
+        });
+
         lista.push({
           data: dataTexto,
           cicloNome: nomeCiclo,
           horas,
           valorHora,
-          valorRealJeton: jetonBruto * 0.78
+          valorRealJeton: jetonBruto * 0.78,
+          jetonBruto,
+          atividades,
+          periodoAtiv
         });
       });
 
@@ -1119,6 +1179,28 @@
         if (c.length >= 7) soma += parseMoeda(c[5].textContent);
       });
       return soma;
+    }
+
+    // Total de atividades de uma escala: 1ª atividade de cada período + atividades extras
+    function totalAtividadesEscalaDash(esc) {
+      let total = 0;
+      ['Manha', 'Tarde', 'Noite'].forEach(P => {
+        if (esc['local' + P]) total++;
+        (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) total++; });
+      });
+      if (!total && esc.local) total = 1;
+      return total;
+    }
+
+    // Maior quantidade de atividades em um único período (e qual período)
+    function maxAtividadesPeriodoDash(esc) {
+      let max = 0, per = '';
+      [['Manha', 'MANHÃ'], ['Tarde', 'TARDE'], ['Noite', 'NOITE']].forEach(([P, nome]) => {
+        let q = esc['local' + P] ? 1 : 0;
+        (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) q++; });
+        if (q > max) { max = q; per = nome; }
+      });
+      return { max, per };
     }
 
     function registrarLocal(mapaLocais, nomeLocal) {
@@ -1569,7 +1651,10 @@
           cicloNome: nomeCicloVigente,
           horas: horasDetalhe,
           valorHora: horasDetalhe > 0 ? (valorRealAposIRDetalhe / horasDetalhe) : 0,
-          valorRealJeton: jetonBrutoDetalhe * 0.78
+          valorRealJeton: jetonBrutoDetalhe * 0.78,
+          jetonBruto: jetonBrutoDetalhe,
+          atividades: maxAtividadesPeriodoDash(escala).max,
+          periodoAtiv: maxAtividadesPeriodoDash(escala).per
         });
 
         if (escala.homeOffice !== true) {
@@ -1832,6 +1917,11 @@
       const top10ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 10);
       const top10ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 10);
 
+      const top12Atividades = listaEscalasDetalhadas
+        .filter(e => (e.atividades || 0) >= 2)
+        .sort((a, b) => (b.atividades - a.atividades) || (b.valorHora - a.valorHora))
+        .slice(0, 12);
+
       const top6ValorRealJetonCiclo = top6PorTipologia('valorRealDeJeton');
       const top6ValorMedioEscala = top6PorTipologia('valorMedioEscala');
       const top6ValorMedioAtividade = top6PorTipologia('valorMedioAtividade');
@@ -1862,6 +1952,8 @@
       renderizarGraficoTopEscalas('chartTop10Horas', 'top10Horas', top10Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
       renderizarGraficoTopEscalas('chartTop10ValorHora', 'top10ValorHora', top10ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
       renderizarGraficoTopEscalas('chartTop10ValorRealJetonEscala', 'top10ValorRealJetonEscala', top10ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
+
+      renderizarGraficoTop12Atividades(top12Atividades);
 
       renderizarGraficoAtividadePorCiclo('chartTop6ValorRealJetonCiclo', 'top6ValorRealJetonCiclo', top6ValorRealJetonCiclo, 'valorRealDeJeton', '#10b981', 'VALOR REAL DE JETON (R$)');
       renderizarGraficoAtividadePorCiclo('chartTop6ValorMedioEscala', 'top6ValorMedioEscala', top6ValorMedioEscala, 'valorMedioEscala', '#3b82f6', 'VALOR MÉDIO POR ESCALA (R$)');
@@ -2179,6 +2271,75 @@
           }
         }
       });
+    }
+
+    function renderizarGraficoTop12Atividades(lista) {
+      const cv = document.getElementById('chartTop12Atividades');
+      const ctx = cv.getContext('2d');
+      if (graficosExtras.top12Atividades) graficosExtras.top12Atividades.destroy();
+      const tabela = document.getElementById('tabelaTop12Atividades');
+
+      if (!lista.length) {
+        graficosExtras.top12Atividades = null;
+        cv.parentElement.style.display = 'none';
+        tabela.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px;">NENHUMA ESCALA COM 2 OU MAIS ATIVIDADES NO MESMO PERÍODO REGISTRADA ATÉ O MOMENTO.</div>';
+        return;
+      }
+      cv.parentElement.style.display = '';
+
+      const labels = lista.map(e => [`${e.data} -`, ...rotuloPeriodo(e.cicloNome)]);
+      graficosExtras.top12Atividades = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'QTD. DE ATIVIDADES',
+            data: lista.map(e => e.atividades),
+            backgroundColor: '#8b5cf6',
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (item) => {
+                  const e = lista[item.dataIndex];
+                  const h = Math.floor(e.horas);
+                  const m = Math.round((e.horas - h) * 60);
+                  return [
+                    `ATIVIDADES (${e.periodoAtiv}): ${e.atividades}`,
+                    `HORAS TRABALHADAS: ${h}H ${String(m).padStart(2, '0')}M`,
+                    `VALOR POR HORA: ${formatMoeda(e.valorHora)}`,
+                    `JETON: ${formatMoeda(e.jetonBruto)}`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8', precision: 0, stepSize: 1 } },
+            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+          }
+        }
+      });
+
+      const th = 'padding:8px 10px;text-align:center;color:#94a3b8;font-size:11px;text-transform:uppercase;border-bottom:1px solid #334155;white-space:nowrap;';
+      const td = 'padding:8px 10px;text-align:center;font-size:12px;color:#e2e8f0;border-bottom:1px solid #1e293b;white-space:nowrap;';
+      tabela.innerHTML = `<table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="${th}">#</th><th style="${th}">Data</th><th style="${th}">Ciclo</th><th style="${th}">Período</th><th style="${th}">Qtd. de Atividades</th>
+          <th style="${th}">Horas Trabalhadas</th><th style="${th}">Valor por Hora</th><th style="${th}">Valor de Jeton</th>
+        </tr></thead><tbody>
+        ${lista.map((e, i) => {
+          const h = Math.floor(e.horas);
+          const m = Math.round((e.horas - h) * 60);
+          return `<tr><td style="${td}">${i + 1}</td><td style="${td}">${e.data}</td><td style="${td}">${rotuloPeriodo(e.cicloNome).join(' ')}</td><td style="${td}">${e.periodoAtiv}</td><td style="${td}font-weight:700;">${e.atividades}</td><td style="${td}">${h}H ${String(m).padStart(2, '0')}M</td><td style="${td}">${formatMoeda(e.valorHora)}</td><td style="${td}">${formatMoeda(e.jetonBruto)}</td></tr>`;
+        }).join('')}
+        </tbody></table>`;
     }
 
     const COLUNAS_HISTORICO = [

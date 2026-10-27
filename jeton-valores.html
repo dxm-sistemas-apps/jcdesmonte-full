@@ -51,6 +51,39 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
+
+  <!-- Oculta o aviso "sincronizando... N pendente" (gerado por jetcontrol-sync.js) -->
+  <style id="jet-oculta-sync">.jet-sync-oculto{display:none !important;}</style>
+  <script>
+  (function () {
+    var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
+    var agendado = false;
+    function varrer() {
+      agendado = false;
+      if (!document.body) return;
+      var els = document.body.querySelectorAll('*');
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+        if (el.children.length > 3) continue;
+        var t = el.textContent || '';
+        if (t.length > 100 || !RE.test(t)) continue;
+        var alvo = el;
+        while (alvo.parentElement && alvo.parentElement !== document.body) {
+          var pt = alvo.parentElement.textContent || '';
+          if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+        }
+        alvo.classList.add('jet-sync-oculto');
+      }
+    }
+    function agendar() { if (!agendado) { agendado = true; (window.requestAnimationFrame || setTimeout)(varrer); } }
+    function iniciar() {
+      varrer();
+      new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+  })();
+  </script>
 </head>
 
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">

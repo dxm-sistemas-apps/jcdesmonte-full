@@ -52,6 +52,39 @@
      dados salvos/sincronizados fiquem em maiúsculas, e não só a exibição. */
   body, input, textarea, select, button { text-transform: uppercase; }
 </style>
+
+  <!-- Oculta o aviso "sincronizando... N pendente" (gerado por jetcontrol-sync.js) -->
+  <style id="jet-oculta-sync">.jet-sync-oculto{display:none !important;}</style>
+  <script>
+  (function () {
+    var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
+    var agendado = false;
+    function varrer() {
+      agendado = false;
+      if (!document.body) return;
+      var els = document.body.querySelectorAll('*');
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+        if (el.children.length > 3) continue;
+        var t = el.textContent || '';
+        if (t.length > 100 || !RE.test(t)) continue;
+        var alvo = el;
+        while (alvo.parentElement && alvo.parentElement !== document.body) {
+          var pt = alvo.parentElement.textContent || '';
+          if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+        }
+        alvo.classList.add('jet-sync-oculto');
+      }
+    }
+    function agendar() { if (!agendado) { agendado = true; (window.requestAnimationFrame || setTimeout)(varrer); } }
+    function iniciar() {
+      varrer();
+      new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, characterData: true });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+  })();
+  </script>
 </head>
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased relative pb-20">
 
@@ -430,29 +463,27 @@
 
         <!-- TURNO MANHÃ -->
         <div class="bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-black text-brand-500 uppercase tracking-wide flex items-center gap-2">
-            <i class="fa-solid fa-sun"></i> Período da Manhã
-          </h3>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-black text-brand-500 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-sun"></i> Período da Manhã
+            </h3>
+            <div class="flex items-center gap-2">
+              <label for="qtdAtividadeManha" class="text-xs uppercase font-bold text-slate-400">Qtd. de Atividade</label>
+              <input type="number" id="qtdAtividadeManha" min="1" max="6" value="1" inputmode="numeric" class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-white text-sm text-center focus:outline-none focus:border-brand-500" oninput="renderizarAtividadesExtras('Manha')" onchange="renderizarAtividadesExtras('Manha')">
+            </div>
+          </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div id="wrapperLocalManha" class="lg:col-span-5">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Manhã</label>
+            <div id="wrapperLocalManha" class="lg:col-span-6">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Manhã <span class="rotulo-ativ-Manha"></span></label>
               <input type="text" id="localManha" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE MANHÃ (CONDICIONAL) -->
-            <div id="wrapperPernoiteManha" class="lg:col-span-4 hidden">
+            <div id="wrapperPernoiteManha" class="lg:col-span-6 hidden">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Pernoite (Manhã) *</label>
               <select id="pernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
                 <option value="" selected disabled>SELECIONE UMA OPÇÃO</option>
                 <option value="SIM">SIM</option>
                 <option value="NAO">NÃO</option>
-              </select>
-            </div>
-            <div class="lg:col-span-3">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Manhã</label>
-              <select id="jetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
-                <option value="" disabled selected>ESCOLHA O VALOR</option>
-                <option value="100.00">R$ 100,00</option>
-                <option value="220.00">R$ 220,00</option>
               </select>
             </div>
           </div>
@@ -467,33 +498,42 @@
               </div>
             </div>
           </div>
+          <div id="extrasAtividadesManha" class="space-y-4"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-4">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Manhã</label>
+              <select id="jetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
+                <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="100.00">R$ 100,00</option>
+                <option value="220.00">R$ 220,00</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- TURNO TARDE -->
         <div class="bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-black text-amber-500 uppercase tracking-wide flex items-center gap-2">
-            <i class="fa-solid fa-cloud-sun"></i> Período da Tarde
-          </h3>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-black text-amber-500 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-cloud-sun"></i> Período da Tarde
+            </h3>
+            <div class="flex items-center gap-2">
+              <label for="qtdAtividadeTarde" class="text-xs uppercase font-bold text-slate-400">Qtd. de Atividade</label>
+              <input type="number" id="qtdAtividadeTarde" min="1" max="6" value="1" inputmode="numeric" class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-white text-sm text-center focus:outline-none focus:border-brand-500" oninput="renderizarAtividadesExtras('Tarde')" onchange="renderizarAtividadesExtras('Tarde')">
+            </div>
+          </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div id="wrapperLocalTarde" class="lg:col-span-5">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Tarde</label>
+            <div id="wrapperLocalTarde" class="lg:col-span-6">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Tarde <span class="rotulo-ativ-Tarde"></span></label>
               <input type="text" id="localTarde" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE TARDE (CONDICIONAL) -->
-            <div id="wrapperPernoiteTarde" class="lg:col-span-4 hidden">
+            <div id="wrapperPernoiteTarde" class="lg:col-span-6 hidden">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Pernoite (Tarde) *</label>
               <select id="pernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
                 <option value="" selected disabled>SELECIONE UMA OPÇÃO</option>
                 <option value="SIM">SIM</option>
                 <option value="NAO">NÃO</option>
-              </select>
-            </div>
-            <div class="lg:col-span-3">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Tarde</label>
-              <select id="jetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
-                <option value="" disabled selected>ESCOLHA O VALOR</option>
-                <option value="100.00">R$ 100,00</option>
-                <option value="220.00">R$ 220,00</option>
               </select>
             </div>
           </div>
@@ -508,33 +548,42 @@
               </div>
             </div>
           </div>
+          <div id="extrasAtividadesTarde" class="space-y-4"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-4">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Tarde</label>
+              <select id="jetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
+                <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="100.00">R$ 100,00</option>
+                <option value="220.00">R$ 220,00</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         <!-- TURNO NOITE -->
         <div class="bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-800/80 space-y-4">
-          <h3 class="text-sm font-black text-indigo-400 uppercase tracking-wide flex items-center gap-2">
-            <i class="fa-solid fa-moon"></i> Período da Noite
-          </h3>
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h3 class="text-sm font-black text-indigo-400 uppercase tracking-wide flex items-center gap-2">
+              <i class="fa-solid fa-moon"></i> Período da Noite
+            </h3>
+            <div class="flex items-center gap-2">
+              <label for="qtdAtividadeNoite" class="text-xs uppercase font-bold text-slate-400">Qtd. de Atividade</label>
+              <input type="number" id="qtdAtividadeNoite" min="1" max="6" value="1" inputmode="numeric" class="w-20 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-white text-sm text-center focus:outline-none focus:border-brand-500" oninput="renderizarAtividadesExtras('Noite')" onchange="renderizarAtividadesExtras('Noite')">
+            </div>
+          </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div id="wrapperLocalNoite" class="lg:col-span-5">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Noite</label>
+            <div id="wrapperLocalNoite" class="lg:col-span-6">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Noite <span class="rotulo-ativ-Noite"></span></label>
               <input type="text" id="localNoite" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE NOITE (CONDICIONAL) -->
-            <div id="wrapperPernoiteNoite" class="lg:col-span-4 hidden">
+            <div id="wrapperPernoiteNoite" class="lg:col-span-6 hidden">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Pernoite (Noite) *</label>
               <select id="pernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
                 <option value="" selected disabled>SELECIONE UMA OPÇÃO</option>
                 <option value="SIM">SIM</option>
                 <option value="NAO">NÃO</option>
-              </select>
-            </div>
-            <div class="lg:col-span-3">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Noite</label>
-              <select id="jetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()" onchange="gerenciarCamposPernoite()">
-                <option value="" disabled selected>ESCOLHA O VALOR</option>
-                <option value="100.00">R$ 100,00</option>
-                <option value="220.00">R$ 220,00</option>
               </select>
             </div>
           </div>
@@ -547,6 +596,17 @@
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
               </div>
+            </div>
+          </div>
+          <div id="extrasAtividadesNoite" class="space-y-4"></div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-4">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Noite</label>
+              <select id="jetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()" onchange="gerenciarCamposPernoite()">
+                <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="100.00">R$ 100,00</option>
+                <option value="220.00">R$ 220,00</option>
+              </select>
             </div>
           </div>
           
@@ -787,7 +847,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- MANHÃ -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
             <input type="text" id="modalLocalManha" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
@@ -801,10 +861,11 @@
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="MOTORISTA">MOTOR.</label>
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="RELATOR">RELATOR</label>
             </div>
+            <div id="modalExtrasManha" class="space-y-2"></div>
           </div>
           <!-- TARDE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
             <input type="text" id="modalLocalTarde" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
@@ -818,10 +879,11 @@
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="MOTORISTA">MOTOR.</label>
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="RELATOR">RELATOR</label>
             </div>
+            <div id="modalExtrasTarde" class="space-y-2"></div>
           </div>
           <!-- NOITE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
             <input type="text" id="modalLocalNoite" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
@@ -835,6 +897,7 @@
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="MOTORISTA">MOTOR.</label>
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="RELATOR">RELATOR</label>
             </div>
+            <div id="modalExtrasNoite" class="space-y-2"></div>
             <select id="modalPercepcaoQuartoJeton" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">4º Jeton: N/A</option><option value="SIM">4º Jeton: SIM</option><option value="NAO">4º Jeton: NÃO</option>
             </select>
@@ -1277,6 +1340,12 @@
         pernoiteNoite: document.getElementById('pernoiteNoite').value,
         jetonNoite: document.getElementById('jetonNoite').value,
         funcaoNoite: Array.from(document.querySelectorAll('input[name="funcaoNoite"]:checked')).map(cb => cb.value),
+        qtdAtividadeManha: qtdAtividadePeriodo('Manha'),
+        qtdAtividadeTarde: qtdAtividadePeriodo('Tarde'),
+        qtdAtividadeNoite: qtdAtividadePeriodo('Noite'),
+        atividadesExtrasManha: lerAtividadesExtras('Manha'),
+        atividadesExtrasTarde: lerAtividadesExtras('Tarde'),
+        atividadesExtrasNoite: lerAtividadesExtras('Noite'),
         percepcaoQuartoJeton: document.getElementById('percepcaoQuartoJeton').value,
         notaVtr: document.getElementById('notaVtr').value,
         notaLocalManha: document.getElementById('notaLocalManha').value,
@@ -1309,6 +1378,7 @@
         document.getElementById('jetonTarde').value = esc.jetonTarde || '';
         document.getElementById('jetonNoite').value = esc.jetonNoite || '';
         document.getElementById('percepcaoQuartoJeton').value = esc.percepcaoQuartoJeton || '';
+        PERIODOS_ATIV.forEach(P => definirAtividadesPeriodo(P, esc['qtdAtividade' + P], esc['atividadesExtras' + P]));
         gerenciarCamposPernoite();
 
         document.querySelectorAll('input[name="funcaoManha"]').forEach(cb => { cb.checked = esc.funcaoManha?.includes(cb.value); });
@@ -1329,6 +1399,94 @@
     document.getElementById('formEscala').addEventListener('change', salvarRascunhoForm);
     window.addEventListener('beforeunload', () => { try { salvarRascunhoForm(); } catch (_) {} });
     window.addEventListener('pagehide', () => { try { salvarRascunhoForm(); } catch (_) {} });
+
+
+    // ===== ATIVIDADES MÚLTIPLAS POR PERÍODO =====
+    const PERIODOS_ATIV = ['Manha', 'Tarde', 'Noite'];
+    const FUNCOES_ATIV = ['AGENTE', 'COORDENADOR', 'MOTORISTA', 'RELATOR'];
+
+    function qtdAtividadePeriodo(P) {
+      const el = document.getElementById('qtdAtividade' + P);
+      let q = parseInt(el ? el.value : '1', 10);
+      if (!q || q < 1) q = 1;
+      if (q > 6) q = 6;
+      return q;
+    }
+
+    function lerAtividadesExtras(P) {
+      const q = qtdAtividadePeriodo(P);
+      const lista = [];
+      for (let i = 2; i <= q; i++) {
+        const l = document.getElementById('localExtra' + P + '_' + i);
+        if (!l) { lista.push({ local: '', funcao: [] }); continue; }
+        lista.push({
+          local: l.value.trim(),
+          funcao: Array.from(document.querySelectorAll('input[name="funcaoExtra' + P + '_' + i + '"]:checked')).map(cb => cb.value)
+        });
+      }
+      return lista;
+    }
+
+    function renderizarAtividadesExtras(P, dados) {
+      const cont = document.getElementById('extrasAtividades' + P);
+      if (!cont) return;
+      const q = qtdAtividadePeriodo(P);
+      const atuais = Array.isArray(dados) ? dados : lerAtividadesExtras(P);
+      const nome = { Manha: 'Manhã', Tarde: 'Tarde', Noite: 'Noite' }[P];
+      let html = '';
+      for (let i = 2; i <= q; i++) {
+        const a = atuais[i - 2] || { local: '', funcao: [] };
+        const localEsc = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        html += `
+          <div class="space-y-3 pt-3 border-t border-slate-800/80">
+            <div>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - ${nome} (${i}ª ATIVIDADE)</label>
+              <input type="text" id="localExtra${P}_${i}" list="locais-historico" value="${localEsc}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - ${nome} (${i}ª ATIVIDADE)</label>
+              <div class="flex flex-wrap gap-3 pt-1">
+                ${FUNCOES_ATIV.map(f => `<label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>${f}</span></label>`).join('')}
+              </div>
+            </div>
+          </div>`;
+      }
+      cont.innerHTML = html;
+      document.querySelectorAll('.rotulo-ativ-' + P).forEach(sp => { sp.textContent = q > 1 ? '(1ª ATIVIDADE)' : ''; });
+    }
+
+    function definirAtividadesPeriodo(P, qtd, extras) {
+      const el = document.getElementById('qtdAtividade' + P);
+      if (el) el.value = (parseInt(qtd, 10) >= 1) ? Math.min(parseInt(qtd, 10), 6) : 1;
+      renderizarAtividadesExtras(P, Array.isArray(extras) ? extras : []);
+    }
+
+    // Todas as atividades de um período: [{local, funcao[]}] (1ª = campos originais, demais = extras)
+    function obterAtividadesPeriodo(esc, P) {
+      const lista = [];
+      const l1 = esc['local' + P];
+      if (l1) lista.push({ local: l1, funcao: esc['funcao' + P] || [] });
+      (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) lista.push({ local: a.local, funcao: a.funcao || [] }); });
+      return lista;
+    }
+
+    function totalAtividadesEscala(esc) {
+      return PERIODOS_ATIV.reduce((acc, P) => acc + obterAtividadesPeriodo(esc, P).length, 0);
+    }
+
+    // Locais de todas as atividades (inclui extras) para estatísticas/busca
+    function todosLocaisEscala(esc) {
+      const out = [];
+      PERIODOS_ATIV.forEach(P => obterAtividadesPeriodo(esc, P).forEach(a => out.push(a.local)));
+      if (!out.length && esc.local) out.push(esc.local);
+      return out;
+    }
+
+    function extrasComoTurnos(esc) {
+      const out = [];
+      PERIODOS_ATIV.forEach(P => (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) out.push({ local: a.local, pernoite: '' }); }));
+      return out;
+    }
 
     function gerenciarCamposPernoite() {
       const periodos = [
@@ -1840,6 +1998,7 @@
         if (esc.localManha) locaisSet.add(esc.localManha);
         if (esc.localTarde) locaisSet.add(esc.localTarde);
         if (esc.localNoite) locaisSet.add(esc.localNoite);
+        PERIODOS_ATIV.forEach(P => (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) locaisSet.add(a.local); }));
       });
 
       const datalist = document.getElementById('locais-historico');
@@ -1981,6 +2140,13 @@
       const funcaoTarde = Array.from(document.querySelectorAll('input[name="funcaoTarde"]:checked')).map(cb => cb.value);
       const funcaoNoite = Array.from(document.querySelectorAll('input[name="funcaoNoite"]:checked')).map(cb => cb.value);
 
+      const qtdAtividadeManha = qtdAtividadePeriodo('Manha');
+      const qtdAtividadeTarde = qtdAtividadePeriodo('Tarde');
+      const qtdAtividadeNoite = qtdAtividadePeriodo('Noite');
+      const atividadesExtrasManha = lerAtividadesExtras('Manha');
+      const atividadesExtrasTarde = lerAtividadesExtras('Tarde');
+      const atividadesExtrasNoite = lerAtividadesExtras('Noite');
+
       if (!data) {
         await alertarCampoObrigatorio('dataAtividade', 'PREENCHA O CAMPO DATA DA ATIVIDADE.');
         return;
@@ -2047,6 +2213,15 @@
         if (!localNoite) { await alertarCampoObrigatorio('localNoite', 'PREENCHA O CAMPO LOCAL DA ATIVIDADE - NOITE.'); return; }
         if (!jetonNoiteVal) { await alertarCampoObrigatorio('jetonNoite', 'SELECIONE O VALOR DO JETON - NOITE.'); return; }
         if (funcaoNoite.length === 0) { await alertarCampoObrigatorio(document.querySelector('input[name="funcaoNoite"]'), 'SELECIONE PELO MENOS UMA FUNÇÃO - NOITE.'); return; }
+      }
+
+      for (const [P, nomeP, tem, extras] of [['Manha', 'MANHÃ', temManha, atividadesExtrasManha], ['Tarde', 'TARDE', temTarde, atividadesExtrasTarde], ['Noite', 'NOITE', temNoite, atividadesExtrasNoite]]) {
+        if (!tem) continue;
+        for (let k = 0; k < extras.length; k++) {
+          const n = k + 2;
+          if (!extras[k].local) { await alertarCampoObrigatorio('localExtra' + P + '_' + n, `PREENCHA O CAMPO LOCAL DA ATIVIDADE - ${nomeP} (${n}ª ATIVIDADE).`); return; }
+          if (extras[k].funcao.length === 0) { await alertarCampoObrigatorio(document.querySelector('input[name="funcaoExtra' + P + '_' + n + '"]'), `SELECIONE PELO MENOS UMA FUNÇÃO - ${nomeP} (${n}ª ATIVIDADE).`); return; }
+        }
       }
 
       const locaisElegiveis = [
@@ -2131,6 +2306,12 @@
         funcaoManha: temManha ? funcaoManha : [],
         funcaoTarde: temTarde ? funcaoTarde : [],
         funcaoNoite: temNoite ? funcaoNoite : [],
+        qtdAtividadeManha: temManha ? qtdAtividadeManha : 0,
+        qtdAtividadeTarde: temTarde ? qtdAtividadeTarde : 0,
+        qtdAtividadeNoite: temNoite ? qtdAtividadeNoite : 0,
+        atividadesExtrasManha: temManha ? atividadesExtrasManha : [],
+        atividadesExtrasTarde: temTarde ? atividadesExtrasTarde : [],
+        atividadesExtrasNoite: temNoite ? atividadesExtrasNoite : [],
         jetonManha: temManha ? jManha : 0,
         jetonTarde: temTarde ? jTarde : 0,
         jetonNoite: temNoite ? jNoite : 0,
@@ -2505,8 +2686,43 @@
       await mostrarAlertaEstilizado('CICLO FECHADO E ARQUIVADO COM SUCESSO NA PÁGINA CICLOS. OS DADOS DO NOVO CICLO ESTÃO LIMPOS. VOCÊ SERÁ REDIRECIONADO PARA A PÁGINA INICIAL PARA INICIAR UM NOVO CICLO.', 'CICLO FECHADO');
     }
 
+
+    // ===== MODAL (CICLO FECHADO): ATIVIDADES EXTRAS =====
+    function qtdAtividadeModal(P) {
+      let q = parseInt(document.getElementById('modalQtdAtividade' + P).value, 10);
+      if (!q || q < 1) q = 1;
+      return Math.min(q, 6);
+    }
+    function lerExtrasModal(P) {
+      const lista = [];
+      for (let i = 2; i <= qtdAtividadeModal(P); i++) {
+        const l = document.getElementById('modalLocalExtra' + P + '_' + i);
+        lista.push({
+          local: l ? l.value.trim() : '',
+          funcao: Array.from(document.querySelectorAll('input[name="modalFuncaoExtra' + P + '_' + i + '"]:checked')).map(cb => cb.value)
+        });
+      }
+      return lista;
+    }
+    function renderizarExtrasModal(P, dados) {
+      const cont = document.getElementById('modalExtras' + P);
+      if (!cont) return;
+      const atuais = Array.isArray(dados) ? dados : lerExtrasModal(P);
+      let html = '';
+      for (let i = 2; i <= qtdAtividadeModal(P); i++) {
+        const a = atuais[i - 2] || { local: '', funcao: [] };
+        const v = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        html += `<div class="pt-2 border-t border-slate-800/80 space-y-1">
+          <input type="text" id="modalLocalExtra${P}_${i}" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <div class="flex flex-wrap gap-2 text-[11px] text-slate-300">${FUNCOES_ATIV.map(f => `<label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div>
+        </div>`;
+      }
+      cont.innerHTML = html;
+    }
+
     function resetarFormularioEscala() {
       document.getElementById('formEscala').reset();
+      PERIODOS_ATIV.forEach(P => definirAtividadesPeriodo(P, 1, []));
       document.getElementById('editIndex').value = '-1';
       document.getElementById('formTituloModo').innerText = 'Organograma da Escala';
       document.getElementById('btnSalvarTexto').innerText = 'SALVAR ESCALA';
@@ -2543,6 +2759,7 @@
       document.getElementById('localManha').value = esc.localManha || '';
       document.getElementById('localTarde').value = esc.localTarde || '';
       document.getElementById('localNoite').value = esc.localNoite || '';
+      PERIODOS_ATIV.forEach(P => definirAtividadesPeriodo(P, esc['qtdAtividade' + P] || (obterAtividadesPeriodo(esc, P).length || 1), esc['atividadesExtras' + P]));
       
       gerenciarCamposPernoite();
 
@@ -2619,12 +2836,14 @@
         const lManha = (esc.localManha || '').toLowerCase();
         const lTarde = (esc.localTarde || '').toLowerCase();
         const lNoite = (esc.localNoite || '').toLowerCase();
-        const matchLocal = lManha.includes(termoBusca) || lTarde.includes(termoBusca) || lNoite.includes(termoBusca);
+        const matchLocal = lManha.includes(termoBusca) || lTarde.includes(termoBusca) || lNoite.includes(termoBusca)
+          || todosLocaisEscala(esc).some(l => String(l || '').toLowerCase().includes(termoBusca));
 
         const funcoesManha = (esc.funcaoManha || []).join(' ').toLowerCase();
         const funcoesTarde = (esc.funcaoTarde || []).join(' ').toLowerCase();
         const funcoesNoite = (esc.funcaoNoite || []).join(' ').toLowerCase();
-        const matchFuncao = funcoesManha.includes(termoBusca) || funcoesTarde.includes(termoBusca) || funcoesNoite.includes(termoBusca);
+        const funcoesExtras = PERIODOS_ATIV.map(P => (esc['atividadesExtras' + P] || []).map(a => (a.funcao || []).join(' ')).join(' ')).join(' ').toLowerCase();
+        const matchFuncao = funcoesManha.includes(termoBusca) || funcoesTarde.includes(termoBusca) || funcoesNoite.includes(termoBusca) || funcoesExtras.includes(termoBusca);
 
         return matchData || matchLocal || matchFuncao;
       });
@@ -2644,6 +2863,12 @@
         const index = escalasSalvas.indexOf(esc);
         return montarCardEscalaHTML(esc, index, 'ativo');
       }).join('');
+    }
+
+    function blocoExtrasCard(esc, P) {
+      const extras = (esc['atividadesExtras' + P] || []).filter(a => a && a.local);
+      if (!extras.length) return '';
+      return extras.map((a, k) => `<div class="pt-1 mt-1 border-t border-slate-800/60 atividade-extra"><p class="text-slate-300"><strong>LOCAL (${k + 2}ª ATIVIDADE):</strong> ${a.local}</p><p class="text-slate-300"><strong>FUNÇÃO (${k + 2}ª ATIVIDADE):</strong> ${(a.funcao || []).length ? a.funcao.join(', ') : '-'}</p></div>`).join('');
     }
 
     function montarCardEscalaHTML(esc, index, modo, cicloId) {
@@ -2735,6 +2960,7 @@
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localManha}</p>
                     ${esc.pernoiteManha ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteManha}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoManha?.length ? esc.funcaoManha.join(', ') : '-'}</p>
+                    ${blocoExtrasCard(esc, 'Manha')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
                 </div>
@@ -2747,6 +2973,7 @@
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localTarde}</p>
                     ${esc.pernoiteTarde ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteTarde}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoTarde?.length ? esc.funcaoTarde.join(', ') : '-'}</p>
+                    ${blocoExtrasCard(esc, 'Tarde')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
                 </div>
@@ -2759,6 +2986,7 @@
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localNoite}</p>
                     ${esc.pernoiteNoite ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteNoite}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoNoite?.length ? esc.funcaoNoite.join(', ') : '-'}</p>
+                    ${blocoExtrasCard(esc, 'Noite')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
                 </div>
@@ -2776,7 +3004,8 @@
                   <div><strong>DIÁRIA TRASLADO:</strong> <span class="${classeCorItemStatus(stCard.diariaTraslado)} font-bold">${formatarMoeda(valorItemCard('diariaTraslado'))}</span>${badgeStatus(stCard.diariaTraslado)}</div>
                   <div><strong>AUXÍLIO ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.auxAlimentacao)} font-bold">${formatarMoeda(valorItemCard('auxAlimentacao'))}</span>${badgeStatus(stCard.auxAlimentacao)}</div>
                   <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
-                  <div class="pt-1"><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${esc.horasTrabalhadasStr || '0H 00M'}</span></div>
+                  <div class="pt-1"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
+                  <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${esc.horasTrabalhadasStr || '0H 00M'}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
                   <div class="pt-2 mt-2 border-t border-slate-800"><strong>VALOR TOTAL DIÁRIO DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
                   <div><strong>VALOR TOTAL DIÁRIO DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
@@ -3040,6 +3269,11 @@
       document.getElementById('modalLocalTarde').value = esc.localTarde || '';
       document.getElementById('modalLocalNoite').value = esc.localNoite || '';
 
+      PERIODOS_ATIV.forEach(P => {
+        document.getElementById('modalQtdAtividade' + P).value = esc['qtdAtividade' + P] || 1;
+        renderizarExtrasModal(P, esc['atividadesExtras' + P] || []);
+      });
+
       document.getElementById('modalPernoiteManha').value = esc.pernoiteManha || '';
       document.getElementById('modalPernoiteTarde').value = esc.pernoiteTarde || '';
       document.getElementById('modalPernoiteNoite').value = esc.pernoiteNoite || '';
@@ -3137,6 +3371,20 @@
       const funcaoNoite = Array.from(document.querySelectorAll('input[name="modalFuncaoNoite"]:checked')).map(cb => cb.value);
 
       let jNoiteEfetivo = jNoite * (percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+      const modalExtrasP = {
+        Manha: localManha ? lerExtrasModal('Manha') : [],
+        Tarde: localTarde ? lerExtrasModal('Tarde') : [],
+        Noite: localNoite ? lerExtrasModal('Noite') : []
+      };
+      for (const P of PERIODOS_ATIV) {
+        const lista = modalExtrasP[P];
+        for (let k = 0; k < lista.length; k++) {
+          if (!lista[k].local || lista[k].funcao.length === 0) {
+            await mostrarAlertaEstilizado(`PREENCHA O LOCAL E A FUNÇÃO DA ${k + 2}ª ATIVIDADE (${P === 'Manha' ? 'MANHÃ' : P.toUpperCase()}).`, 'CAMPO OBRIGATÓRIO');
+            return;
+          }
+        }
+      }
       const extras = obterValoresExtrasEscala(data, [
         { local: localManha, pernoite: pernoiteManha },
         { local: localTarde, pernoite: pernoiteTarde },
@@ -3176,6 +3424,12 @@
         localManha, localTarde, localNoite,
         pernoiteManha, pernoiteTarde, pernoiteNoite,
         funcaoManha, funcaoTarde, funcaoNoite,
+        qtdAtividadeManha: localManha ? qtdAtividadeModal('Manha') : 0,
+        qtdAtividadeTarde: localTarde ? qtdAtividadeModal('Tarde') : 0,
+        qtdAtividadeNoite: localNoite ? qtdAtividadeModal('Noite') : 0,
+        atividadesExtrasManha: modalExtrasP.Manha,
+        atividadesExtrasTarde: modalExtrasP.Tarde,
+        atividadesExtrasNoite: modalExtrasP.Noite,
         jetonManha: jManha, jetonTarde: jTarde, jetonNoite: jNoite,
         percepcaoQuartoJeton,
         valorDiarioTotal,

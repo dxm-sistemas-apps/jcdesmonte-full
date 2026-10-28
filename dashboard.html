@@ -1638,6 +1638,7 @@
           { local: escala.localTarde, pernoite: escala.pernoiteTarde },
           { local: escala.localNoite, pernoite: escala.pernoiteNoite }
         ];
+        ['Manha', 'Tarde', 'Noite'].forEach(P => (escala['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) turnosVig.push({ local: a.local, pernoite: escala['pernoite' + P] || '' }); }));
         const ehElegivelLocal = (l) => !!l && MUNICIPIOS_ELEGIVEIS.some(m => String(l).toUpperCase().includes(m));
         const elegivelVig = turnosVig.some(t => ehElegivelLocal(t.local));
         const pernoiteVig = turnosVig.some(t => ehElegivelLocal(t.local) && ['SIM', 'TRUE', '1', 'S'].includes(String(t.pernoite || '').toUpperCase().trim()));

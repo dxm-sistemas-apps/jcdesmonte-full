@@ -12,6 +12,9 @@
   var CHAVE_FILA = '__jetcontrol_sync_fila__';
   var CHAVE_MARCADOR_RESET = 'sistema_reset_marker';
   var CHAVE_RESET_APLICADO = 'jetcontrol_reset_aplicado_em';
+  // Chaves que ficam SOMENTE neste aparelho (rascunho do formulário). Não vão para a nuvem:
+  // evita a nuvem devolver/apagar um rascunho em andamento e evita o aviso de "pendente" a cada tecla.
+  var CHAVES_SOMENTE_LOCAIS = {};
   var ATRASO_ENVIO_MS = 700;
   var TEMPO_LIMITE_MS = 8000;
 
@@ -111,7 +114,8 @@
     if (!document.body) { document.addEventListener('DOMContentLoaded', atualizarIndicador); return; }
     var qtd = Object.keys(lerFila()).length;
     var offline = (typeof navigator !== 'undefined') && navigator.onLine === false;
-    if (!offline && qtd === 0) { if (indicadorEl) indicadorEl.style.display = 'none'; return; }
+    // O aviso "Sincronizando… N pendente" foi removido a pedido; só o aviso de offline permanece.
+    if (!offline) { if (indicadorEl) indicadorEl.style.display = 'none'; return; }
     if (!indicadorEl) {
       indicadorEl = document.createElement('div');
       indicadorEl.setAttribute('role', 'status');
@@ -121,9 +125,7 @@
     indicadorEl.style.display = 'block';
     indicadorEl.style.background = offline ? '#b45309' : '#1d4ed8';
     indicadorEl.style.color = '#fff';
-    var txt = offline ? 'Offline — dados salvos neste aparelho' : 'Sincronizando…';
-    if (qtd > 0) txt += ' · ' + qtd + ' pendente' + (qtd > 1 ? 's' : '');
-    indicadorEl.textContent = txt;
+    indicadorEl.textContent = 'Offline — dados salvos neste aparelho';
   }
   window.addEventListener('online', function () { atualizarIndicador(); reenviarFila(); });
   window.addEventListener('offline', atualizarIndicador);
@@ -144,6 +146,7 @@
 
   function agendarEnvio(chave, valor, apagar) {
     if (!configurado) return;
+    if (CHAVES_SOMENTE_LOCAIS[chave]) return;
     clearTimeout(timersPendentes[chave]);
 
     var carimboDestaEdicao = Date.now();
@@ -267,6 +270,7 @@
         var partesDoNome = doc.name.split('/');
         var chave = partesDoNome[partesDoNome.length - 1];
         if (chave === CHAVE_MARCADOR_RESET) return;
+        if (CHAVES_SOMENTE_LOCAIS[chave]) return; // nunca aplica rascunho vindo da nuvem
         chavesQueAJaEstaoNaNuvem[chave] = true;
 
         var info = decodificarDocumento(doc.fields);

@@ -1214,7 +1214,8 @@
         const locais = [
           { local: esc.localManha, pernoite: esc.pernoiteManha },
           { local: esc.localTarde, pernoite: esc.pernoiteTarde },
-          { local: esc.localNoite, pernoite: esc.pernoiteNoite }
+          { local: esc.localNoite, pernoite: esc.pernoiteNoite },
+          ...extrasComoTurnos(esc)
         ];
 
         let temElegivelNaEscala = false;
@@ -1257,7 +1258,8 @@
         const extrasEsc = obterValoresExtrasEscala(esc.data, [
           { local: esc.localManha || esc.local, pernoite: esc.pernoiteManha },
           { local: esc.localTarde, pernoite: esc.pernoiteTarde },
-          { local: esc.localNoite, pernoite: esc.pernoiteNoite }
+          { local: esc.localNoite, pernoite: esc.pernoiteNoite },
+          ...extrasComoTurnos(esc)
         ]);
 
         totalDiariasCalculadas += extrasEsc.valorDiarias;
@@ -1325,7 +1327,10 @@
       });
     }
 
+    let rascunhoJaCarregado = false;
+
     function salvarRascunhoForm() {
+      if (!rascunhoJaCarregado) return; // evita sobrescrever o rascunho com o formulário ainda vazio
       if (document.getElementById('editIndex').value !== '-1') return;
       const rascunho = {
         dataAtividade: document.getElementById('dataAtividade').value,
@@ -1363,7 +1368,7 @@
 
     function carregarRascunhoForm() {
       const rascunhoStr = localStorage.getItem(STORAGE_KEY_RASCUNHO);
-      if (!rascunhoStr) return;
+      if (!rascunhoStr) { rascunhoJaCarregado = true; return; }
       try {
         const esc = JSON.parse(rascunhoStr);
         document.getElementById('dataAtividade').value = esc.dataAtividade || '';
@@ -1373,16 +1378,16 @@
         document.getElementById('localTarde').value = esc.localTarde || '';
         document.getElementById('localNoite').value = esc.localNoite || '';
         
-        document.getElementById('pernoiteManha').value = esc.pernoiteManha || '';
-        document.getElementById('pernoiteTarde').value = esc.pernoiteTarde || '';
-        document.getElementById('pernoiteNoite').value = esc.pernoiteNoite || '';
-
         document.getElementById('jetonManha').value = esc.jetonManha || '';
         document.getElementById('jetonTarde').value = esc.jetonTarde || '';
         document.getElementById('jetonNoite').value = esc.jetonNoite || '';
         document.getElementById('percepcaoQuartoJeton').value = esc.percepcaoQuartoJeton || '';
         PERIODOS_ATIV.forEach(P => definirAtividadesPeriodo(P, esc['qtdAtividade' + P], esc['atividadesExtras' + P]));
         gerenciarCamposPernoite();
+        // pernoite só depois de todos os períodos/atividades extras estarem montados
+        document.getElementById('pernoiteManha').value = esc.pernoiteManha || '';
+        document.getElementById('pernoiteTarde').value = esc.pernoiteTarde || '';
+        document.getElementById('pernoiteNoite').value = esc.pernoiteNoite || '';
 
         document.querySelectorAll('input[name="funcaoManha"]').forEach(cb => { cb.checked = esc.funcaoManha?.includes(cb.value); });
         document.querySelectorAll('input[name="funcaoTarde"]').forEach(cb => { cb.checked = esc.funcaoTarde?.includes(cb.value); });
@@ -1395,7 +1400,8 @@
         document.getElementById('notaOutros').value = esc.notaOutros || '';
 
         calcularValoresEscala();
-      } catch(e) {}
+      } catch(e) { console.error('Falha ao restaurar rascunho', e); }
+      finally { rascunhoJaCarregado = true; }
     }
 
     document.getElementById('formEscala').addEventListener('input', salvarRascunhoForm);
@@ -1488,7 +1494,7 @@
           <div class="space-y-3 pt-3 border-t border-slate-800/80">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - ${nome} (${i}ª ATIVIDADE)</label>
-              <input type="text" id="localExtra${P}_${i}" list="locais-historico" value="${localEsc}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="localExtra${P}_${i}" list="locais-historico" value="${localEsc}" oninput="gerenciarCamposPernoite()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - ${nome} (${i}ª ATIVIDADE)</label>
@@ -1506,6 +1512,7 @@
       }
       cont.innerHTML = html;
       document.querySelectorAll('.rotulo-ativ-' + P).forEach(sp => { sp.textContent = q > 1 ? '(1ª ATIVIDADE)' : ''; });
+      if (typeof gerenciarCamposPernoite === 'function' && document.getElementById('pernoiteManha')) gerenciarCamposPernoite();
       if (typeof calcularValoresEscala === 'function' && document.getElementById('calcJetonDiario')) calcularValoresEscala();
     }
 
@@ -1513,6 +1520,7 @@
       const el = document.getElementById('qtdAtividade' + P);
       if (el) el.value = (parseInt(qtd, 10) >= 1) ? Math.min(parseInt(qtd, 10), 4) : 1;
       renderizarAtividadesExtras(P, Array.isArray(extras) ? extras : []);
+      if (typeof gerenciarCamposPernoite === 'function' && document.getElementById('pernoiteManha')) gerenciarCamposPernoite();
     }
 
     // Todas as atividades de um período: [{local, funcao[]}] (1ª = campos originais, demais = extras)
@@ -1536,10 +1544,27 @@
       return out;
     }
 
+    // Atividades extras entram como "turnos" extras: basta UMA atividade elegível na escala para gerar
+    // os valores; como a regra usa some(), nada é multiplicado pela quantidade de atividades.
     function extrasComoTurnos(esc) {
       const out = [];
-      PERIODOS_ATIV.forEach(P => (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) out.push({ local: a.local, pernoite: '' }); }));
+      PERIODOS_ATIV.forEach(P => (esc['atividadesExtras' + P] || []).forEach(a => {
+        if (a && a.local) out.push({ local: a.local, pernoite: esc['pernoite' + P] || '' });
+      }));
       return out;
+    }
+
+    function extrasDoFormulario() {
+      return {
+        atividadesExtrasManha: lerAtividadesExtras('Manha'), atividadesExtrasTarde: lerAtividadesExtras('Tarde'), atividadesExtrasNoite: lerAtividadesExtras('Noite'),
+        pernoiteManha: document.getElementById('pernoiteManha').value, pernoiteTarde: document.getElementById('pernoiteTarde').value, pernoiteNoite: document.getElementById('pernoiteNoite').value
+      };
+    }
+
+    // Período elegível = local principal OU qualquer atividade extra em município elegível
+    function periodoElegivelForm(P) {
+      return verificarElegibilidade(document.getElementById('local' + P).value.trim())
+        || lerAtividadesExtras(P).some(a => verificarElegibilidade(a.local));
     }
 
     function gerenciarCamposPernoite() {
@@ -1549,7 +1574,7 @@
         { localId: 'localNoite', jetonId: 'jetonNoite', wrapperLocalId: 'wrapperLocalNoite', wrapperPernoiteId: 'wrapperPernoiteNoite', pernoiteId: 'pernoiteNoite' }
       ];
 
-      const primeiroElegivel = periodos.find(p => verificarElegibilidade(document.getElementById(p.localId).value.trim()));
+      const primeiroElegivel = periodos.find(p => periodoElegivelForm(p.localId.replace('local', '')));
 
       periodos.forEach(p => {
         const local = document.getElementById(p.localId);
@@ -1560,7 +1585,7 @@
         if (!local || !jeton || !wrapperLocal || !wrapperPernoite || !pernoite) return;
 
         const valorLocal = local.value.trim();
-        const elegivel = verificarElegibilidade(valorLocal);
+        const elegivel = periodoElegivelForm(p.localId.replace('local', ''));
 
         if (!valorLocal) {
           jeton.value = '';
@@ -1572,9 +1597,9 @@
         }
 
         if (elegivel) {
-          wrapperLocal.className = 'lg:col-span-5';
+          wrapperLocal.className = 'lg:col-span-6';
         } else {
-          wrapperLocal.className = 'lg:col-span-9';
+          wrapperLocal.className = 'lg:col-span-12';
         }
 
         const exibirPernoite = elegivel && p === primeiroElegivel;
@@ -1991,7 +2016,8 @@
       const extrasAtual = obterValoresExtrasEscala(dataStr, [
         { local: document.getElementById('localManha').value.trim(), pernoite: document.getElementById('pernoiteManha').value },
         { local: document.getElementById('localTarde').value.trim(), pernoite: document.getElementById('pernoiteTarde').value },
-        { local: document.getElementById('localNoite').value.trim(), pernoite: document.getElementById('pernoiteNoite').value }
+        { local: document.getElementById('localNoite').value.trim(), pernoite: document.getElementById('pernoiteNoite').value },
+        ...extrasComoTurnos(extrasDoFormulario())
       ]);
       atualizarVisibilidadeItensRecebiveis('', extrasAtual);
       atualizarVisualHomeOffice('');
@@ -2279,11 +2305,14 @@
         }
       }
 
+      const eleManha = verificarElegibilidade(localManha) || atividadesExtrasManha.some(a => verificarElegibilidade(a.local));
+      const eleTarde = verificarElegibilidade(localTarde) || atividadesExtrasTarde.some(a => verificarElegibilidade(a.local));
+      const eleNoite = verificarElegibilidade(localNoite) || atividadesExtrasNoite.some(a => verificarElegibilidade(a.local));
       const locaisElegiveis = [
-        { periodo: 'MANHÃ', local: localManha, pernoite: pernoiteManha },
-        { periodo: 'TARDE', local: localTarde, pernoite: pernoiteTarde },
-        { periodo: 'NOITE', local: localNoite, pernoite: pernoiteNoite }
-      ].filter(item => verificarElegibilidade(item.local));
+        { periodo: 'MANHÃ', local: localManha, pernoite: pernoiteManha, ele: eleManha },
+        { periodo: 'TARDE', local: localTarde, pernoite: pernoiteTarde, ele: eleTarde },
+        { periodo: 'NOITE', local: localNoite, pernoite: pernoiteNoite, ele: eleNoite }
+      ].filter(item => item.ele);
       if (locaisElegiveis.length > 0 && !locaisElegiveis[0].pernoite) {
         const campoPernoite = locaisElegiveis[0].periodo === 'MANHÃ' ? 'pernoiteManha' : locaisElegiveis[0].periodo === 'TARDE' ? 'pernoiteTarde' : 'pernoiteNoite';
         await alertarCampoObrigatorio(campoPernoite, `SELECIONE A OPÇÃO DE PERNOITE PARA O PERÍODO DA ${locaisElegiveis[0].periodo}.`);
@@ -2313,7 +2342,8 @@
       const extrasEscala = obterValoresExtrasEscala(data, [
         { local: localManha, pernoite: pernoiteManha },
         { local: localTarde, pernoite: pernoiteTarde },
-        { local: localNoite, pernoite: pernoiteNoite }
+        { local: localNoite, pernoite: pernoiteNoite },
+        ...extrasComoTurnos({ atividadesExtrasManha: temManha ? atividadesExtrasManha : [], atividadesExtrasTarde: temTarde ? atividadesExtrasTarde : [], atividadesExtrasNoite: temNoite ? atividadesExtrasNoite : [], pernoiteManha, pernoiteTarde, pernoiteNoite })
       ]);
       const flagsSalvar = {
         diariaAlimentacaoRecebivel: valorRecebivelParaSalvar('', 'DiariaAlimentacao'),
@@ -2359,9 +2389,9 @@
         localManha,
         localTarde,
         localNoite,
-        pernoiteManha: (temManha && verificarElegibilidade(localManha)) ? pernoiteManha : '',
-        pernoiteTarde: (temTarde && verificarElegibilidade(localTarde) && !verificarElegibilidade(localManha)) ? pernoiteTarde : '',
-        pernoiteNoite: (temNoite && verificarElegibilidade(localNoite) && !verificarElegibilidade(localManha) && !verificarElegibilidade(localTarde)) ? pernoiteNoite : '',
+        pernoiteManha: (temManha && eleManha) ? pernoiteManha : '',
+        pernoiteTarde: (temTarde && eleTarde && !eleManha) ? pernoiteTarde : '',
+        pernoiteNoite: (temNoite && eleNoite && !eleManha && !eleTarde) ? pernoiteNoite : '',
         funcaoManha: temManha ? funcaoManha : [],
         funcaoTarde: temTarde ? funcaoTarde : [],
         funcaoNoite: temNoite ? funcaoNoite : [],
@@ -2949,7 +2979,8 @@
       const extrasCard = obterValoresExtrasEscala(esc.data, [
         { local: esc.localManha, pernoite: esc.pernoiteManha },
         { local: esc.localTarde, pernoite: esc.pernoiteTarde },
-        { local: esc.localNoite, pernoite: esc.pernoiteNoite }
+        { local: esc.localNoite, pernoite: esc.pernoiteNoite },
+          ...extrasComoTurnos(esc)
       ]);
       const recebivelCard = somarComponentesRecebiveis(extrasCard, flagsCard);
       const diariasComputadas = recebivelCard.diarias;
@@ -3358,7 +3389,8 @@
       atualizarVisibilidadeItensRecebiveis('modal', obterValoresExtrasEscala(esc.data, [
         { local: esc.localManha || '', pernoite: esc.pernoiteManha },
         { local: esc.localTarde || '', pernoite: esc.pernoiteTarde },
-        { local: esc.localNoite || '', pernoite: esc.pernoiteNoite }
+        { local: esc.localNoite || '', pernoite: esc.pernoiteNoite },
+          ...extrasComoTurnos(esc)
       ]));
 
       document.querySelectorAll('input[name="modalFuncaoManha"]').forEach(cb => { cb.checked = esc.funcaoManha?.includes(cb.value); });
@@ -3463,7 +3495,8 @@
       const extras = obterValoresExtrasEscala(data, [
         { local: localManha, pernoite: pernoiteManha },
         { local: localTarde, pernoite: pernoiteTarde },
-        { local: localNoite, pernoite: pernoiteNoite }
+        { local: localNoite, pernoite: pernoiteNoite },
+        ...extrasComoTurnos({ atividadesExtrasManha: modalExtrasP.Manha, atividadesExtrasTarde: modalExtrasP.Tarde, atividadesExtrasNoite: modalExtrasP.Noite, pernoiteManha, pernoiteTarde, pernoiteNoite })
       ]);
       const flagsModal = {
         diariaAlimentacaoRecebivel: valorRecebivelParaSalvar('modal', 'DiariaAlimentacao'),

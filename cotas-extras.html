@@ -422,9 +422,12 @@
         { local: escala.localTarde, pernoite: escala.pernoiteTarde },
         { local: escala.localNoite, pernoite: escala.pernoiteNoite }
       ];
-      // Locais das atividades adicionais: apenas exibição (não alteram diárias/auxílios)
+      // Atividades adicionais: basta UMA atividade elegível na escala (principal ou extra) para gerar os valores.
+      // Como a regra usa some(), os valores não acumulam pela quantidade de atividades.
       const locaisExtras = [];
-      ['Manha', 'Tarde', 'Noite'].forEach(P => (escala['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) locaisExtras.push(a.local); }));
+      ['Manha', 'Tarde', 'Noite'].forEach(P => (escala['atividadesExtras' + P] || []).forEach(a => {
+        if (a && a.local) { locaisExtras.push(a.local); turnos.push({ local: a.local, pernoite: escala['pernoite' + P] || '' }); }
+      }));
       const elegivel = turnos.some(t => verificarElegibilidade(t.local));
       const possuiPernoite = turnos.some(t => verificarElegibilidade(t.local) && ['SIM', 'TRUE', '1', 'S'].includes(String(t.pernoite || '').toUpperCase().trim()));
       const d = escala.data ? new Date(escala.data + 'T00:00:00') : null;
@@ -480,7 +483,7 @@
         if (ex.diaEspecial) {
           const totalLinhaAuxilio = ex.auxAlimentacao + ex.auxTransporte;
           somaTotalAuxilios += totalLinhaAuxilio;
-          const locaisEscala = [...new Set(ex.turnos.map(t => t.local).concat(ex.locaisExtras).filter(l => l && String(l).trim() !== ''))];
+          const locaisEscala = [...new Set(ex.turnos.map(t => t.local).filter(l => l && String(l).trim() !== ''))];
           const locaisFormatados = locaisEscala.length ? locaisEscala.join(' / ') : '-';
 
           htmlAuxilios += `

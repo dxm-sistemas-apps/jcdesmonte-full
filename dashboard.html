@@ -1053,7 +1053,22 @@
           valJetonNoite = valJetonNoite / 2;
         }
 
-        [valJetonManha, valJetonTarde, valJetonNoite].forEach(valor => {
+        // Com mais de uma atividade no período, cada atividade tem seu próprio jeton ("JETON (nª ATIVIDADE):")
+        const jetonsPorAtividade = (iconClass, totalVal) => {
+          const icon = card.querySelector('i.' + iconClass);
+          const bloco = icon && icon.closest('div.space-y-1');
+          const lista = [];
+          if (bloco) bloco.querySelectorAll('p').forEach(p => {
+            const forte = p.querySelector('strong');
+            if (forte && /^JETON \(\d+ª ATIVIDADE\):$/.test(forte.textContent.trim())) lista.push(parseMoeda(p.textContent.replace(forte.textContent, '').trim()));
+          });
+          return lista.length ? lista : (totalVal === null ? [] : [totalVal]);
+        };
+        [
+          ...jetonsPorAtividade('fa-sun', valJetonManha),
+          ...jetonsPorAtividade('fa-cloud-sun', valJetonTarde),
+          ...jetonsPorAtividade('fa-moon', valJetonNoite)
+        ].forEach(valor => {
           if (valor === null) return;
           if (Math.abs(valor - 100) < 0.005) metricas.simples++;
           if (Math.abs(valor - 220) < 0.005) metricas.dobrada++;
@@ -1179,6 +1194,21 @@
         if (c.length >= 7) soma += parseMoeda(c[5].textContent);
       });
       return soma;
+    }
+
+    // Jetons individuais (1 por atividade). Dados antigos: 1 por período.
+    function listaJetonsEscalaDash(esc) {
+      const out = [];
+      ['Manha', 'Tarde', 'Noite'].forEach(P => {
+        const arr = esc['jetons' + P];
+        if (Array.isArray(arr) && arr.length) { arr.forEach(j => out.push(parseFloat(j) || 0)); return; }
+        const j = parseFloat(esc['jeton' + P]) || 0;
+        if (!j) return;
+        if (Math.abs(j - 200) < 0.005) out.push(100, 100);
+        else if (Math.abs(j - 440) < 0.005) out.push(220, 220);
+        else out.push(j);
+      });
+      return out;
     }
 
     // Total de atividades de uma escala: 1ª atividade de cada período + atividades extras
@@ -1675,7 +1705,7 @@
           acumuladoGeral.turnos.Noite++;
         }
 
-        [escala.jetonManha, escala.jetonTarde, escala.jetonNoite].forEach(j => {
+        listaJetonsEscalaDash(escala).forEach(j => {
           const valor = parseMoeda(j);
           if (Math.abs(valor - 100) < 0.005) simplesVigente++;
           if (Math.abs(valor - 220) < 0.005) dobradaVigente++;

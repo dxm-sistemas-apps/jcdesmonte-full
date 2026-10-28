@@ -489,7 +489,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Manhã</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Manhã <span class="rotulo-ativ-Manha"></span></label>
               <div class="flex flex-wrap gap-3 pt-1">
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
@@ -498,19 +498,18 @@
               </div>
             </div>
           </div>
-          <div id="extrasAtividadesManha" class="space-y-4"></div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Manhã</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Manhã <span class="rotulo-ativ-Manha"></span></label>
               <select id="jetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="0.00">R$ 0,00</option>
                 <option value="100.00">R$ 100,00</option>
-                <option value="200.00">R$ 200,00</option>
                 <option value="220.00">R$ 220,00</option>
-                <option value="440.00">R$ 440,00</option>
               </select>
             </div>
           </div>
+          <div id="extrasAtividadesManha" class="space-y-4"></div>
         </div>
 
         <!-- TURNO TARDE -->
@@ -541,7 +540,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Tarde</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Tarde <span class="rotulo-ativ-Tarde"></span></label>
               <div class="flex flex-wrap gap-3 pt-1">
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
@@ -550,19 +549,18 @@
               </div>
             </div>
           </div>
-          <div id="extrasAtividadesTarde" class="space-y-4"></div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Tarde</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Tarde <span class="rotulo-ativ-Tarde"></span></label>
               <select id="jetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="0.00">R$ 0,00</option>
                 <option value="100.00">R$ 100,00</option>
-                <option value="200.00">R$ 200,00</option>
                 <option value="220.00">R$ 220,00</option>
-                <option value="440.00">R$ 440,00</option>
               </select>
             </div>
           </div>
+          <div id="extrasAtividadesTarde" class="space-y-4"></div>
         </div>
 
         <!-- TURNO NOITE -->
@@ -593,7 +591,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Noite</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Noite <span class="rotulo-ativ-Noite"></span></label>
               <div class="flex flex-wrap gap-3 pt-1">
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
                 <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
@@ -602,19 +600,18 @@
               </div>
             </div>
           </div>
-          <div id="extrasAtividadesNoite" class="space-y-4"></div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Noite</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Noite <span class="rotulo-ativ-Noite"></span></label>
               <select id="jetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()" onchange="gerenciarCamposPernoite()">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
+                <option value="0.00">R$ 0,00</option>
                 <option value="100.00">R$ 100,00</option>
-                <option value="200.00">R$ 200,00</option>
                 <option value="220.00">R$ 220,00</option>
-                <option value="440.00">R$ 440,00</option>
               </select>
             </div>
           </div>
+          <div id="extrasAtividadesNoite" class="space-y-4"></div>
           
           <!-- PERCEPÇÃO DO 4º JETON (CONDICIONAL AO PERÍODO DA NOITE PREENCHIDO) -->
           <div id="wrapperQuartoJeton" class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 hidden">
@@ -853,13 +850,13 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <!-- MANHÃ -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
             <input type="text" id="modalLocalManha" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
             <select id="modalJetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
             <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="AGENTE">AGENTE</label>
@@ -871,13 +868,13 @@
           </div>
           <!-- TARDE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
             <input type="text" id="modalLocalTarde" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
             <select id="modalJetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
             <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="AGENTE">AGENTE</label>
@@ -889,13 +886,13 @@
           </div>
           <!-- NOITE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
-            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="6" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
+            <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
             <input type="text" id="modalLocalNoite" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
             <select id="modalJetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
             <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
               <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="AGENTE">AGENTE</label>
@@ -1403,6 +1400,9 @@
 
     document.getElementById('formEscala').addEventListener('input', salvarRascunhoForm);
     document.getElementById('formEscala').addEventListener('change', salvarRascunhoForm);
+    document.getElementById('formEscala').addEventListener('change', function (ev) {
+      if (ev.target && /^(jetonExtra|localExtra)/.test(ev.target.id || '')) calcularValoresEscala();
+    });
     window.addEventListener('beforeunload', () => { try { salvarRascunhoForm(); } catch (_) {} });
     window.addEventListener('pagehide', () => { try { salvarRascunhoForm(); } catch (_) {} });
 
@@ -1415,8 +1415,47 @@
       const el = document.getElementById('qtdAtividade' + P);
       let q = parseInt(el ? el.value : '1', 10);
       if (!q || q < 1) q = 1;
-      if (q > 6) q = 6;
+      if (q > 4) q = 4;
       return q;
+    }
+
+    const OPCOES_JETON = [['0.00', 'R$ 0,00'], ['100.00', 'R$ 100,00'], ['220.00', 'R$ 220,00']];
+    function htmlOpcoesJeton(sel) {
+      const v = (sel === undefined || sel === null || sel === '') ? '' : Number(sel).toFixed(2);
+      return `<option value="" disabled ${v === '' ? 'selected' : ''}>ESCOLHA O VALOR</option>` +
+        OPCOES_JETON.map(([val, rot]) => `<option value="${val}" ${v === val ? 'selected' : ''}>${rot}</option>`).join('');
+    }
+
+    // Jetons individuais (1ª atividade + extras) de um período no formulário
+    function jetonsPeriodoForm(P) {
+      const lista = [parseFloat(document.getElementById('jeton' + P).value) || 0];
+      lerAtividadesExtras(P).forEach(a => lista.push(parseFloat(a.jeton) || 0));
+      return lista;
+    }
+    function somaJetonsPeriodoForm(P) { return jetonsPeriodoForm(P).reduce((a, b) => a + b, 0); }
+
+    // Todos os jetons individuais de uma escala salva (cada atividade = 1 jeton). Dados antigos: 1 por período.
+    function listaJetonsEscala(esc) {
+      const out = [];
+      PERIODOS_ATIV.forEach(P => {
+        const arr = esc['jetons' + P];
+        if (Array.isArray(arr) && arr.length) { arr.forEach(j => out.push(parseFloat(j) || 0)); return; }
+        const j = parseFloat(esc['jeton' + P]);
+        if (!j) { if (esc['jeton' + P] === 0 && esc['local' + P]) out.push(0); return; }
+        if (Math.abs(j - 200) < 0.005) { out.push(100, 100); }
+        else if (Math.abs(j - 440) < 0.005) { out.push(220, 220); }
+        else out.push(j);
+      });
+      return out;
+    }
+    function jetonPrimeiraAtividade(esc, P) {
+      const arr = esc['jetons' + P];
+      return (Array.isArray(arr) && arr.length) ? arr[0] : esc['jeton' + P];
+    }
+    function jetonInicialCampo(esc, P) {
+      if (!esc['local' + P]) return '';
+      const v = jetonPrimeiraAtividade(esc, P);
+      return (v === undefined || v === null || v === '') ? '' : Number(v).toFixed(2);
     }
 
     function lerAtividadesExtras(P) {
@@ -1424,9 +1463,11 @@
       const lista = [];
       for (let i = 2; i <= q; i++) {
         const l = document.getElementById('localExtra' + P + '_' + i);
-        if (!l) { lista.push({ local: '', funcao: [] }); continue; }
+        if (!l) { lista.push({ local: '', funcao: [], jeton: '' }); continue; }
+        const jt = document.getElementById('jetonExtra' + P + '_' + i);
         lista.push({
           local: l.value.trim(),
+          jeton: jt ? jt.value : '',
           funcao: Array.from(document.querySelectorAll('input[name="funcaoExtra' + P + '_' + i + '"]:checked')).map(cb => cb.value)
         });
       }
@@ -1441,7 +1482,7 @@
       const nome = { Manha: 'Manhã', Tarde: 'Tarde', Noite: 'Noite' }[P];
       let html = '';
       for (let i = 2; i <= q; i++) {
-        const a = atuais[i - 2] || { local: '', funcao: [] };
+        const a = atuais[i - 2] || { local: '', funcao: [], jeton: '' };
         const localEsc = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         html += `
           <div class="space-y-3 pt-3 border-t border-slate-800/80">
@@ -1455,15 +1496,22 @@
                 ${FUNCOES_ATIV.map(f => `<label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''} class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>${f}</span></label>`).join('')}
               </div>
             </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              <div class="lg:col-span-4">
+                <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - ${nome} (${i}ª ATIVIDADE)</label>
+                <select id="jetonExtra${P}_${i}" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">${htmlOpcoesJeton(a.jeton)}</select>
+              </div>
+            </div>
           </div>`;
       }
       cont.innerHTML = html;
       document.querySelectorAll('.rotulo-ativ-' + P).forEach(sp => { sp.textContent = q > 1 ? '(1ª ATIVIDADE)' : ''; });
+      if (typeof calcularValoresEscala === 'function' && document.getElementById('calcJetonDiario')) calcularValoresEscala();
     }
 
     function definirAtividadesPeriodo(P, qtd, extras) {
       const el = document.getElementById('qtdAtividade' + P);
-      if (el) el.value = (parseInt(qtd, 10) >= 1) ? Math.min(parseInt(qtd, 10), 6) : 1;
+      if (el) el.value = (parseInt(qtd, 10) >= 1) ? Math.min(parseInt(qtd, 10), 4) : 1;
       renderizarAtividadesExtras(P, Array.isArray(extras) ? extras : []);
     }
 
@@ -1919,9 +1967,9 @@
     }
 
     function calcularValoresEscala() {
-      let jManha = parseFloat(document.getElementById('jetonManha').value) || 0;
-      let jTarde = parseFloat(document.getElementById('jetonTarde').value) || 0;
-      let jNoite = parseFloat(document.getElementById('jetonNoite').value) || 0;
+      let jManha = somaJetonsPeriodoForm('Manha');
+      let jTarde = somaJetonsPeriodoForm('Tarde');
+      let jNoite = somaJetonsPeriodoForm('Noite');
 
       const percepcao4Jeton = document.getElementById('percepcaoQuartoJeton').value;
       let jNoiteEfetivo = jNoite;
@@ -2024,7 +2072,7 @@
       let totalMinutosHomeOfficeReuniao = 0;
 
       escalasSalvas.forEach(esc => {
-        const jetons = [esc.jetonManha, esc.jetonTarde, esc.jetonNoite];
+        const jetons = listaJetonsEscala(esc);
         jetons.forEach(j => {
           if (j === 100 || j === 100.00) totalSimples++;
           if (j === 220 || j === 220.00) totalDobradas++;
@@ -2227,6 +2275,7 @@
           const n = k + 2;
           if (!extras[k].local) { await alertarCampoObrigatorio('localExtra' + P + '_' + n, `PREENCHA O CAMPO LOCAL DA ATIVIDADE - ${nomeP} (${n}ª ATIVIDADE).`); return; }
           if (extras[k].funcao.length === 0) { await alertarCampoObrigatorio(document.querySelector('input[name="funcaoExtra' + P + '_' + n + '"]'), `SELECIONE PELO MENOS UMA FUNÇÃO - ${nomeP} (${n}ª ATIVIDADE).`); return; }
+          if (extras[k].jeton === '' || extras[k].jeton === undefined) { await alertarCampoObrigatorio('jetonExtra' + P + '_' + n, `SELECIONE O VALOR DO JETON - ${nomeP} (${n}ª ATIVIDADE).`); return; }
         }
       }
 
@@ -2241,9 +2290,13 @@
         return;
       }
 
-      let jManha = parseFloat(jetonManhaVal) || 0;
-      let jTarde = parseFloat(jetonTardeVal) || 0;
-      let jNoite = parseFloat(jetonNoiteVal) || 0;
+      // Jeton do período = soma dos jetons de cada atividade (1ª + extras)
+      const jetonsManha = temManha ? [parseFloat(jetonManhaVal) || 0, ...atividadesExtrasManha.map(a => parseFloat(a.jeton) || 0)] : [];
+      const jetonsTarde = temTarde ? [parseFloat(jetonTardeVal) || 0, ...atividadesExtrasTarde.map(a => parseFloat(a.jeton) || 0)] : [];
+      const jetonsNoite = temNoite ? [parseFloat(jetonNoiteVal) || 0, ...atividadesExtrasNoite.map(a => parseFloat(a.jeton) || 0)] : [];
+      let jManha = jetonsManha.reduce((a, b) => a + b, 0);
+      let jTarde = jetonsTarde.reduce((a, b) => a + b, 0);
+      let jNoite = jetonsNoite.reduce((a, b) => a + b, 0);
       
       let jNoiteEfetivo = jNoite;
       if (percepcaoQuartoJeton === 'SIM') {
@@ -2315,9 +2368,10 @@
         qtdAtividadeManha: temManha ? qtdAtividadeManha : 0,
         qtdAtividadeTarde: temTarde ? qtdAtividadeTarde : 0,
         qtdAtividadeNoite: temNoite ? qtdAtividadeNoite : 0,
-        atividadesExtrasManha: temManha ? atividadesExtrasManha : [],
-        atividadesExtrasTarde: temTarde ? atividadesExtrasTarde : [],
-        atividadesExtrasNoite: temNoite ? atividadesExtrasNoite : [],
+        atividadesExtrasManha: temManha ? atividadesExtrasManha.map(a => ({ ...a, jeton: parseFloat(a.jeton) || 0 })) : [],
+        atividadesExtrasTarde: temTarde ? atividadesExtrasTarde.map(a => ({ ...a, jeton: parseFloat(a.jeton) || 0 })) : [],
+        atividadesExtrasNoite: temNoite ? atividadesExtrasNoite.map(a => ({ ...a, jeton: parseFloat(a.jeton) || 0 })) : [],
+        jetonsManha, jetonsTarde, jetonsNoite,
         jetonManha: temManha ? jManha : 0,
         jetonTarde: temTarde ? jTarde : 0,
         jetonNoite: temNoite ? jNoite : 0,
@@ -2697,14 +2751,16 @@
     function qtdAtividadeModal(P) {
       let q = parseInt(document.getElementById('modalQtdAtividade' + P).value, 10);
       if (!q || q < 1) q = 1;
-      return Math.min(q, 6);
+      return Math.min(q, 4);
     }
     function lerExtrasModal(P) {
       const lista = [];
       for (let i = 2; i <= qtdAtividadeModal(P); i++) {
         const l = document.getElementById('modalLocalExtra' + P + '_' + i);
+        const jt = document.getElementById('modalJetonExtra' + P + '_' + i);
         lista.push({
           local: l ? l.value.trim() : '',
+          jeton: jt ? jt.value : '',
           funcao: Array.from(document.querySelectorAll('input[name="modalFuncaoExtra' + P + '_' + i + '"]:checked')).map(cb => cb.value)
         });
       }
@@ -2716,11 +2772,12 @@
       const atuais = Array.isArray(dados) ? dados : lerExtrasModal(P);
       let html = '';
       for (let i = 2; i <= qtdAtividadeModal(P); i++) {
-        const a = atuais[i - 2] || { local: '', funcao: [] };
+        const a = atuais[i - 2] || { local: '', funcao: [], jeton: '' };
         const v = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         html += `<div class="pt-2 border-t border-slate-800/80 space-y-1">
           <input type="text" id="modalLocalExtra${P}_${i}" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <div class="flex flex-wrap gap-2 text-[11px] text-slate-300">${FUNCOES_ATIV.map(f => `<label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div>
+          <select id="modalJetonExtra${P}_${i}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">${htmlOpcoesJeton(a.jeton).replace('ESCOLHA O VALOR', 'Jeton (' + i + 'ª atividade)')}</select>
         </div>`;
       }
       cont.innerHTML = html;
@@ -2773,9 +2830,10 @@
       document.getElementById('pernoiteTarde').value = esc.pernoiteTarde || '';
       document.getElementById('pernoiteNoite').value = esc.pernoiteNoite || '';
 
-      document.getElementById('jetonManha').value = esc.jetonManha ? esc.jetonManha.toFixed(2) : '';
-      document.getElementById('jetonTarde').value = esc.jetonTarde ? esc.jetonTarde.toFixed(2) : '';
-      document.getElementById('jetonNoite').value = esc.jetonNoite ? esc.jetonNoite.toFixed(2) : '';
+      document.getElementById('jetonManha').value = jetonInicialCampo(esc, 'Manha');
+      document.getElementById('jetonTarde').value = jetonInicialCampo(esc, 'Tarde');
+      document.getElementById('jetonNoite').value = jetonInicialCampo(esc, 'Noite');
+      calcularValoresEscala();
       document.getElementById('percepcaoQuartoJeton').value = esc.percepcaoQuartoJeton || '';
       definirEstadoRecebivel('', 'DiariaAlimentacao', esc.diariaAlimentacaoRecebivel === true, esc.diariaAlimentacaoRecebivel !== undefined && esc.diariaAlimentacaoRecebivel !== null);
       definirEstadoRecebivel('', 'DiariaPernoite', esc.diariaPernoiteRecebivel === true, esc.diariaPernoiteRecebivel !== undefined && esc.diariaPernoiteRecebivel !== null);
@@ -2874,7 +2932,9 @@
     function blocoExtrasCard(esc, P) {
       const extras = (esc['atividadesExtras' + P] || []).filter(a => a && a.local);
       if (!extras.length) return '';
-      return extras.map((a, k) => `<div class="pt-1 mt-1 border-t border-slate-800/60 atividade-extra"><p class="text-slate-300"><strong>LOCAL (${k + 2}ª ATIVIDADE):</strong> ${a.local}</p><p class="text-slate-300"><strong>FUNÇÃO (${k + 2}ª ATIVIDADE):</strong> ${(a.funcao || []).length ? a.funcao.join(', ') : '-'}</p></div>`).join('');
+      const j1 = parseFloat(jetonPrimeiraAtividade(esc, P)) || 0;
+      const primeiro = `<p class="text-slate-300"><strong>JETON (1ª ATIVIDADE):</strong> ${formatarMoeda(j1)}</p>`;
+      return primeiro + extras.map((a, k) => `<div class="pt-1 mt-1 border-t border-slate-800/60 atividade-extra"><p class="text-slate-300"><strong>LOCAL (${k + 2}ª ATIVIDADE):</strong> ${a.local}</p><p class="text-slate-300"><strong>FUNÇÃO (${k + 2}ª ATIVIDADE):</strong> ${(a.funcao || []).length ? a.funcao.join(', ') : '-'}</p><p class="text-slate-300"><strong>JETON (${k + 2}ª ATIVIDADE):</strong> ${formatarMoeda(parseFloat(a.jeton) || 0)}</p></div>`).join('');
     }
 
     function montarCardEscalaHTML(esc, index, modo, cicloId) {
@@ -3114,7 +3174,7 @@
       let totalMinutosHomeOfficeReuniao = 0;
 
       escalasArr.forEach(esc => {
-        const jetons = [esc.jetonManha, esc.jetonTarde, esc.jetonNoite];
+        const jetons = listaJetonsEscala(esc);
         jetons.forEach(j => {
           if (j === 100 || j === 100.00) totalSimples++;
           if (j === 220 || j === 220.00) totalDobradas++;
@@ -3285,9 +3345,9 @@
       document.getElementById('modalPernoiteNoite').value = esc.pernoiteNoite || '';
       aplicarVisibilidadePernoiteModal();
 
-      document.getElementById('modalJetonManha').value = esc.jetonManha ? Number(esc.jetonManha).toFixed(2) : '';
-      document.getElementById('modalJetonTarde').value = esc.jetonTarde ? Number(esc.jetonTarde).toFixed(2) : '';
-      document.getElementById('modalJetonNoite').value = esc.jetonNoite ? Number(esc.jetonNoite).toFixed(2) : '';
+      document.getElementById('modalJetonManha').value = jetonInicialCampo(esc, 'Manha');
+      document.getElementById('modalJetonTarde').value = jetonInicialCampo(esc, 'Tarde');
+      document.getElementById('modalJetonNoite').value = jetonInicialCampo(esc, 'Noite');
       document.getElementById('modalPercepcaoQuartoJeton').value = esc.percepcaoQuartoJeton || '';
       definirEstadoRecebivel('modal', 'DiariaAlimentacao', esc.diariaAlimentacaoRecebivel === true, esc.diariaAlimentacaoRecebivel !== undefined && esc.diariaAlimentacaoRecebivel !== null);
       definirEstadoRecebivel('modal', 'DiariaPernoite', esc.diariaPernoiteRecebivel === true, esc.diariaPernoiteRecebivel !== undefined && esc.diariaPernoiteRecebivel !== null);
@@ -3368,15 +3428,14 @@
       const pernoiteManha = document.getElementById('modalPernoiteManha').value;
       const pernoiteTarde = document.getElementById('modalPernoiteTarde').value;
       const pernoiteNoite = document.getElementById('modalPernoiteNoite').value;
-      const jManha = parseFloat(document.getElementById('modalJetonManha').value) || 0;
-      const jTarde = parseFloat(document.getElementById('modalJetonTarde').value) || 0;
-      const jNoite = parseFloat(document.getElementById('modalJetonNoite').value) || 0;
+      const jManhaPrim = parseFloat(document.getElementById('modalJetonManha').value) || 0;
+      const jTardePrim = parseFloat(document.getElementById('modalJetonTarde').value) || 0;
+      const jNoitePrim = parseFloat(document.getElementById('modalJetonNoite').value) || 0;
       const percepcaoQuartoJeton = document.getElementById('modalPercepcaoQuartoJeton').value || 'NAO';
       const funcaoManha = Array.from(document.querySelectorAll('input[name="modalFuncaoManha"]:checked')).map(cb => cb.value);
       const funcaoTarde = Array.from(document.querySelectorAll('input[name="modalFuncaoTarde"]:checked')).map(cb => cb.value);
       const funcaoNoite = Array.from(document.querySelectorAll('input[name="modalFuncaoNoite"]:checked')).map(cb => cb.value);
 
-      let jNoiteEfetivo = jNoite * (percepcaoQuartoJeton === 'SIM' ? 2 : 1);
       const modalExtrasP = {
         Manha: localManha ? lerExtrasModal('Manha') : [],
         Tarde: localTarde ? lerExtrasModal('Tarde') : [],
@@ -3385,12 +3444,22 @@
       for (const P of PERIODOS_ATIV) {
         const lista = modalExtrasP[P];
         for (let k = 0; k < lista.length; k++) {
-          if (!lista[k].local || lista[k].funcao.length === 0) {
-            await mostrarAlertaEstilizado(`PREENCHA O LOCAL E A FUNÇÃO DA ${k + 2}ª ATIVIDADE (${P === 'Manha' ? 'MANHÃ' : P.toUpperCase()}).`, 'CAMPO OBRIGATÓRIO');
+          if (!lista[k].local || lista[k].funcao.length === 0 || lista[k].jeton === '') {
+            await mostrarAlertaEstilizado(`PREENCHA O LOCAL, A FUNÇÃO E O JETON DA ${k + 2}ª ATIVIDADE (${P === 'Manha' ? 'MANHÃ' : P.toUpperCase()}).`, 'CAMPO OBRIGATÓRIO');
             return;
           }
         }
       }
+      modalExtrasP.Manha.forEach(a => { a.jeton = parseFloat(a.jeton) || 0; });
+      modalExtrasP.Tarde.forEach(a => { a.jeton = parseFloat(a.jeton) || 0; });
+      modalExtrasP.Noite.forEach(a => { a.jeton = parseFloat(a.jeton) || 0; });
+      const jetonsManha = localManha ? [jManhaPrim, ...modalExtrasP.Manha.map(a => a.jeton)] : [];
+      const jetonsTarde = localTarde ? [jTardePrim, ...modalExtrasP.Tarde.map(a => a.jeton)] : [];
+      const jetonsNoite = localNoite ? [jNoitePrim, ...modalExtrasP.Noite.map(a => a.jeton)] : [];
+      const jManha = jetonsManha.reduce((a, b) => a + b, 0);
+      const jTarde = jetonsTarde.reduce((a, b) => a + b, 0);
+      const jNoite = jetonsNoite.reduce((a, b) => a + b, 0);
+      let jNoiteEfetivo = jNoite * (percepcaoQuartoJeton === 'SIM' ? 2 : 1);
       const extras = obterValoresExtrasEscala(data, [
         { local: localManha, pernoite: pernoiteManha },
         { local: localTarde, pernoite: pernoiteTarde },
@@ -3436,6 +3505,7 @@
         atividadesExtrasManha: modalExtrasP.Manha,
         atividadesExtrasTarde: modalExtrasP.Tarde,
         atividadesExtrasNoite: modalExtrasP.Noite,
+        jetonsManha, jetonsTarde, jetonsNoite,
         jetonManha: jManha, jetonTarde: jTarde, jetonNoite: jNoite,
         percepcaoQuartoJeton,
         valorDiarioTotal,

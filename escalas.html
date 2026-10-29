@@ -277,7 +277,7 @@
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
             <span class="block text-sm uppercase font-bold text-slate-400">Total de Horas Trabalhadas</span>
-            <span id="statTotalHoras" class="text-xl font-black text-white">0H 00M</span>
+            <span id="statTotalHoras" class="text-xl font-black text-white">0,0H</span>
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
             <i class="fa-solid fa-clock"></i>
@@ -300,7 +300,7 @@
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
             <span class="block text-sm uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span>
-            <span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-white">0H 00M</span>
+            <span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-white">0,0H</span>
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
             <i class="fa-solid fa-people-group"></i>
@@ -355,25 +355,25 @@
 
         <!-- VALOR RECEBÍVEL DAS DIÁRIAS -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Valor Recebível das Diárias</span>
+          <span class="block text-sm uppercase font-bold text-slate-400">Valor Recebido das Diárias</span>
           <span id="recValorRecebivelDiarias" class="text-xl font-black text-amber-400">R$ 0,00</span>
         </div>
 
         <!-- VALOR RECEBÍVEL DOS AUXÍLIOS -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Valor Recebível dos Auxílios</span>
+          <span class="block text-sm uppercase font-bold text-slate-400">Valor Recebido dos Auxílios</span>
           <span id="recValorRecebivelAuxilios" class="text-xl font-black text-amber-400">R$ 0,00</span>
         </div>
 
         <!-- BALANÇO DAS DIÁRIAS -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Balanço das Diárias</span>
+          <span class="block text-sm uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span>
           <span id="recBalancoDiarias" class="text-xl font-black text-amber-400">R$ 0,00</span>
         </div>
 
         <!-- BALANÇO DOS AUXÍLIOS -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Balanço dos Auxílios</span>
+          <span class="block text-sm uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span>
           <span id="recBalancoAuxilios" class="text-xl font-black text-amber-400">R$ 0,00</span>
         </div>
 
@@ -1567,6 +1567,21 @@
         || lerAtividadesExtras(P).some(a => verificarElegibilidade(a.local));
     }
 
+    // Horas em formato decimal (ex.: 9h20m -> 9,3H). Não exibe minutos.
+    function formatarHorasDecimal(horas) {
+      const n = Number(horas) || 0;
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'H';
+    }
+    function formatarMinutosComoHoras(min) { return formatarHorasDecimal((Number(min) || 0) / 60); }
+    function horasDecimalDaEscala(esc) {
+      if (!esc || !esc.horarioSaida || !esc.horarioChegada) return 0;
+      const [a, b] = esc.horarioSaida.split(':').map(Number);
+      const [c, d] = esc.horarioChegada.split(':').map(Number);
+      let ini = a * 60 + b, fim = c * 60 + d;
+      if (fim < ini) fim += 24 * 60;
+      return (fim - ini) / 60;
+    }
+
     function gerenciarCamposPernoite() {
       const periodos = [
         { localId: 'localManha', jetonId: 'jetonManha', wrapperLocalId: 'wrapperLocalManha', wrapperPernoiteId: 'wrapperPernoiteManha', pernoiteId: 'pernoiteManha' },
@@ -2053,9 +2068,9 @@
         const minutos = diffMinutos % 60;
         
         horasTrabalhadasNum = diffMinutos / 60;
-        document.getElementById('calcHorasTrabalhadas').value = `${horas}H ${minutos.toString().padStart(2, '0')}M`;
+        document.getElementById('calcHorasTrabalhadas').value = formatarMinutosComoHoras(diffMinutos);
       } else {
-        document.getElementById('calcHorasTrabalhadas').value = `0H 00M`;
+        document.getElementById('calcHorasTrabalhadas').value = `0,0H`;
       }
 
       if (horasTrabalhadasNum > 0) {
@@ -2139,10 +2154,10 @@
       document.getElementById('statTriplas').innerText = totalTriplas;
       document.getElementById('statQuadruplas').innerText = totalQuadruplas;
       document.getElementById('statTotalEscalas').innerText = escalasSalvas.length;
-      document.getElementById('statTotalHoras').innerText = `${horasTotais}H ${minutosTotais.toString().padStart(2, '0')}M`;
+      document.getElementById('statTotalHoras').innerText = formatarMinutosComoHoras(totalMinutosTrabalhados);
       document.getElementById('statHomeOffices').innerText = totalHomeOffices;
       document.getElementById('statHomeOfficesDetalhe').innerHTML = textoHomeOfficesDetalhe(totalHomeOfficesCompulsorio, totalHomeOfficesReuniao, totalHomeOfficesSolicitado);
-      document.getElementById('statHorasHomeOfficeReuniao').innerText = `${horasHomeOfficeReuniao}H ${String(minutosHomeOfficeReuniao).padStart(2, '0')}M`;
+      document.getElementById('statHorasHomeOfficeReuniao').innerText = formatarMinutosComoHoras(totalMinutosHomeOfficeReuniao);
 
       document.getElementById('recValorTotalJeton').innerText = formatarMoeda(valorTotalJeton);
 
@@ -2357,7 +2372,7 @@
       const auxiliosComputadosSalvar = recebivelSalvar.auxilios;
       const valorDiarioTotal = totalJeton + diariasComputadasSalvar + auxiliosComputadosSalvar;
 
-      let horasTrabalhadasStr = '0H 00M';
+      let horasTrabalhadasStr = '0,0H';
       let valorHoraStr = 'R$ 0,00 /H';
       let horasTrabalhadasNum = 0;
 
@@ -2370,7 +2385,7 @@
       const horas = Math.floor(diffMinutos / 60);
       const minutos = diffMinutos % 60;
       horasTrabalhadasNum = diffMinutos / 60;
-      horasTrabalhadasStr = `${horas}H ${minutos.toString().padStart(2, '0')}M`;
+      horasTrabalhadasStr = formatarMinutosComoHoras(diffMinutos);
 
       if (horasTrabalhadasNum > 0) {
         const valorDiarioRealAposIR = totalJeton * 0.78 + diariasComputadasSalvar + auxiliosComputadosSalvar;
@@ -2815,6 +2830,7 @@
 
     function resetarFormularioEscala() {
       document.getElementById('formEscala').reset();
+      document.getElementById('dataAtividade').value = ''; // campo oculto não é limpo pelo reset(); limpa também o texto exibido
       PERIODOS_ATIV.forEach(P => definirAtividadesPeriodo(P, 1, []));
       document.getElementById('editIndex').value = '-1';
       document.getElementById('formTituloModo').innerText = 'Organograma da Escala';
@@ -3102,7 +3118,7 @@
                   <div><strong>AUXÍLIO ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.auxAlimentacao)} font-bold">${formatarMoeda(valorItemCard('auxAlimentacao'))}</span>${badgeStatus(stCard.auxAlimentacao)}</div>
                   <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
                   <div class="pt-1"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
-                  <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${esc.horasTrabalhadasStr || '0H 00M'}</span></div>
+                  <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
                   <div class="pt-2 mt-2 border-t border-slate-800"><strong>VALOR TOTAL DIÁRIO DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
                   <div><strong>VALOR TOTAL DIÁRIO DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
@@ -3290,9 +3306,9 @@
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Atividades Triplas</span><span id="statTriplas" class="text-xl font-black text-indigo-400">${v.totalTriplas}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Atividades Quádruplas</span><span id="statQuadruplas" class="text-xl font-black text-emerald-400">${v.totalQuadruplas}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Total de Escalas</span><span id="statTotalEscalas" class="text-xl font-black text-white">${v.totalEscalas}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas Trabalhadas</span><span id="statTotalHoras" class="text-xl font-black text-cyan-400">${v.horasTotais}H ${String(v.minutosTotais).padStart(2, '0')}M</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas Trabalhadas</span><span id="statTotalHoras" class="text-xl font-black text-cyan-400">${formatarMinutosComoHoras(v.horasTotais * 60 + v.minutosTotais)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Home Offices</span><span id="statHomeOffices" class="text-xl font-black text-purple-400">${v.totalHomeOffices}</span><span id="statHomeOfficesDetalhe" class="block text-[10px] text-slate-500 uppercase mt-0.5">${textoHomeOfficesDetalhe(v.totalHomeOfficesCompulsorio, v.totalHomeOfficesReuniao, v.totalHomeOfficesSolicitado)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span><span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-indigo-400">${v.horasHomeOfficeReuniao}H ${String(v.minutosHomeOfficeReuniao).padStart(2, '0')}M</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span><span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-indigo-400">${formatarMinutosComoHoras(v.horasHomeOfficeReuniao * 60 + v.minutosHomeOfficeReuniao)}</span></div>
           </div>
         </section>
       `;
@@ -3312,10 +3328,10 @@
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Hora Trabalhada</span><span id="recValorMedioHora" class="text-xl font-black text-white">${formatarMoeda(v.valorMedioHora)} /H</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor das Diárias</span><span id="recValorDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.valorDiarias)}">${formatarMoeda(v.valorDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor dos Auxílios</span><span id="recValorAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxilios)}">${formatarMoeda(v.valorAuxilios)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebível das Diárias</span><span id="recValorRecebivelDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.valorDiariasRecebivel)}">${formatarMoeda(v.valorDiariasRecebivel)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebível dos Auxílios</span><span id="recValorRecebivelAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxiliosRecebivel)}">${formatarMoeda(v.valorAuxiliosRecebivel)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Balanço das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Balanço dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido das Diárias</span><span id="recValorRecebivelDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.valorDiariasRecebivel)}">${formatarMoeda(v.valorDiariasRecebivel)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido dos Auxílios</span><span id="recValorRecebivelAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxiliosRecebivel)}">${formatarMoeda(v.valorAuxiliosRecebivel)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto de IR (22%)</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorRealJeton)}</span></div>
           </div>
@@ -3510,7 +3526,7 @@
       const auxiliosComputadosModal = recebivelModal.auxilios;
       const valorDiarioTotal = jManha + jTarde + jNoiteEfetivo + diariasComputadasModal + auxiliosComputadosModal;
 
-      let horasTrabalhadasStr = '0H 00M';
+      let horasTrabalhadasStr = '0,0H';
       let valorHoraStr = 'R$ 0,00 /H';
       let horasTrabalhadasNum = 0;
       const [sH, sM] = horarioSaida.split(':').map(Number);
@@ -3520,7 +3536,7 @@
       if (minutosChegada < minutosSaida) minutosChegada += 24 * 60;
       const diffMinutos = minutosChegada - minutosSaida;
       horasTrabalhadasNum = diffMinutos / 60;
-      horasTrabalhadasStr = `${Math.floor(diffMinutos / 60)}H ${(diffMinutos % 60).toString().padStart(2, '0')}M`;
+      horasTrabalhadasStr = formatarMinutosComoHoras(diffMinutos);
       if (horasTrabalhadasNum > 0) {
         const valorDiarioRealAposIR = (jManha + jTarde + jNoiteEfetivo) * 0.78 + diariasComputadasModal + auxiliosComputadosModal;
         valorHoraStr = `${formatarMoeda(valorDiarioRealAposIR / horasTrabalhadasNum)} /H`;

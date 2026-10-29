@@ -389,7 +389,7 @@
         </div>
         <div class="kpi-card white">
           <div class="kpi-label" id="label-kpi-horas-home-office">Tempo de Home Office (Reunião - Sede)</div>
-          <div class="kpi-value" id="kpi-horas-home-office">0H 00M</div>
+          <div class="kpi-value" id="kpi-horas-home-office">0,0H</div>
           <div class="kpi-subtext" id="kpi-horas-home-office-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card danger">
@@ -423,12 +423,12 @@
           <div class="kpi-subtext" id="kpi-pernoites-count">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="label-kpi-recebiveis">Auxílios e Diárias <br>Recebíveis</div>
+          <div class="kpi-label" id="label-kpi-recebiveis">Auxílios e Diárias <br>RecebidoS</div>
           <div class="kpi-value" id="kpi-recebiveis">R$ 0,00</div>
           <div class="kpi-subtext" id="kpi-recebiveis-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="label-kpi-balanco">Auxílios e Diárias <br>Não Recebíveis</div>
+          <div class="kpi-label" id="label-kpi-balanco">Auxílios e Diárias <br>Não RecebidoS</div>
           <div class="kpi-value" id="kpi-balanco">R$ 0,00</div>
           <div class="kpi-subtext" id="kpi-balanco-sub">(calculado automaticamente)</div>
         </div>
@@ -456,7 +456,7 @@
         </div>
         <div class="kpi-card white">
           <div class="kpi-label" id="tc-label-kpi-horas-home-office">Tempo de Home Office (Reunião - Sede)</div>
-          <div class="kpi-value" id="tc-kpi-horas-home-office">0H 00M</div>
+          <div class="kpi-value" id="tc-kpi-horas-home-office">0,0H</div>
           <div class="kpi-subtext" id="tc-kpi-horas-home-office-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card danger">
@@ -490,12 +490,12 @@
           <div class="kpi-subtext" id="tc-kpi-pernoites-count">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="tc-label-kpi-recebiveis">Auxílios e Diárias <br>Recebíveis</div>
+          <div class="kpi-label" id="tc-label-kpi-recebiveis">Auxílios e Diárias <br>RecebidoS</div>
           <div class="kpi-value" id="tc-kpi-recebiveis">R$ 0,00</div>
           <div class="kpi-subtext" id="tc-kpi-recebiveis-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="tc-label-kpi-balanco">Auxílios e Diárias <br>Não Recebíveis</div>
+          <div class="kpi-label" id="tc-label-kpi-balanco">Auxílios e Diárias <br>Não RecebidoS</div>
           <div class="kpi-value" id="tc-kpi-balanco">R$ 0,00</div>
           <div class="kpi-subtext" id="tc-kpi-balanco-sub">(calculado automaticamente)</div>
         </div>
@@ -766,8 +766,8 @@
                 <th>Horas <br>Trabalhadas</th>
                 <th>Valor <br>Médio/Hora</th>
                 <th>Auxílios e Diárias <br>Perceptíveis</th>
-                <th>Auxílios e Diárias <br>Recebíveis</th>
-                <th>Auxílios e Diárias <br>Não Recebíveis</th>
+                <th>Auxílios e Diárias <br>RecebidoS</th>
+                <th>Auxílios e Diárias <br>Não RecebidoS</th>
                 <th>Jeton <br>Bruto</th>
                 <th>Receita <br>Bruta</th>
                 <th>Desconto <br>IR</th>
@@ -939,7 +939,7 @@
     function textoReceitaBrutaSub(qtdCiclosFechados, todosOsCiclos) {
       return todosOsCiclos
         ? `${qtdCiclosFechados} Ciclo(s) Fechado(s) + Ciclo Vigente`
-        : `Jeton Bruto + Auxílios e Diárias (Ciclo Vigente)`;
+        : `Jeton Bruto + Auxílios e Diárias Recebidos (Ciclo Vigente)`;
     }
     function textoReceitaLiquidaSub(percentualLiquidoIR) {
       return `Jeton Líquido (${percentualLiquidoIR}%) + Auxílios e Diárias`;
@@ -960,7 +960,7 @@
       return `${formatMoeda(valorAuxAlimentacao)} Auxílio Alimentação <br> ${formatMoeda(valorAuxTransporte)} Auxílio Transporte <br> ${formatMoeda(valorDiariaAlimentacao)} Diária de Alimentação <br> ${formatMoeda(valorDiariaHospedagem)} Diária de Pernoite <br> ${formatMoeda(valorDiariaTraslado)} Diária de Traslado`;
     }
     function textoRendimentoHoraSub(totalHoras) {
-      return `Total de ${totalHoras.toFixed(1)}h Trabalhadas`;
+      return `Total de ${formatarHorasDecimal(totalHoras)} Trabalhadas`;
     }
     function textoRecebiveisSub(valorDiarias, valorAuxilios, valorTraslado) {
       return `${formatMoeda(valorAuxilios)} Auxílios <br> ${formatMoeda(valorDiarias)} Diárias`;
@@ -985,6 +985,19 @@
       "ITAOCARA", "ITAPERUNA", "SANTO ANTÔNIO DE PÁDUA", "SANTO ANTONIO DE PADUA", "BOM JESUS DO ITABAPOANA", "MIRACEMA",
       "ANGRA DOS REIS", "PARATY", "PARATI", "MANGARATIBA"
     ];
+
+    // Horas em decimal (9h20m -> 9,3H). Aceita texto antigo "9H 20M" e novo "9,3H".
+    function formatarHorasDecimal(horas) {
+      return (Number(horas) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'H';
+    }
+    function parseHorasTexto(txt) {
+      if (!txt) return null;
+      let m = String(txt).match(/(\d+)\s*H\s*(\d+)\s*M/i);
+      if (m) return parseInt(m[1], 10) + parseInt(m[2], 10) / 60;
+      m = String(txt).match(/(\d+(?:[.,]\d+)?)\s*H\b/i);
+      if (m) return parseFloat(m[1].replace(',', '.'));
+      return null;
+    }
 
     function extrairJetonDoBloco(card, iconClass) {
       const icon = card.querySelector('i.' + iconClass);
@@ -1089,10 +1102,10 @@
           }
         });
 
-        const matchHoras = text.match(/HORAS TRABALHADAS:\s*(\d+)\s*H\s*(\d+)\s*M/i);
-        if (matchHoras) {
-          const minutosCard = parseInt(matchHoras[1], 10) * 60 + parseInt(matchHoras[2], 10);
-          metricas.horasTrabalhadas += (minutosCard / 60);
+        const matchHoras = text.match(/HORAS TRABALHADAS:\s*(\d+\s*H\s*\d+\s*M|\d+(?:[.,]\d+)?\s*H\b)/i);
+        const horasCardParse = matchHoras ? parseHorasTexto(matchHoras[1]) : null;
+        if (horasCardParse !== null) {
+          metricas.horasTrabalhadas += horasCardParse;
         } else {
           metricas.horasTrabalhadas += (qtdTurnos * 4);
         }
@@ -1136,8 +1149,8 @@
 
         let horas = 0;
         if (horasTxt) {
-          const m = horasTxt.match(/(\d+)\s*H\s*(\d+)\s*M/i);
-          if (m) horas = parseInt(m[1], 10) + (parseInt(m[2], 10) / 60);
+          const hp = parseHorasTexto(horasTxt);
+          if (hp !== null) horas = hp;
         }
 
         const realTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO REAL APÓS IR:');
@@ -1522,7 +1535,7 @@
         acumuladoGeral.diariasNaoRecebivel += naoDiariasCiclo;
         acumuladoGeral.auxiliosNaoRecebivel += naoAuxiliosCiclo;
 
-        const totalBrutoCiclo = jetonBrutoCiclo + diariasRecebivelCiclo + auxiliosRecebivelCiclo + naoDiariasCiclo + naoAuxiliosCiclo;
+        const totalBrutoCiclo = jetonBrutoCiclo + diariasRecebivelCiclo + auxiliosRecebivelCiclo; // só diárias/auxílios recebíveis
         const receitaLiquidaCiclo = receitaLiquidaCicloDireta > 0
           ? receitaLiquidaCicloDireta
           : (jetonBrutoCiclo * (1 - aliquotaIR)) + diariasCiclo + auxiliosCiclo;
@@ -1810,7 +1823,7 @@
 
       const totalDiariasEAuxiliosGeral = acumuladoGeral.diarias + acumuladoGeral.auxilios;
       const totalDiariasEAuxiliosRecebivelGeral = acumuladoGeral.diariasRecebivel + acumuladoGeral.auxiliosRecebivel;
-      const receitaBrutaGeral = acumuladoGeral.jetonBruto + totalDiariasEAuxiliosGeral;
+      const receitaBrutaGeral = acumuladoGeral.jetonBruto + totalDiariasEAuxiliosRecebivelGeral;
       const jetonLiquidoGeral = acumuladoGeral.jetonBruto * (1 - aliquotaIR);
       const receitaLiquidaGeral = jetonLiquidoGeral + totalDiariasEAuxiliosRecebivelGeral;
       const rendimentoHoraGeral = acumuladoGeral.horas > 0 ? (receitaLiquidaGeral / acumuladoGeral.horas) : 0;
@@ -1818,7 +1831,7 @@
       const preencherKpis = (P, av) => {
         const totalDiariasEAuxiliosVig = av.diarias + av.auxilios;
         const totalDiariasEAuxiliosRecebivelVig = av.diariasRecebivel + av.auxiliosRecebivel;
-        const receitaBrutaVig = av.jetonBruto + av.diariasRecebivel + av.auxiliosRecebivel + av.diariasNaoRecebivel + av.auxiliosNaoRecebivel;
+        const receitaBrutaVig = av.jetonBruto + av.diariasRecebivel + av.auxiliosRecebivel;
         const receitaLiquidaVig = av.jetonBruto * (1 - aliquotaIR) + totalDiariasEAuxiliosRecebivelVig;
         const rendimentoHoraVig = av.horas > 0 ? (receitaLiquidaVig / av.horas) : 0;
 
@@ -1839,7 +1852,7 @@
 
         const horasHomeOfficeReuniaoVig = Math.floor(av.minutosHomeOfficeReuniao / 60);
         const minutosHomeOfficeReuniaoVig = av.minutosHomeOfficeReuniao % 60;
-        document.getElementById(P + 'kpi-horas-home-office').textContent = `${horasHomeOfficeReuniaoVig}H ${String(minutosHomeOfficeReuniaoVig).padStart(2, '0')}M`;
+        document.getElementById(P + 'kpi-horas-home-office').textContent = formatarHorasDecimal(av.minutosHomeOfficeReuniao / 60);
         definirTextoRotulo(P + 'kpi-horas-home-office-sub', textoHorasHomeOfficeSub(av.homeOfficesReuniao));
 
         const elKpiDiariasAux = document.getElementById(P + 'kpi-diarias-auxilios');
@@ -1883,7 +1896,7 @@
       const agora = new Date();
       document.getElementById('last-updated').textContent = `Sincronizado: ${agora.toLocaleTimeString('pt-BR')}`;
 
-      const totalBrutoVigente = jetonBrutoVigente + diariasRecebivelVigente + auxiliosRecebivelVigente + naoDiariasVigente + naoAuxiliosVigente;
+      const totalBrutoVigente = jetonBrutoVigente + diariasRecebivelVigente + auxiliosRecebivelVigente;
       const receitaLiquidaVigente = (jetonBrutoVigente * (1 - aliquotaIR)) + diariasRecebivelVigente + auxiliosRecebivelVigente;
       const rendimentoHoraVigente = horasVigente > 0 ? (receitaLiquidaVigente / horasVigente) : 0;
 
@@ -2059,7 +2072,7 @@
       graficosExtras[chaveInstancia] = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: [rotuloJeton, 'AUXÍLIOS RECEBÍVEIS', 'DIÁRIAS RECEBÍVEIS'],
+          labels: [rotuloJeton, 'AUXÍLIOS RECEBIDOS', 'DIÁRIAS RECEBIDAS'],
           datasets: [{
             label: 'VALOR (R$)',
             data: [jeton, auxiliosRecebivel, diariasRecebivel],
@@ -2294,7 +2307,7 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: (item) => ehMoeda ? formatMoeda(item.parsed.y) : `${item.parsed.y.toFixed(1)}H` } }
+            tooltip: { callbacks: { label: (item) => ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y) } }
           },
           scales: {
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => ehMoeda ? formatMoeda(v) : `${v}H` } },
@@ -2343,7 +2356,7 @@
                   const m = Math.round((e.horas - h) * 60);
                   return [
                     `ATIVIDADES (${e.periodoAtiv}): ${e.atividades}`,
-                    `HORAS TRABALHADAS: ${h}H ${String(m).padStart(2, '0')}M`,
+                    `HORAS TRABALHADAS: ${formatarHorasDecimal(e.horas)}`,
                     `VALOR POR HORA: ${formatMoeda(e.valorHora)}`,
                     `JETON: ${formatMoeda(e.jetonBruto)}`
                   ];
@@ -2368,7 +2381,7 @@
         ${lista.map((e, i) => {
           const h = Math.floor(e.horas);
           const m = Math.round((e.horas - h) * 60);
-          return `<tr><td style="${td}">${i + 1}</td><td style="${td}">${e.data}</td><td style="${td}">${rotuloPeriodo(e.cicloNome).join(' ')}</td><td style="${td}">${e.periodoAtiv}</td><td style="${td}font-weight:700;">${e.atividades}</td><td style="${td}">${h}H ${String(m).padStart(2, '0')}M</td><td style="${td}">${formatMoeda(e.valorHora)}</td><td style="${td}">${formatMoeda(e.jetonBruto)}</td></tr>`;
+          return `<tr><td style="${td}">${i + 1}</td><td style="${td}">${e.data}</td><td style="${td}">${rotuloPeriodo(e.cicloNome).join(' ')}</td><td style="${td}">${e.periodoAtiv}</td><td style="${td}font-weight:700;">${e.atividades}</td><td style="${td}">${formatarHorasDecimal(e.horas)}</td><td style="${td}">${formatMoeda(e.valorHora)}</td><td style="${td}">${formatMoeda(e.jetonBruto)}</td></tr>`;
         }).join('')}
         </tbody></table>`;
     }
@@ -2382,8 +2395,8 @@
       { nome: 'Horas Totais',                        largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Rendimento Médio/Hora',               largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Diárias/Auxílios',                    largura: '165px', alinhar: 'center', quebra: 'normal' },
-      { nome: 'Auxílios e Diárias Recebíveis',       largura: '165px', alinhar: 'center', quebra: 'normal' },
-      { nome: 'Auxílios e Diárias Não Recebíveis',   largura: '165px', alinhar: 'center', quebra: 'normal' },
+      { nome: 'Auxílios e Diárias RECEBIDOS',       largura: '165px', alinhar: 'center', quebra: 'normal' },
+      { nome: 'Auxílios e Diárias Não RECEBIDOS',   largura: '165px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Jeton Bruto',                         largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Receita Bruta',                       largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Total de Descontos de IR',            largura: '140px', alinhar: 'center', quebra: 'normal' },
@@ -2417,7 +2430,7 @@
         return;
       }
 
-      const fmtHM = (min) => `${Math.floor(min / 60)}H ${String(Math.round(min % 60)).padStart(2, '0')}M`;
+      const fmtHM = (min) => formatarHorasDecimal((Number(min) || 0) / 60);
       const EMERALD = '#34d399', AMBER = '#fbbf24', RED = '#f87171';
       const corZ = (v, cor) => Math.abs(v) < 0.005 ? '#ffffff' : cor;
       const cel = (txt, cor) => `<td style="font-weight: 700;${cor ? ` color: ${cor};` : ''}">${txt}</td>`;
@@ -2442,7 +2455,7 @@
           <td>${v.ho}</td>
           <td>${fmtHM(v.minHO)}</td>
           ${cel(formatMoeda(v.perda), RED)}
-          <td>${c.horas.toFixed(1)}h</td>
+          <td>${formatarHorasDecimal(c.horas)}</td>
           ${cel(formatMoeda(c.rendimentoHora) + '/h', EMERALD)}
           ${cel(formatMoeda(v.diAux), corDiariaAuxiliar(v.diAux))}
           ${cel(formatMoeda(v.rec), corZ(v.rec, AMBER))}
@@ -2465,7 +2478,7 @@
             <td style="font-weight: 900;">${T.ho}</td>
             <td style="font-weight: 900;">${fmtHM(T.minHO)}</td>
             ${cel(formatMoeda(T.perda), RED)}
-            <td style="font-weight: 900;">${T.horas.toFixed(1)}h</td>
+            <td style="font-weight: 900;">${formatarHorasDecimal(T.horas)}</td>
             ${cel(formatMoeda(rendTotal) + '/h', EMERALD)}
             ${cel(formatMoeda(T.diAux), corDiariaAuxiliar(T.diAux))}
             ${cel(formatMoeda(T.rec), corZ(T.rec, AMBER))}

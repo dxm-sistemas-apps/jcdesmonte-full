@@ -851,7 +851,7 @@
           <!-- MANHÃ -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
-            <input type="text" id="modalLocalManha" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalManha" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
@@ -869,7 +869,7 @@
           <!-- TARDE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
-            <input type="text" id="modalLocalTarde" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalTarde" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
@@ -887,7 +887,7 @@
           <!-- NOITE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
-            <input type="text" id="modalLocalNoite" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalNoite" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
             </select>
@@ -2086,18 +2086,129 @@
       el.addEventListener('change', calcularValoresEscala);
     });
 
-    function atualizarDatalistLocais() {
-      const escalasSalvas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS)) || [];
-      const locaisSet = new Set();
-      escalasSalvas.forEach(esc => {
-        if (esc.localManha) locaisSet.add(esc.localManha);
-        if (esc.localTarde) locaisSet.add(esc.localTarde);
-        if (esc.localNoite) locaisSet.add(esc.localNoite);
-        PERIODOS_ATIV.forEach(P => (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) locaisSet.add(a.local); }));
-      });
+    const LOCAIS_JETON_100 = ["Abolição", "Acari", "Água Santa", "Alto da Boa Vista", "Anchieta", "Andaraí", "Anil", "Bairro de Fátima", "Bangu", "Barra da Tijuca", "Barros Filho", "Belford Roxo", "Benfica", "Bento Ribeiro", "Bonsucesso", "Botafogo", "Brás de Pina", "Cachambi", "Caju", "Camorim", "Catete", "Catumbi", "Cavalcanti", "Caxias", "Centro", "Cidade de Deus", "Cidade Nova", "Coelho Neto", "Colégio", "Copacabana", "Cordovil", "Cosme Velho", "Costa Barros", "Curicica", "Del Castilho", "Deodoro", "Duque de Caxias", "Encantado", "Engenho da Rainha", "Engenho de Dentro", "Engenho Novo", "Estácio", "Flamengo", "Freguesia de Jacarepaguá", "Gamboa", "Gávea", "Gericinó", "Glória", "Grajaú", "Guadalupe", "Higienópolis", "Honório Gurgel", "Humaitá", "Ilha do Governador", "Inhaúma", "Ipanema", "Irajá", "Itanhangá", "Jardim América", "Jardim Botânico", "Joá", "Lagoa", "Lapa", "Laranjeiras", "Leblon", "Leme", "Lins de Vasconcelos", "Madureira", "Magalhães Bastos", "Mangueira", "Manguinhos", "Maracanã", "Marechal Hermes", "Maria da Graça", "Méier", "Mesquita", "Nilópolis", "Niterói", "Nova Iguaçu", "Olaria", "Oswaldo Cruz", "Padre Miguel", "Parada de Lucas", "Parque Anchieta", "Parque Colúmbia", "Pavuna", "Pechincha", "Penha", "Penha Circular", "Piedade", "Pilares", "Praça da Bandeira", "Praça Seca", "Ramos", "Realengo", "Riachuelo", "Ricardo de Albuquerque", "Rio Comprido", "Rocha", "Rocha Miranda", "Rocinha", "Sampaio", "Santa Teresa", "Santo Cristo", "São Conrado", "São Cristóvão", "São Francisco Xavier", "São Gonçalo", "São João de Meriti", "Saúde", "Senador Camará", "Sulacap", "Tanque", "Taquara", "Tijuca", "Todos os Santos", "Tomás Coelho", "Turiaçu", "Urca", "Vargem Grande", "Vargem Pequena", "Vasco da Gama", "Vaz Lobo", "Vicente de Carvalho", "Vidigal", "Vigário Geral", "Vila da Penha", "Vila Isabel", "Vila Kosmos", "Vila Militar", "Vila Valqueire", "Vista Alegre"];
+    const LOCAIS_JETON_220 = ["Angra dos Reis", "Aperibé", "Araruama", "Areal", "Armação dos Búzios", "Arraial do Cabo", "Barra do Piraí", "Barra Mansa", "Bom Jardim", "Bom Jesus do Itabapoana", "Búzios", "Cabo Frio", "Cachoeiras de Macacu", "Cambuci", "Campo Grande", "Campos", "Campos dos Goytacazes", "Cantagalo", "Carapebus", "Cardoso Moreira", "Carmo", "Casimiro de Abreu", "Comendador Levy Gasparian", "Conceição de Macabu", "Cordeiro", "Duas Barras", "Engenheiro Paulo de Frontin", "Guapimirim", "Iguaba Grande", "Iguabinha", "Inhoaíba", "Itaboraí", "Itaguaí", "Italva", "Itaocara", "Itaperuna", "Itatiaia", "Japeri", "Laje do Muriaé", "Macaé", "Macuco", "Magé", "Mangaratiba", "Maricá", "Mendes", "Miguel Pereira", "Miracema", "Natividade", "Nova Friburgo", "Paciência", "Paracambi", "Paraíba do Sul", "Paraty", "Paty do Alferes", "Petrópolis", "Pinheiral", "Piraí", "Porciúncula", "Porto Real", "Quatis", "Queimados", "Quissamã", "Recreio dos Bandeirantes", "Resende", "Rio Bonito", "Rio Claro", "Rio das Flores", "Rio das Ostras", "Santa Cruz", "Santa Maria Madalena", "Santíssimo", "Santo Antônio de Pádua", "São Fidélis", "São Francisco de Itabapoana", "São João da Barra", "São José de Ubá", "São José do Vale do Rio Preto", "São Pedro da Aldeia", "São Sebastião do Alto", "Sapucaia", "Saquarema", "Senador Vasconcelos", "Seropédica", "Silva Jardim", "Sumidouro", "Tanguá", "Teresópolis", "Trajano de Moraes", "Três Rios", "Unamar", "Valença", "Varre-Sai", "Vassouras", "Volta Redonda"];
+    const NOVA_IGUACU_220 = ["Cabuçu", "Austin", "Jaceruba", "Rio D'ouro", "Vila de Cava", "Santa Rita", "Adrianópolis", "Tinguá", "Lagoinha", "Marapicu", "Jardim Guandu", "Campo Alegre", "Prados Verdes", "Km 32", "Palhada"];
 
+    const CHAVE_LOCAIS_MEMORIA = 'jetcontrol_locais_memoria';
+    const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase();
+    const normLocal = (t) => semAcento(t).replace(/\s+/g, ' ').trim();
+
+    const MAPA_LOCAIS_BASE = (() => {
+      const m = new Map();
+      LOCAIS_JETON_100.forEach(n => m.set(normLocal(n), { nome: n.toUpperCase(), jeton: '100.00' }));
+      LOCAIS_JETON_220.forEach(n => m.set(normLocal(n), { nome: n.toUpperCase(), jeton: '220.00' }));
+      // Nova Iguaçu (R$ 220,00) = "NOVA IGUAÇU - (LOCALIDADE)"; "NOVA IGUAÇU" puro permanece R$ 100,00
+      NOVA_IGUACU_220.forEach(sub => {
+        const nome = `NOVA IGUAÇU - (${sub})`.toUpperCase();
+        m.set(normLocal(nome), { nome, jeton: '220.00' });
+      });
+      return m;
+    })();
+
+    function lerMemoriaLocais() {
+      try { return JSON.parse(localStorage.getItem(CHAVE_LOCAIS_MEMORIA) || '{}') || {}; } catch (_) { return {}; }
+    }
+
+    let catalogoLocaisCache = null;
+    function invalidarCatalogoLocais() { catalogoLocaisCache = null; }
+    // Catálogo = lista "divisão de jeton" + locais memorizados + locais já usados em escalas salvas
+    function obterCatalogoLocais() {
+      if (catalogoLocaisCache) return catalogoLocaisCache;
+      const mapa = new Map(MAPA_LOCAIS_BASE);
+      Object.entries(lerMemoriaLocais()).forEach(([nome, jeton]) => {
+        const k = normLocal(nome);
+        if (k && !mapa.has(k)) mapa.set(k, { nome: String(nome).toUpperCase(), jeton: jeton || '' });
+      });
+      try {
+        (JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS)) || []).forEach(esc => {
+          PERIODOS_ATIV.forEach(P => obterAtividadesPeriodo(esc, P).forEach(a => {
+            const k = normLocal(a.local);
+            if (k && !mapa.has(k)) mapa.set(k, { nome: String(a.local).toUpperCase().trim(), jeton: '' });
+          }));
+        });
+      } catch (_) {}
+      const lista = Array.from(mapa.entries()).map(([k, v]) => ({ k, sa: semAcento(v.nome), nome: v.nome, jeton: v.jeton }));
+      lista.sort((a, b) => a.sa.localeCompare(b.sa, 'pt-BR'));
+      catalogoLocaisCache = { mapa, lista };
+      return catalogoLocaisCache;
+    }
+
+    // Guarda na memória os locais que não constam na lista base (com o jeton escolhido)
+    function memorizarLocaisDaEscala(esc) {
+      const mem = lerMemoriaLocais();
+      let mudou = false;
+      PERIODOS_ATIV.forEach(P => {
+        const itens = [];
+        if (esc['local' + P]) itens.push({ local: esc['local' + P], jeton: jetonPrimeiraAtividade(esc, P) });
+        (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) itens.push({ local: a.local, jeton: a.jeton }); });
+        itens.forEach(({ local, jeton }) => {
+          const nome = String(local).toUpperCase().trim().replace(/\s+/g, ' ');
+          const k = normLocal(nome);
+          if (!k || MAPA_LOCAIS_BASE.has(k)) return;
+          const chaveExistente = Object.keys(mem).find(n => normLocal(n) === k) || nome;
+          const j = (jeton === undefined || jeton === null || jeton === '') ? '' : Number(jeton).toFixed(2);
+          if (mem[chaveExistente] !== j) { mem[chaveExistente] = j; mudou = true; }
+        });
+      });
+      if (mudou) localStorage.setItem(CHAVE_LOCAIS_MEMORIA, JSON.stringify(mem));
+      invalidarCatalogoLocais();
+    }
+
+    // Preenche o jeton correspondente ao local (o campo continua editável manualmente)
+    function aplicarJetonDoLocal(el) {
+      const entrada = obterCatalogoLocais().mapa.get(normLocal(el.value));
+      if (!entrada || !entrada.jeton) return;
+      const idJeton = el.id.replace(/^(modal)?[lL]ocal/, (m, p) => p ? 'modalJeton' : 'jeton');
+      const sel = document.getElementById(idJeton);
+      if (!sel || sel.value === entrada.jeton) return;
+      sel.disabled = false;
+      sel.value = entrada.jeton;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    const ID_CAMPO_LOCAL = /^(modal)?[lL]ocal(Extra)?(Manha|Tarde|Noite)(_\d+)?$/;
+    // Autopreenchimento estilo Excel: completa o texto enquanto digita (texto sugerido fica selecionado)
+    document.addEventListener('input', function (ev) {
+      const el = ev.target;
+      if (!el || el.tagName !== 'INPUT' || !ID_CAMPO_LOCAL.test(el.id || '') || ev.isComposing) return;
+      const maiusc = el.value.toUpperCase();
+      if (maiusc !== el.value) {
+        const pos = el.selectionStart;
+        el.value = maiusc;
+        try { el.setSelectionRange(pos, pos); } catch (_) {}
+      }
+      const semCompletar = /^delete/.test(ev.inputType || '') || ev.inputType === 'insertReplacementText';
+      const digitado = el.value;
+      if (!semCompletar && digitado && el.selectionStart === digitado.length && el.selectionEnd === digitado.length) {
+        const chave = semAcento(digitado);
+        const cat = obterCatalogoLocais();
+        // se o texto já é exatamente um local da lista (ex.: NOVA IGUAÇU), não força completar com outro mais longo
+        const achado = cat.mapa.has(normLocal(digitado)) ? null : cat.lista.find(e => e.sa.length > chave.length && e.sa.startsWith(chave));
+        if (achado) {
+          el.value = achado.nome;
+          try { el.setSelectionRange(digitado.length, achado.nome.length); } catch (_) {}
+        }
+      }
+      aplicarJetonDoLocal(el);
+      if (typeof gerenciarCamposPernoite === 'function' && !/^modal/.test(el.id)) gerenciarCamposPernoite();
+      if (typeof salvarRascunhoForm === 'function' && !/^modal/.test(el.id)) salvarRascunhoForm();
+    });
+    // Enter aceita a sugestão (como no Excel) sem enviar o formulário
+    document.addEventListener('keydown', function (ev) {
+      const el = ev.target;
+      if (ev.key !== 'Enter' || !el || el.tagName !== 'INPUT' || !ID_CAMPO_LOCAL.test(el.id || '')) return;
+      if (el.selectionStart !== el.selectionEnd) {
+        ev.preventDefault();
+        el.setSelectionRange(el.value.length, el.value.length);
+      }
+    });
+
+    function atualizarDatalistLocais() {
+      invalidarCatalogoLocais();
       const datalist = document.getElementById('locais-historico');
-      datalist.innerHTML = Array.from(locaisSet).map(l => `<option value="${l}">`).join('');
+      if (!datalist) return;
+      datalist.innerHTML = obterCatalogoLocais().lista.map(e => `<option value="${e.nome.replace(/"/g, '&quot;')}">`).join('');
     }
 
     function atualizarEstatisticasEReceitasCiclo() {
@@ -2454,6 +2565,7 @@
       }
 
       localStorage.setItem(STORAGE_KEY_ESCALAS, JSON.stringify(escalasSalvas));
+      memorizarLocaisDaEscala(dadosEscala);
       localStorage.removeItem(STORAGE_KEY_RASCUNHO);
 
       await sincronizarCotasExtrasInvisivel();
@@ -2820,7 +2932,7 @@
         const a = atuais[i - 2] || { local: '', funcao: [], jeton: '' };
         const v = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         html += `<div class="pt-2 border-t border-slate-800/80 space-y-1">
-          <input type="text" id="modalLocalExtra${P}_${i}" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalLocalExtra${P}_${i}" list="locais-historico" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <div class="flex flex-wrap gap-2 text-[11px] text-slate-300">${FUNCOES_ATIV.map(f => `<label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div>
           <select id="modalJetonExtra${P}_${i}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">${htmlOpcoesJeton(a.jeton).replace('ESCOLHA O VALOR', 'Jeton (' + i + 'ª atividade)')}</select>
         </div>`;
@@ -3585,6 +3697,7 @@
       };
 
       ciclo.escalasData[index] = dadosEscala;
+      memorizarLocaisDaEscala(dadosEscala);
 
       ciclo.escalas = construirSnapshotEscalasHTML(ciclo.escalasData);
       const valoresRecalculados = calcularEstatisticasReceitasArray(ciclo.escalasData);

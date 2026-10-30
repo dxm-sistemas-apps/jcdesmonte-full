@@ -419,7 +419,7 @@
           </div>
           <div>
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
-            <input type="time" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500">
+            <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500">
           </div>
           <div id="wrapperHomeOffice">
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Home Office</label>
@@ -700,7 +700,7 @@
         <!-- HORÁRIO DE CHEGADA -->
         <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
           <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Chegada *</label>
-          <input type="time" id="horarioChegada" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+          <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioChegada" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
         </div>
 
         <!-- ANOTAÇÕES -->
@@ -803,11 +803,11 @@
           </div>
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
-            <input type="time" id="modalHorarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm">
+            <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="modalHorarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm">
           </div>
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Horário de Chegada *</label>
-            <input type="time" id="modalHorarioChegada" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm">
+            <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="modalHorarioChegada" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm">
           </div>
           <div id="modalWrapperHomeOffice">
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Home Office</label>
@@ -2098,10 +2098,12 @@
       const m = new Map();
       LOCAIS_JETON_100.forEach(n => m.set(normLocal(n), { nome: n.toUpperCase(), jeton: '100.00' }));
       LOCAIS_JETON_220.forEach(n => m.set(normLocal(n), { nome: n.toUpperCase(), jeton: '220.00' }));
-      // Nova Iguaçu (R$ 220,00) = "NOVA IGUAÇU - (LOCALIDADE)"; "NOVA IGUAÇU" puro permanece R$ 100,00
+      // Nova Iguaçu (R$ 220,00) = "LOCALIDADE - NOVA IGUAÇU"; "NOVA IGUAÇU" puro permanece R$ 100,00
       NOVA_IGUACU_220.forEach(sub => {
-        const nome = `NOVA IGUAÇU - (${sub})`.toUpperCase();
+        const nome = `${sub} - NOVA IGUAÇU`.toUpperCase();
         m.set(normLocal(nome), { nome, jeton: '220.00' });
+        // formato antigo "NOVA IGUAÇU - (LOCALIDADE)" continua reconhecido (não é sugerido)
+        m.set(normLocal(`NOVA IGUAÇU - (${sub})`), { nome: `NOVA IGUAÇU - (${sub})`.toUpperCase(), jeton: '220.00', alias: true });
       });
       return m;
     })();
@@ -2128,7 +2130,7 @@
           }));
         });
       } catch (_) {}
-      const lista = Array.from(mapa.entries()).map(([k, v]) => ({ k, sa: semAcento(v.nome), nome: v.nome, jeton: v.jeton }));
+      const lista = Array.from(mapa.entries()).filter(([k, v]) => !v.alias).map(([k, v]) => ({ k, sa: semAcento(v.nome), nome: v.nome, jeton: v.jeton }));
       lista.sort((a, b) => a.sa.localeCompare(b.sa, 'pt-BR'));
       catalogoLocaisCache = { mapa, lista };
       return catalogoLocaisCache;
@@ -2728,6 +2730,48 @@
 
     inicializarCalendarioPersonalizado('dataAtividade', 'dataAtividadeDisplay');
     inicializarCalendarioPersonalizado('modalDataAtividade', 'modalDataAtividadeDisplay');
+
+
+    // ===== CAMPOS DE HORÁRIO: teclado numérico + máscara HH:MM =====
+    function inicializarCampoHorario(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const nativo = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+      // value só devolve horário completo e válido (HH:MM); enquanto digita, devolve vazio
+      Object.defineProperty(el, 'value', {
+        configurable: true,
+        get() { const t = nativo.get.call(el); return /^([01]\d|2[0-3]):[0-5]\d$/.test(t) ? t : ''; },
+        set(v) { nativo.set.call(el, v); }
+      });
+      const formatar = (digitos, apagando) => {
+        let h = digitos.slice(0, 2), m = digitos.slice(2, 4);
+        if (h.length === 2 && parseInt(h, 10) > 23) h = '23';
+        if (m.length === 2 && parseInt(m, 10) > 59) m = '59';
+        if (m.length === 1 && parseInt(m, 10) > 5) m = '5';
+        if (digitos.length > 2) return h + ':' + m;
+        return (h.length === 2 && !apagando) ? h + ':' : h;
+      };
+      el.addEventListener('input', function (ev) {
+        const bruto = nativo.get.call(el);
+        const digitos = bruto.replace(/\D/g, '').slice(0, 4);
+        const novo = formatar(digitos, /^delete/.test(ev.inputType || ''));
+        if (novo !== bruto) nativo.set.call(el, novo);
+      });
+      el.addEventListener('blur', function () {
+        const d = nativo.get.call(el).replace(/\D/g, '');
+        if (!d || d.length === 4) return;
+        let completo = d;
+        if (d.length === 1) completo = '0' + d + '00';
+        else if (d.length === 2) completo = d + '00';
+        else if (d.length === 3) completo = d + '0';
+        let h = completo.slice(0, 2), m = completo.slice(2, 4);
+        if (parseInt(h, 10) > 23) h = '23';
+        if (parseInt(m, 10) > 59) m = '59';
+        nativo.set.call(el, h + ':' + m);
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+    ['horarioSaida', 'horarioChegada', 'modalHorarioSaida', 'modalHorarioChegada'].forEach(inicializarCampoHorario);
 
     function converterParaMaiusculasAoDigitar(el) {
       el.addEventListener('input', function () {

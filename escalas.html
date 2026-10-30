@@ -2395,11 +2395,18 @@
         }
       }
 
-      if (!horarioSaida) {
+      // Home Office: só exige data, horários (quando liberados) e condição; períodos não são exigidos
+      const ehHomeOfficeSalvar = valorHomeOfficeParaSalvar('') === true;
+      if (ehHomeOfficeSalvar && !condicaoHomeOfficeParaSalvar('')) {
+        await alertarCampoObrigatorio('wrapperHomeOfficeCondicao', 'SELECIONE A CONDIÇÃO DO HOME OFFICE.');
+        return;
+      }
+
+      if (!horarioSaida && !document.getElementById('horarioSaida').disabled) {
         await alertarCampoObrigatorio('horarioSaida', 'PREENCHA O CAMPO HORÁRIO DE SAÍDA.');
         return;
       }
-      if (!horarioChegada) {
+      if (!horarioChegada && !document.getElementById('horarioChegada').disabled) {
         await alertarCampoObrigatorio('horarioChegada', 'PREENCHA O CAMPO HORÁRIO DE CHEGADA.');
         return;
       }
@@ -2408,7 +2415,7 @@
       const temTarde = localTarde !== '' || jetonTardeVal !== '' || funcaoTarde.length > 0;
       const temNoite = localNoite !== '' || jetonNoiteVal !== '' || funcaoNoite.length > 0;
 
-      if (!temManha && !temTarde && !temNoite) {
+      if (!ehHomeOfficeSalvar && !temManha && !temTarde && !temNoite) {
         await alertarCampoObrigatorio('localManha', 'PREENCHA PELO MENOS UM PERÍODO: MANHÃ, TARDE OU NOITE.');
         return;
       }

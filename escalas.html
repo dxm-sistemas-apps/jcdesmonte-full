@@ -3075,7 +3075,7 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoManha?.length ? esc.funcaoManha.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Manha')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
                 </div>
                 ` : ''}
                 
@@ -3088,7 +3088,7 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoTarde?.length ? esc.funcaoTarde.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Tarde')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
                 </div>
                 ` : ''}
 
@@ -3101,13 +3101,13 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoNoite?.length ? esc.funcaoNoite.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Noite')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
                 </div>
                 ` : ''}
               </div>
 
               <div class="lg:col-span-4 bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex flex-col justify-between text-xs text-slate-300">
-                <div class="font-bold text-brand-500 uppercase mb-2 flex items-center gap-1.5 border-b border-slate-800 pb-1.5">
+                <div class="font-bold text-brand-500 uppercase mb-2 flex items-center gap-1.5 border-b-4 border-slate-800 pb-1.5">
                   <i class="fa-solid fa-business-time"></i> JORNADA
                 </div>
                 <div class="space-y-2">
@@ -3119,10 +3119,10 @@
                   <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
-                  <div  class="pt-2 mt-2 border-t border-slate-800"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
+                  <div  class="pt-2 mt-2 border-t-4 border-slate-800"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
-                  <div class="pt-2 mt-2 border-t border-slate-800"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
+                  <div class="pt-2 mt-2 border-t-4 border-slate-800"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
                 </div>

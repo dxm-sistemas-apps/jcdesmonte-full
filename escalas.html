@@ -415,7 +415,9 @@
           <div class="relative">
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Data da Atividade *</label>
             <input type="hidden" id="dataAtividade">
-            <input type="text" id="dataAtividadeDisplay" readonly placeholder="SELECIONE A DATA" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-brand-500 cursor-pointer uppercase">
+            <div id="dataAtividadeSelecionada" class="text-xs font-bold text-slate-400 uppercase mb-2">Data selecionada: <span class="text-white">—</span></div>
+            <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
+            <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
           </div>
           <div>
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
@@ -2378,7 +2380,8 @@
           if (indiceEmEdicaoCheck >= 0 && idx === indiceEmEdicaoCheck) return;
           if (esc.data && (!maiorDataCheck || esc.data > maiorDataCheck)) maiorDataCheck = esc.data;
         });
-        if (maiorDataCheck && data <= maiorDataCheck) {
+        // Regra só vale para NOVA escala; ao atualizar uma escala existente (inclusive passada) não se aplica
+        if (indiceEmEdicaoCheck < 0 && maiorDataCheck && data <= maiorDataCheck) {
           await alertarCampoObrigatorio('dataAtividade', 'A DATA DA ATIVIDADE DEVE SER POSTERIOR À DATA DA ÚLTIMA ATIVIDADE JÁ REGISTRADA NO CICLO.');
           return;
         }
@@ -2590,7 +2593,10 @@
       atualizarEstatisticasEReceitasCiclo();
       verificarDataDeFechamentoExistente();
 
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      // Rola até o início do card "Receitas do Ciclo"
+      const secaoReceitas = document.getElementById('secaoReceitasCiclo');
+      if (secaoReceitas) secaoReceitas.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
     });
 
     function obterDataAberturaCiclo() {
@@ -2715,17 +2721,35 @@
       const display = document.getElementById(idDisplay);
       if (!hidden || !display) return;
 
+      // Calendário FIXO (sempre visível) quando existir a caixa dedicada; senão, painel suspenso ao clicar
+      const fixo = document.getElementById(idHidden === 'dataAtividade' ? 'calendarioFixoAtividade' : '__sem_calendario_fixo__');
+      const redesenharFixo = () => {
+        if (!fixo) return;
+        const base = hidden.value || hidden.getAttribute('min') || '';
+        const hoje = new Date();
+        const [a, m] = base ? base.split('-').map(Number) : [hoje.getFullYear(), hoje.getMonth() + 1];
+        renderizarPainelCalendario(fixo, hidden, display, a, m - 1);
+        const rot = document.getElementById('dataAtividadeSelecionada');
+        if (rot) rot.innerHTML = 'Data selecionada: <span class="text-white">' + (hidden.value ? formatarDataBRPeriodo(hidden.value) : '—') + '</span>';
+      };
+
       const descritorNativo = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
       Object.defineProperty(hidden, 'value', {
         get() { return descritorNativo.get.call(hidden); },
         set(v) {
           descritorNativo.set.call(hidden, v);
           display.value = v ? formatarDataBRPeriodo(v) : '';
+          redesenharFixo();
         },
         configurable: true
       });
 
-      display.addEventListener('click', () => abrirPainelCalendario(hidden, display));
+      if (fixo) {
+        hidden.__redesenharCalendarioFixo = redesenharFixo;
+        redesenharFixo();
+      } else {
+        display.addEventListener('click', () => abrirPainelCalendario(hidden, display));
+      }
     }
 
     inicializarCalendarioPersonalizado('dataAtividade', 'dataAtividadeDisplay');
@@ -2815,8 +2839,9 @@
         if (esc.data && (!maiorData || esc.data > maiorData)) maiorData = esc.data;
       });
 
+      const editando = indexEmEdicao !== undefined && indexEmEdicao !== null && indexEmEdicao >= 0;
       let minCalculado = dataAbertura || '';
-      if (maiorData) {
+      if (maiorData && !editando) {
         const proximoDia = adicionarDias(maiorData, 1);
         if (!minCalculado || proximoDia > minCalculado) minCalculado = proximoDia;
       }
@@ -2826,6 +2851,7 @@
         if (dataAtual && minCalculado && dataAtual < minCalculado) minCalculado = dataAtual;
       }
 
+      setTimeout(() => { if (campoDataAtividade.__redesenharCalendarioFixo) campoDataAtividade.__redesenharCalendarioFixo(); }, 0);
       if (minCalculado) {
         campoDataAtividade.setAttribute('min', minCalculado);
       } else {
@@ -3223,7 +3249,7 @@
               
               <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
                 ${esc.localManha ? `
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800 space-y-1 flex flex-col justify-between">
+                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-600 space-y-1 flex flex-col justify-between">
                   <div>
                     <strong class="text-brand-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-sun"></i> MANHÃ</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localManha}</p>
@@ -3231,7 +3257,7 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoManha?.length ? esc.funcaoManha.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Manha')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
                 </div>
                 ` : ''}
                 
@@ -3244,7 +3270,7 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoTarde?.length ? esc.funcaoTarde.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Tarde')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
                 </div>
                 ` : ''}
 
@@ -3257,13 +3283,13 @@
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoNoite?.length ? esc.funcaoNoite.join(', ') : '-'}</p>
                     ${blocoExtrasCard(esc, 'Noite')}
                   </div>
-                  <p class="text-slate-300 pt-2 border-t-4 border-slate-800/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
+                  <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
                 </div>
                 ` : ''}
               </div>
 
               <div class="lg:col-span-4 bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex flex-col justify-between text-xs text-slate-300">
-                <div class="font-bold text-brand-500 uppercase mb-2 flex items-center gap-1.5 border-b-4 border-slate-800 pb-1.5">
+                <div class="font-bold text-brand-500 uppercase mb-2 flex items-center gap-1.5 border-b-4 border-slate-600 pb-1.5">
                   <i class="fa-solid fa-business-time"></i> JORNADA
                 </div>
                 <div class="space-y-2">
@@ -3275,10 +3301,10 @@
                   <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
-                  <div  class="pt-2 mt-2 border-t-4 border-slate-800"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
+                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
-                  <div class="pt-2 mt-2 border-t-4 border-slate-800"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
+                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
                 </div>
@@ -3287,11 +3313,11 @@
             </div>
 
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs text-slate-300">
-              <div class="font-bold text-brand-500 uppercase mb-1.5"><i class="fa-solid fa-note-sticky mr-1"></i> ANOTAÇÕES DA ESCALA:</div>
-              <div><strong>VTR:</strong> ${esc.anotacoes?.notaVtr || '-'}</div>
-              <div><strong>LOCAL - MANHÃ:</strong> ${esc.anotacoes?.notaLocalManha || '-'}</div>
-              <div><strong>LOCAL - TARDE:</strong> ${esc.anotacoes?.notaLocalTarde || '-'}</div>
-              <div><strong>LOCAL - NOITE:</strong> ${esc.anotacoes?.notaLocalNoite || '-'}</div>
+              <div class="font-bold text-brand-500 uppercase mb-1.5 border-b-4 border-slate-600 pb-1.5"><i class="fa-solid fa-note-sticky mr-1"></i> ANOTAÇÕES DA ESCALA:</div>
+              <div class="border-b-4 border-slate-600 pb-1.5"><strong>VTR:</strong> ${esc.anotacoes?.notaVtr || '-'}</div>
+              <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - MANHÃ:</strong> ${esc.anotacoes?.notaLocalManha || '-'}</div>
+              <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - TARDE:</strong> ${esc.anotacoes?.notaLocalTarde || '-'}</div>
+              <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - NOITE:</strong> ${esc.anotacoes?.notaLocalNoite || '-'}</div>
               <div><strong>OUTROS ASSUNTOS:</strong> ${esc.anotacoes?.notaOutros || '-'}</div>
             </div>
           </div>
@@ -3523,11 +3549,8 @@
         if (idx === index) return;
         if (e.data && (!maiorDataFechado || e.data > maiorDataFechado)) maiorDataFechado = e.data;
       });
+      // Ao atualizar uma escala, a data só precisa estar dentro do período do ciclo (sem regra de "posterior à última")
       let minFechado = ciclo.dataAbertura || '';
-      if (maiorDataFechado) {
-        const proximoDiaFechado = adicionarDias(maiorDataFechado, 1);
-        if (!minFechado || proximoDiaFechado > minFechado) minFechado = proximoDiaFechado;
-      }
       if (esc.data && minFechado && esc.data < minFechado) minFechado = esc.data;
       if (minFechado) document.getElementById('modalDataAtividade').setAttribute('min', minFechado);
       if (ciclo.dataFechamento) document.getElementById('modalDataAtividade').setAttribute('max', ciclo.dataFechamento);
@@ -3614,18 +3637,6 @@
         await mostrarAlertaEstilizado('A DATA DA ATIVIDADE NÃO PODE SER POSTERIOR À DATA DE FECHAMENTO DESTE CICLO.');
         return;
       }
-      {
-        let maiorDataOutras = '';
-        (ciclo.escalasData || []).forEach((e, idx) => {
-          if (idx === index) return;
-          if (e.data && (!maiorDataOutras || e.data > maiorDataOutras)) maiorDataOutras = e.data;
-        });
-        if (maiorDataOutras && data <= maiorDataOutras) {
-          await mostrarAlertaEstilizado('A DATA DA ATIVIDADE DEVE SER POSTERIOR À DATA DA ÚLTIMA ATIVIDADE JÁ REGISTRADA NESTE CICLO.');
-          return;
-        }
-      }
-
       const localManha = document.getElementById('modalLocalManha').value.trim();
       const localTarde = document.getElementById('modalLocalTarde').value.trim();
       const localNoite = document.getElementById('modalLocalNoite').value.trim();

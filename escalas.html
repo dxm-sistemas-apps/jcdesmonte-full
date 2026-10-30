@@ -1974,7 +1974,7 @@
       const idsHorarios = [idify('horarioSaida'), idify('horarioChegada')];
       const idsDemais = [idify('percepcaoQuartoJeton')];
       ['Manha', 'Tarde', 'Noite'].forEach(periodo => {
-        idsDemais.push(idify(`local${periodo}`), idify(`pernoite${periodo}`), idify(`jeton${periodo}`));
+        idsDemais.push(idify(`local${periodo}`), idify(`pernoite${periodo}`), idify(`jeton${periodo}`), idify(`qtdAtividade${periodo}`));
       });
       const namesFuncao = ['Manha', 'Tarde', 'Noite'].map(periodo => idify(`funcao${periodo}`));
       return { idsHorarios, idsDemais, namesFuncao };
@@ -1986,6 +1986,7 @@
       if (bloquear) {
         if (elemento.tagName === 'SELECT') elemento.selectedIndex = 0;
         else if (elemento.type === 'checkbox') elemento.checked = false;
+        else if (elemento.type === 'number') elemento.value = '1';
         else elemento.value = '';
       }
     }
@@ -2006,6 +2007,13 @@
       namesFuncao.forEach(name => {
         document.getElementsByName(name).forEach(el => definirCampoBloqueado(el, ehHomeOffice));
       });
+      // Home office: qtd. volta a 1 e as atividades extras (2ª a 4ª) somem do formulário
+      if (!prefixo && ehHomeOffice && !aplicarBloqueioCamposHomeOffice.__rodando
+          && document.querySelector('[id^="localExtra"]')) {
+        aplicarBloqueioCamposHomeOffice.__rodando = true;
+        try { PERIODOS_ATIV.forEach(P => renderizarAtividadesExtras(P, [])); }
+        finally { aplicarBloqueioCamposHomeOffice.__rodando = false; }
+      }
     }
 
     function calcularValoresEscala() {

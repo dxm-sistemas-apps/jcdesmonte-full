@@ -591,7 +591,7 @@
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartLocaisFiscalizados">top 12 Locais Mais Fiscalizados</div>
+          <div class="chart-card-title" id="title-chartLocaisFiscalizados">Top 12 Locais Mais Fiscalizados</div>
         </div>
         <div class="chart-container">
           <canvas id="chartLocaisFiscalizados"></canvas>
@@ -657,11 +657,11 @@
       </div>
     </section>
 
-    <!-- PAINEL DE GRÁFICOS - LINHA 6 (top 12 ESCALAS INDIVIDUAIS) -->
+    <!-- PAINEL DE GRÁFICOS - LINHA 6 (TOP 12 ESCALAS INDIVIDUAIS) -->
     <section class="dashboard-grid">
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-charttop12Horas">top 12 Escalas com Maior Qtd. de Horas Trabalhadas</div>
+          <div class="chart-card-title" id="title-charttop12Horas">Top 12 Escalas com Maior Qtd. de Horas Trabalhadas</div>
         </div>
         <div class="chart-container">
           <canvas id="charttop12Horas"></canvas>
@@ -669,7 +669,7 @@
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-charttop12ValorHora">top 12 Escalas com Maior Valor por Hora Trabalhada</div>
+          <div class="chart-card-title" id="title-charttop12ValorHora">Top 12 Escalas com Maior Valor por Hora Trabalhada</div>
         </div>
         <div class="chart-container">
           <canvas id="charttop12ValorHora"></canvas>
@@ -679,7 +679,7 @@
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-charttop12ValorRealJetonEscala">top 12 Escalas com Maior Valor Real de Jeton</div>
+          <div class="chart-card-title" id="title-charttop12ValorRealJetonEscala">Top 12 Escalas com Maior Valor Real de Jeton</div>
         </div>
         <div class="chart-container">
           <canvas id="charttop12ValorRealJetonEscala"></canvas>
@@ -2057,6 +2057,62 @@
       }
     };
     // ============================================================
+    // INTERVALO (PASSO) DO EIXO VERTICAL DOS GRÁFICOS
+    // Defina de quanto em quanto o eixo Y vai marcar. Exemplos: 1000 = a cada R$ 1.000,00 | 50 = a cada R$ 50,00
+    //   | 2 = a cada 2 (inteiros). "null" = automático (o gráfico escolhe sozinho).
+    // Para mudar um grupo, altere o número da linha do gráfico (a chave é o id do <canvas>).
+    // Para um gráfico novo, basta acrescentar uma linha: idDoCanvas: passo,
+    // ============================================================
+    const INTERVALO_EIXO_Y = {
+      padrao: null,
+      porGrafico: {
+        // ---- a cada R$ 1.000,00 ----
+        chartEvolucaoCiclos: 1000,            // Evolução de Faturamento por Ciclo
+        chartComposicaoReceita: 1000,         // Composição da Receita Bruta
+        chartComposicaoReceitaLiquida: 1000,  // Composição da Receita Líquida
+        chartTop6ValorRealJetonCiclo: 1000,   // 6 Ciclos com Maior Valor Real de Jeton
+        chartTop6DescontoIR: 1000,            // 6 Ciclos com Maior Desconto de Imposto de Renda
+
+        // ---- a cada R$ 50,00 ----
+        chartTop6ValorMedioAtividade: 50,     // 6 Ciclos com Maior Valor Médio por Atividade
+        chartTop6ValorMedioEscala: 50,        // 6 Ciclos com Maior Valor Médio por Escala
+        charttop12ValorRealJetonEscala: 50,   // Top 12 Escalas com Maior Valor Real de Jeton
+
+        // ---- a cada R$ 10,00 ----
+        chartTop6ValorMedioHora: 10,          // 6 Ciclos com Maior Valor Médio por Hora Trabalhada
+
+        // ---- a cada 2 (somente inteiros, sem decimal) ----
+        chartTop6HomeOffices: 2,              // 6 Ciclos com Mais Home Offices
+        chartAtividadeQuadruplas: 2,          // 6 Ciclos com Mais Atividade Quádrupla
+        chartAtividadeTriplas: 2,             // 6 Ciclos com Mais Atividade Tripla
+        chartAtividadeDobradas: 2,            // 6 Ciclos com Mais Atividade Dobrada
+        chartAtividadeSimples: 2,             // 6 Ciclos com Mais Atividade Simples
+        chartLocaisFiscalizados: 2,           // Top 12 Locais Mais Fiscalizados
+        chartFuncoes: 2                       // Distribuição de Funções
+
+        // ---- sem intervalo definido (automático) ----
+        // charttop12ValorHora: 5,
+        // chartTop12Atividades: 1,
+        // chartTipologiaCarga: 2,
+        // chartTurnos: 2,
+        // chartGanhoCiclos: 1000,
+      }
+    };
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'intervaloEixoY',
+        beforeInit(chart) {
+          const id = chart.canvas && chart.canvas.id;
+          const passo = (id && Object.prototype.hasOwnProperty.call(INTERVALO_EIXO_Y.porGrafico, id)) ? INTERVALO_EIXO_Y.porGrafico[id] : INTERVALO_EIXO_Y.padrao;
+          const sc = chart.config.options && chart.config.options.scales;
+          if (!passo || !sc || !sc.y) return;
+          sc.y.ticks = Object.assign({}, sc.y.ticks, { stepSize: passo });
+          if (passo % 1 === 0) sc.y.ticks.precision = 0;
+        }
+      });
+    }
+
+    // ============================================================
     // COMO O VALOR É EXIBIDO AO CLICAR NO INDICADOR
     //   'grafico' = só o valor escrito no próprio gráfico (em cima do indicador)
     //   'quadro'  = só o quadro com os detalhes (período, valor e demais informações)
@@ -2085,10 +2141,7 @@
     const VALORES_SEMPRE_VISIVEIS = {
       padrao: true,
       porGrafico: {
-        charttop12Horas: false,
-        charttop12ValorHora: false,
-        charttop12ValorRealJetonEscala: false,
-        chartTop12Atividades: false
+        // charttop12Horas: false,   // (exemplo) tire as barras e use false para exibir o valor só ao clicar
       }
     };
     function valoresFixosAtivos(chart) {

@@ -423,12 +423,12 @@
           <div class="kpi-subtext" id="kpi-pernoites-count">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="label-kpi-recebiveis">Auxílios e Diárias <br>RecebidoS</div>
+          <div class="kpi-label" id="label-kpi-recebiveis">Auxílios e Diárias <br>Recebíveis</div>
           <div class="kpi-value" id="kpi-recebiveis">R$ 0,00</div>
           <div class="kpi-subtext" id="kpi-recebiveis-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="label-kpi-balanco">Auxílios e Diárias <br>Não RecebidoS</div>
+          <div class="kpi-label" id="label-kpi-balanco">Auxílios e Diárias <br>Não Recebíveis</div>
           <div class="kpi-value" id="kpi-balanco">R$ 0,00</div>
           <div class="kpi-subtext" id="kpi-balanco-sub">(calculado automaticamente)</div>
         </div>
@@ -490,12 +490,12 @@
           <div class="kpi-subtext" id="tc-kpi-pernoites-count">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="tc-label-kpi-recebiveis">Auxílios e Diárias <br>RecebidoS</div>
+          <div class="kpi-label" id="tc-label-kpi-recebiveis">Auxílios e Diárias <br>Recebíveis</div>
           <div class="kpi-value" id="tc-kpi-recebiveis">R$ 0,00</div>
           <div class="kpi-subtext" id="tc-kpi-recebiveis-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card warning">
-          <div class="kpi-label" id="tc-label-kpi-balanco">Auxílios e Diárias <br>Não RecebidoS</div>
+          <div class="kpi-label" id="tc-label-kpi-balanco">Auxílios e Diárias <br>Não Recebíveis</div>
           <div class="kpi-value" id="tc-kpi-balanco">R$ 0,00</div>
           <div class="kpi-subtext" id="tc-kpi-balanco-sub">(calculado automaticamente)</div>
         </div>
@@ -766,8 +766,8 @@
                 <th>Horas <br>Trabalhadas</th>
                 <th>Valor <br>Médio/Hora</th>
                 <th>Auxílios e Diárias <br>Perceptíveis</th>
-                <th>Auxílios e Diárias <br>RecebidoS</th>
-                <th>Auxílios e Diárias <br>Não RecebidoS</th>
+                <th>Auxílios e Diárias <br>Recebíveis</th>
+                <th>Auxílios e Diárias <br>Não Recebíveis</th>
                 <th>Jeton <br>Bruto</th>
                 <th>Receita <br>Bruta</th>
                 <th>Desconto <br>IR</th>
@@ -939,7 +939,7 @@
     function textoReceitaBrutaSub(qtdCiclosFechados, todosOsCiclos) {
       return todosOsCiclos
         ? `${qtdCiclosFechados} Ciclo(s) Fechado(s) + Ciclo Vigente`
-        : `Jeton Bruto + Auxílios e Diárias Recebidos (Ciclo Vigente)`;
+        : `Jeton Bruto + Auxílios e Diárias Recebíveis (Ciclo Vigente)`;
     }
     function textoReceitaLiquidaSub(percentualLiquidoIR) {
       return `Jeton Líquido (${percentualLiquidoIR}%) + Auxílios e Diárias`;
@@ -1036,7 +1036,8 @@
       const cards = temp.querySelectorAll('#containerCardsEscalas > div, .pdf-card');
       if (!cards.length) return metricas;
 
-      metricas.totalEscalas = cards.length;
+      // Home Office não conta como escala (não há atividade nele)
+      metricas.totalEscalas = Array.from(cards).filter(c => !c.querySelector('i.fa-house-laptop')).length;
 
       cards.forEach(card => {
         const text = card.textContent || '';
@@ -1785,7 +1786,7 @@
       acumuladoGeral.diariasNaoRecebivel += naoDiariasVigente;
       acumuladoGeral.auxiliosNaoRecebivel += naoAuxiliosVigente;
       acumuladoGeral.auxiliosRecebivel += auxiliosRecebivelVigente;
-      acumuladoGeral.escalas += escalasVigentes.length;
+      acumuladoGeral.escalas += escalasVigentes.filter(e => e.homeOffice !== true).length;
       acumuladoGeral.horas += horasVigente;
       acumuladoGeral.pernoites += pernoitesVigente;
 
@@ -1902,7 +1903,8 @@
 
       const somaAtividadesVigente = simplesVigente + dobradaVigente + triplaVigente + quadruplaVigente;
       const valorDescontoIRVigente = jetonBrutoVigente * aliquotaIR;
-      const valorMedioEscalaVigente = escalasVigentes.length > 0 ? (receitaLiquidaVigente / escalasVigentes.length) : 0;
+      const qtdEscalasVigentesSemHO = escalasVigentes.filter(e => e.homeOffice !== true).length;
+      const valorMedioEscalaVigente = qtdEscalasVigentesSemHO > 0 ? (receitaLiquidaVigente / qtdEscalasVigentesSemHO) : 0;
       const valorMedioAtividadeVigente = somaAtividadesVigente > 0 ? (receitaLiquidaVigente / somaAtividadesVigente) : 0;
       const valorMedioHoraVigente = rendimentoHoraVigente;
       const valorRealDeJetonVigente = jetonBrutoVigente * (1 - aliquotaIR);
@@ -2072,7 +2074,7 @@
       graficosExtras[chaveInstancia] = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: [rotuloJeton, 'AUXÍLIOS RECEBIDOS', 'DIÁRIAS RECEBIDAS'],
+          labels: [rotuloJeton, 'AUXÍLIOS RECEBÍVEIS', 'DIÁRIAS RECEBÍVEIS'],
           datasets: [{
             label: 'VALOR (R$)',
             data: [jeton, auxiliosRecebivel, diariasRecebivel],
@@ -2395,8 +2397,8 @@
       { nome: 'Horas Totais',                        largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Rendimento Médio/Hora',               largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Diárias/Auxílios',                    largura: '165px', alinhar: 'center', quebra: 'normal' },
-      { nome: 'Auxílios e Diárias RECEBIDOS',       largura: '165px', alinhar: 'center', quebra: 'normal' },
-      { nome: 'Auxílios e Diárias Não RECEBIDOS',   largura: '165px', alinhar: 'center', quebra: 'normal' },
+      { nome: 'Auxílios e Diárias Recebíveis',       largura: '165px', alinhar: 'center', quebra: 'normal' },
+      { nome: 'Auxílios e Diárias Não Recebíveis',   largura: '165px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Jeton Bruto',                         largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Receita Bruta',                       largura: '140px', alinhar: 'center', quebra: 'normal' },
       { nome: 'Total de Descontos de IR',            largura: '140px', alinhar: 'center', quebra: 'normal' },

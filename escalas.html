@@ -1006,7 +1006,7 @@
           <p class="text-xs text-slate-400 mt-1">A data limite do ciclo foi atingida. Revise as informações antes de fechar.</p>
         </div>
       </div>
-      <div class="flex justify-end">
+      <div class="flex justify-center">
         <button type="button" id="btnFecharCiclo" class="bg-red-700 hover:bg-red-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition flex items-center gap-2 uppercase">
           <i class="fa-solid fa-lock"></i>
           <span>FECHAR CICLO</span>
@@ -2364,7 +2364,7 @@
       document.getElementById('statDobradas').innerText = totalDobradas;
       document.getElementById('statTriplas').innerText = totalTriplas;
       document.getElementById('statQuadruplas').innerText = totalQuadruplas;
-      document.getElementById('statTotalEscalas').innerText = escalasSalvas.length;
+      document.getElementById('statTotalEscalas').innerText = escalasSalvas.filter(e => e.homeOffice !== true).length; // Home Office não conta como escala
       document.getElementById('statTotalHoras').innerText = formatarMinutosComoHoras(totalMinutosTrabalhados);
       document.getElementById('statHomeOffices').innerText = totalHomeOffices;
       document.getElementById('statHomeOfficesDetalhe').innerHTML = textoHomeOfficesDetalhe(totalHomeOfficesCompulsorio, totalHomeOfficesReuniao, totalHomeOfficesSolicitado);
@@ -2372,7 +2372,7 @@
 
       document.getElementById('recValorTotalJeton').innerText = formatarMoeda(valorTotalJeton);
 
-      const qtdEscalas = escalasSalvas.length;
+      const qtdEscalas = escalasSalvas.filter(e => e.homeOffice !== true).length;
       const somaAtividades = totalSimples + totalDobradas + totalTriplas + totalQuadruplas;
 
       recalcularEAtualizarCotasExtras();
@@ -3427,8 +3427,8 @@
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
-                  ${(esc.homeOffice === true && esc.homeOfficeCondicao === 'reuniao') ? `<div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>` : ''}
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
+                  ${(esc.homeOffice === true && esc.homeOfficeCondicao === 'reuniao') ? `<div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>` : ''}
                 </div>
               </div>
 
@@ -3573,7 +3573,7 @@
       const horasHomeOfficeReuniao = Math.floor(totalMinutosHomeOfficeReuniao / 60);
       const minutosHomeOfficeReuniao = totalMinutosHomeOfficeReuniao % 60;
       const totalHorasNumerico = totalMinutosTrabalhados / 60;
-      const qtdEscalas = escalasArr.length;
+      const qtdEscalas = escalasArr.filter(e => e.homeOffice !== true).length;
       const somaAtividades = totalSimples + totalDobradas + totalTriplas + totalQuadruplas;
 
       const aliqIR = 22;

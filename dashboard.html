@@ -591,7 +591,7 @@
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartLocaisFiscalizados">Top 12 Locais Mais Fiscalizados</div>
+          <div class="chart-card-title" id="title-chartLocaisFiscalizados">top 12 Locais Mais Fiscalizados</div>
         </div>
         <div class="chart-container">
           <canvas id="chartLocaisFiscalizados"></canvas>
@@ -657,32 +657,32 @@
       </div>
     </section>
 
-    <!-- PAINEL DE GRÁFICOS - LINHA 6 (Top 12 ESCALAS INDIVIDUAIS) -->
+    <!-- PAINEL DE GRÁFICOS - LINHA 6 (top 12 ESCALAS INDIVIDUAIS) -->
     <section class="dashboard-grid">
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop12Horas">Top 12 Escalas com Maior Qtd. de Horas Trabalhadas</div>
+          <div class="chart-card-title" id="title-charttop12Horas">top 12 Escalas com Maior Qtd. de Horas Trabalhadas</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop12Horas"></canvas>
+          <canvas id="charttop12Horas"></canvas>
         </div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop12ValorHora">Top 12 Escalas com Maior Valor por Hora Trabalhada</div>
+          <div class="chart-card-title" id="title-charttop12ValorHora">top 12 Escalas com Maior Valor por Hora Trabalhada</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop12ValorHora"></canvas>
+          <canvas id="charttop12ValorHora"></canvas>
         </div>
       </div>
     </section>
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop12ValorRealJetonEscala">Top 12 Escalas com Maior Valor Real de Jeton</div>
+          <div class="chart-card-title" id="title-charttop12ValorRealJetonEscala">top 12 Escalas com Maior Valor Real de Jeton</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop12ValorRealJetonEscala"></canvas>
+          <canvas id="charttop12ValorRealJetonEscala"></canvas>
         </div>
       </div>
     </section>
@@ -892,9 +892,9 @@
       dobradas: null,
       triplas: null,
       quadruplas: null,
-      Top12Horas: null,
-      Top12ValorHora: null,
-      Top12ValorRealJetonEscala: null,
+      top12Horas: null,
+      top12ValorHora: null,
+      top12ValorRealJetonEscala: null,
       top12Atividades: null,
       top6ValorRealJetonCiclo: null,
       top6ValorMedioEscala: null,
@@ -1382,7 +1382,7 @@
               r0: '24%',
               r: '58%',
               itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
-              label: { rotate: 'radial', fontSize: 10, color: '#f8fafc', fontWeight: 'bold' }
+              label: { rotate: 'radial', fontSize: 9, color: '#f8fafc', fontWeight: 'bold' }
             },
             {
               r0: '58%',
@@ -1956,7 +1956,7 @@
         status: 'VIGENTE'
       });
 
-      const Top12Locais = Object.entries(contagemLocais)
+      const top12Locais = Object.entries(contagemLocais)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 12);
 
@@ -1977,9 +1977,9 @@
       const top6Quadruplas = top6PorTipologia('quadrupla');
       const top6HomeOffices = top6PorTipologia('homeOffices');
 
-      const Top12Horas = [...listaEscalasDetalhadas].sort((a, b) => b.horas - a.horas).slice(0, 12);
-      const Top12ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 12);
-      const Top12ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 12);
+      const top12Horas = [...listaEscalasDetalhadas].sort((a, b) => b.horas - a.horas).slice(0, 12);
+      const top12ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 12);
+      const top12ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 12);
 
       const top12Atividades = listaEscalasDetalhadas
         .filter(e => (e.atividades || 0) >= 2)
@@ -2005,7 +2005,7 @@
       // Renderiza o Sunburst Hierárquico com as escalas do ciclo vigente
       renderizarGraficoSunburst(escalasVigentes);
 
-      renderizarGraficoLocais(Top12Locais);
+      renderizarGraficoLocais(top12Locais);
       renderizarGraficoGanhoCiclos(top6MaiorGanho);
       renderizarGraficoAtividadePorCiclo('chartAtividadeSimples', 'simples', top6Simples, 'simples', '#3b82f6', 'Atividades Simples');
       renderizarGraficoAtividadePorCiclo('chartAtividadeDobradas', 'dobradas', top6Dobradas, 'dobrada', '#06b6d4', 'Atividades Dobradas');
@@ -2013,9 +2013,9 @@
       renderizarGraficoAtividadePorCiclo('chartAtividadeQuadruplas', 'quadruplas', top6Quadruplas, 'quadrupla', '#ef4444', 'Atividades Quádruplas');
       renderizarGraficoAtividadePorCiclo('chartTop6HomeOffices', 'top6HomeOffices', top6HomeOffices, 'homeOffices', '#a855f7', 'Home Offices');
 
-      renderizarGraficoTopEscalas('chartTop12Horas', 'Top12Horas', Top12Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
-      renderizarGraficoTopEscalas('chartTop12ValorHora', 'Top12ValorHora', Top12ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
-      renderizarGraficoTopEscalas('chartTop12ValorRealJetonEscala', 'Top12ValorRealJetonEscala', Top12ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
+      renderizarGraficoTopEscalas('charttop12Horas', 'top12Horas', top12Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
+      renderizarGraficoTopEscalas('charttop12ValorHora', 'top12ValorHora', top12ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
+      renderizarGraficoTopEscalas('charttop12ValorRealJetonEscala', 'top12ValorRealJetonEscala', top12ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
 
       renderizarGraficoTop12Atividades(top12Atividades);
 
@@ -2026,6 +2026,46 @@
       renderizarGraficoAtividadePorCiclo('chartTop6DescontoIR', 'top6DescontoIR', top6DescontoIR, 'valorDescontoIR', '#ef4444', 'DESCONTO DE IR (R$)');
 
       aplicarSeletoresGraficos();
+    }
+
+    // ============================================================
+    // TAMANHO DA FONTE DOS RÓTULOS DE BAIXO (EIXO X) DOS GRÁFICOS
+    // Para mudar TODOS: altere "padrao". Para mudar UM gráfico: descomente/adicione
+    // a linha dele em "porGrafico" (a chave é o id do <canvas>) com o tamanho desejado.
+    // ============================================================
+    const FONTE_ROTULOS_GRAFICOS = {
+      padrao: 9,
+      porGrafico: {
+        // chartEvolucaoCiclos: 9,
+        // chartTipologiaCarga: 9,
+        // chartLocaisFiscalizados: 9,
+        // chartGanhoCiclos: 9,
+        // chartAtividadeSimples: 9,
+        // chartAtividadeDobradas: 9,
+        // chartAtividadeTriplas: 9,
+        // chartAtividadeQuadruplas: 9,
+        // chartTop6HomeOffices: 9,
+        // charttop12Horas: 9,            // (rótulos ocultos neste gráfico)
+        // charttop12ValorHora: 9,        // (rótulos ocultos neste gráfico)
+        // charttop12ValorRealJetonEscala: 9,
+        // chartTop12Atividades: 9,       // (rótulos ocultos neste gráfico)
+        // chartTop6ValorRealJetonCiclo: 9,
+        // chartTop6ValorMedioEscala: 9,
+        // chartTop6ValorMedioAtividade: 9,
+        // chartTop6ValorMedioHora: 9,
+        // chartTop6DescontoIR: 9
+      }
+    };
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'fonteRotulosX',
+        beforeInit(chart) {
+          const id = chart.canvas && chart.canvas.id;
+          const tam = (id && FONTE_ROTULOS_GRAFICOS.porGrafico[id]) || FONTE_ROTULOS_GRAFICOS.padrao;
+          const sc = chart.config.options && chart.config.options.scales;
+          if (sc && sc.x && sc.x.ticks) sc.x.ticks.font = Object.assign({}, sc.x.ticks.font, { size: tam });
+        }
+      });
     }
 
     // ===== DESTAQUE DO INDICADOR CLICADO (todos os gráficos Chart.js) =====
@@ -2228,7 +2268,7 @@
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } }
             }
           }
         }
@@ -2261,7 +2301,7 @@
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } }
             }
           }
         }
@@ -2292,7 +2332,7 @@
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1, precision: 0 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, font: { size: 10 } } }
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, font: { size: 9 } } }
           }
         }
       });
@@ -2642,7 +2682,7 @@
             maintainAspectRatio: false,
             cutout: '68%',
             plugins: {
-              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } } },
+              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } } },
               tooltip: { callbacks: { label: (item) => `${item.dataset.label ? item.dataset.label + ' — ' : ''}${item.label}: ${fmtValor(item.parsed)}` } }
             }
           }

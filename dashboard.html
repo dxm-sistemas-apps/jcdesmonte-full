@@ -591,7 +591,7 @@
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartLocaisFiscalizados">Top 10 Locais Mais Fiscalizados</div>
+          <div class="chart-card-title" id="title-chartLocaisFiscalizados">Top 12 Locais Mais Fiscalizados</div>
         </div>
         <div class="chart-container">
           <canvas id="chartLocaisFiscalizados"></canvas>
@@ -657,32 +657,32 @@
       </div>
     </section>
 
-    <!-- PAINEL DE GRÁFICOS - LINHA 6 (TOP 10 ESCALAS INDIVIDUAIS) -->
+    <!-- PAINEL DE GRÁFICOS - LINHA 6 (Top 12 ESCALAS INDIVIDUAIS) -->
     <section class="dashboard-grid">
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop10Horas">Top 10 Escalas com Maior Qtd. de Horas Trabalhadas</div>
+          <div class="chart-card-title" id="title-chartTop12Horas">Top 12 Escalas com Maior Qtd. de Horas Trabalhadas</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop10Horas"></canvas>
+          <canvas id="chartTop12Horas"></canvas>
         </div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop10ValorHora">Top 10 Escalas com Maior Valor por Hora Trabalhada</div>
+          <div class="chart-card-title" id="title-chartTop12ValorHora">Top 12 Escalas com Maior Valor por Hora Trabalhada</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop10ValorHora"></canvas>
+          <canvas id="chartTop12ValorHora"></canvas>
         </div>
       </div>
     </section>
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
-          <div class="chart-card-title" id="title-chartTop10ValorRealJetonEscala">Top 10 Escalas com Maior Valor Real de Jeton</div>
+          <div class="chart-card-title" id="title-chartTop12ValorRealJetonEscala">Top 12 Escalas com Maior Valor Real de Jeton</div>
         </div>
         <div class="chart-container">
-          <canvas id="chartTop10ValorRealJetonEscala"></canvas>
+          <canvas id="chartTop12ValorRealJetonEscala"></canvas>
         </div>
       </div>
     </section>
@@ -892,9 +892,9 @@
       dobradas: null,
       triplas: null,
       quadruplas: null,
-      top10Horas: null,
-      top10ValorHora: null,
-      top10ValorRealJetonEscala: null,
+      Top12Horas: null,
+      Top12ValorHora: null,
+      Top12ValorRealJetonEscala: null,
       top12Atividades: null,
       top6ValorRealJetonCiclo: null,
       top6ValorMedioEscala: null,
@@ -1136,6 +1136,7 @@
       const cards = temp.querySelectorAll('#containerCardsEscalas > div, .pdf-card');
 
       cards.forEach(card => {
+        if (card.querySelector('i.fa-house-laptop')) return; // Home Office não é escala trabalhada (fora dos rankings)
         const spanData = card.querySelector('i.fa-calendar');
         const dataTexto = spanData && spanData.closest('span') ? spanData.closest('span').textContent.trim() : '-';
 
@@ -1170,6 +1171,13 @@
           if (q > atividades) { atividades = q; periodoAtiv = nome; }
         });
 
+        const qtdTotTxt = extrairCampoPorRotulo(card, 'QTD. DE ATIVIDADES:');
+        const totTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO TOTAL:');
+        const descTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO DO DESCONTO DE IR:');
+        const qtdAtividadesTotal = qtdTotTxt !== null ? (parseInt(String(qtdTotTxt).replace(/\D/g, ''), 10) || 0) : atividades;
+        const valorDiarioTotal = (computarDiariasEAuxilios && totTxt !== null) ? parseMoeda(totTxt) : jetonBruto;
+        const valorDescontoIR = (computarDiariasEAuxilios && descTxt !== null) ? parseMoeda(descTxt) : (jetonBruto * 0.22);
+
         lista.push({
           data: dataTexto,
           cicloNome: nomeCiclo,
@@ -1178,7 +1186,11 @@
           valorRealJeton: jetonBruto * 0.78,
           jetonBruto,
           atividades,
-          periodoAtiv
+          periodoAtiv,
+          qtdAtividadesTotal,
+          valorDiarioTotal,
+          valorDescontoIR,
+          valorRealAposIR
         });
       });
 
@@ -1496,7 +1508,7 @@
         acumuladoGeral.auxilios += auxiliosCiclo;
         acumuladoGeral.diariasRecebivel += diariasRecebivelCiclo;
         acumuladoGeral.auxiliosRecebivel += auxiliosRecebivelCiclo;
-        acumuladoGeral.escalas += metricasEscalas.totalEscalas;
+        acumuladoGeral.escalas += (Array.isArray(ciclo.escalasData) && ciclo.escalasData.length) ? ciclo.escalasData.filter(e => e.homeOffice !== true).length : metricasEscalas.totalEscalas;
         acumuladoGeral.horas += metricasEscalas.horasTrabalhadas;
         acumuladoGeral.pernoites += metricasEscalas.pernoites;
         acumuladoGeral.simples += metricasEscalas.simples;
@@ -1583,7 +1595,7 @@
           nome: nomeCicloProcessado,
           periodo: `${ciclo.dataAbertura || 'Abertura'} (${ciclo.recebimentoEm || 'Encerrado'})`,
           horas: metricasEscalas.horasTrabalhadas,
-          escalas: metricasEscalas.totalEscalas,
+          escalas: (Array.isArray(ciclo.escalasData) && ciclo.escalasData.length) ? ciclo.escalasData.filter(e => e.homeOffice !== true).length : metricasEscalas.totalEscalas,
           jetonBruto: jetonBrutoCiclo,
           diariasEAuxilios: diariasCiclo + auxiliosCiclo,
           receitaLiquida: receitaLiquidaCiclo,
@@ -1691,6 +1703,7 @@
         }
 
         const valorRealAposIRDetalhe = (jetonBrutoDetalhe * 0.78) + diariasDetalhe + auxiliosDetalhe;
+        if (escala.homeOffice !== true) { // Home Office não é escala trabalhada (fora dos rankings)
         listaEscalasDetalhadas.push({
           data: escala.data ? dataBR(escala.data) : '-',
           cicloNome: nomeCicloVigente,
@@ -1699,8 +1712,13 @@
           valorRealJeton: jetonBrutoDetalhe * 0.78,
           jetonBruto: jetonBrutoDetalhe,
           atividades: maxAtividadesPeriodoDash(escala).max,
-          periodoAtiv: maxAtividadesPeriodoDash(escala).per
+          periodoAtiv: maxAtividadesPeriodoDash(escala).per,
+          qtdAtividadesTotal: ['Manha', 'Tarde', 'Noite'].reduce((t, P) => t + (escala['local' + P] ? 1 : 0) + (escala['atividadesExtras' + P] || []).filter(a => a && a.local).length, 0),
+          valorDiarioTotal: jetonBrutoDetalhe + diariasDetalhe + auxiliosDetalhe,
+          valorDescontoIR: jetonBrutoDetalhe * 0.22,
+          valorRealAposIR: valorRealAposIRDetalhe
         });
+        }
 
         if (escala.homeOffice !== true) {
           const minTrab = calcularMinutosEntreHorarios(
@@ -1914,7 +1932,7 @@
         nome: nomeCicloVigente,
         periodo: 'Ciclo Vigente em Aberto',
         horas: horasVigente,
-        escalas: escalasVigentes.length,
+        escalas: escalasVigentes.filter(e => e.homeOffice !== true).length,
         jetonBruto: jetonBrutoVigente,
         diariasEAuxilios: diariasVigente + auxiliosVigente,
         receitaLiquida: receitaLiquidaVigente,
@@ -1938,9 +1956,9 @@
         status: 'VIGENTE'
       });
 
-      const top10Locais = Object.entries(contagemLocais)
+      const Top12Locais = Object.entries(contagemLocais)
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 10);
+        .slice(0, 12);
 
       const top6MaiorGanho = [...listaCiclosProcessados]
         .sort((a, b) => b.receitaBruta - a.receitaBruta)
@@ -1959,9 +1977,9 @@
       const top6Quadruplas = top6PorTipologia('quadrupla');
       const top6HomeOffices = top6PorTipologia('homeOffices');
 
-      const top10Horas = [...listaEscalasDetalhadas].sort((a, b) => b.horas - a.horas).slice(0, 10);
-      const top10ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 10);
-      const top10ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 10);
+      const Top12Horas = [...listaEscalasDetalhadas].sort((a, b) => b.horas - a.horas).slice(0, 12);
+      const Top12ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 12);
+      const Top12ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 12);
 
       const top12Atividades = listaEscalasDetalhadas
         .filter(e => (e.atividades || 0) >= 2)
@@ -1987,7 +2005,7 @@
       // Renderiza o Sunburst Hierárquico com as escalas do ciclo vigente
       renderizarGraficoSunburst(escalasVigentes);
 
-      renderizarGraficoLocais(top10Locais);
+      renderizarGraficoLocais(Top12Locais);
       renderizarGraficoGanhoCiclos(top6MaiorGanho);
       renderizarGraficoAtividadePorCiclo('chartAtividadeSimples', 'simples', top6Simples, 'simples', '#3b82f6', 'Atividades Simples');
       renderizarGraficoAtividadePorCiclo('chartAtividadeDobradas', 'dobradas', top6Dobradas, 'dobrada', '#06b6d4', 'Atividades Dobradas');
@@ -1995,9 +2013,9 @@
       renderizarGraficoAtividadePorCiclo('chartAtividadeQuadruplas', 'quadruplas', top6Quadruplas, 'quadrupla', '#ef4444', 'Atividades Quádruplas');
       renderizarGraficoAtividadePorCiclo('chartTop6HomeOffices', 'top6HomeOffices', top6HomeOffices, 'homeOffices', '#a855f7', 'Home Offices');
 
-      renderizarGraficoTopEscalas('chartTop10Horas', 'top10Horas', top10Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
-      renderizarGraficoTopEscalas('chartTop10ValorHora', 'top10ValorHora', top10ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
-      renderizarGraficoTopEscalas('chartTop10ValorRealJetonEscala', 'top10ValorRealJetonEscala', top10ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
+      renderizarGraficoTopEscalas('chartTop12Horas', 'Top12Horas', Top12Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
+      renderizarGraficoTopEscalas('chartTop12ValorHora', 'Top12ValorHora', Top12ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
+      renderizarGraficoTopEscalas('chartTop12ValorRealJetonEscala', 'Top12ValorRealJetonEscala', Top12ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
 
       renderizarGraficoTop12Atividades(top12Atividades);
 
@@ -2009,6 +2027,66 @@
 
       aplicarSeletoresGraficos();
     }
+
+    // ===== DESTAQUE DO INDICADOR CLICADO (todos os gráficos Chart.js) =====
+    (function () {
+      if (!window.Chart || !Chart.register) return;
+      const esmaecer = (cor) => {
+        if (typeof cor !== 'string') return cor;
+        const m = cor.match(/^#([0-9a-f]{6})$/i);
+        if (m) { const n = parseInt(m[1], 16); return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, 0.28)`; }
+        return cor;
+      };
+      const porPonto = (v, i) => Array.isArray(v) ? v[i % v.length] : v;
+      function aplicarDestaque(chart) {
+        const sel = chart.$destaque;
+        chart.data.datasets.forEach((ds, d) => {
+          const tipo = ds.type || chart.config.type;
+          const n = (ds.data || []).length;
+          if (ds.$orig === undefined) {
+            ds.$orig = { bg: ds.backgroundColor, bc: ds.borderColor, bw: ds.borderWidth, off: ds.offset, pr: ds.pointRadius, pbw: ds.pointBorderWidth, pbc: ds.pointBorderColor };
+          }
+          const o = ds.$orig;
+          if (!sel) {
+            ds.backgroundColor = o.bg; ds.borderColor = o.bc; ds.borderWidth = o.bw; ds.offset = o.off;
+            ds.pointRadius = o.pr; ds.pointBorderWidth = o.pbw; ds.pointBorderColor = o.pbc;
+            return;
+          }
+          const idx = Array.from({ length: n }, (_, i) => i);
+          if (tipo === 'line') {
+            const base = o.pr === undefined ? 3 : o.pr;
+            ds.pointRadius = idx.map(i => (sel.d === d && sel.i === i) ? 9 : porPonto(base, i));
+            ds.pointBorderWidth = idx.map(i => (sel.d === d && sel.i === i) ? 3 : porPonto(o.pbw === undefined ? 1 : o.pbw, i));
+            ds.pointBorderColor = idx.map(i => (sel.d === d && sel.i === i) ? '#ffffff' : porPonto(o.pbc === undefined ? ds.borderColor : o.pbc, i));
+            return;
+          }
+          ds.backgroundColor = idx.map(i => (sel.d === d && sel.i === i) ? porPonto(o.bg, i) : esmaecer(porPonto(o.bg, i)));
+          ds.borderColor = idx.map(i => (sel.d === d && sel.i === i) ? '#ffffff' : porPonto(o.bc === undefined ? 'transparent' : o.bc, i));
+          ds.borderWidth = idx.map(i => (sel.d === d && sel.i === i) ? 3 : (tipo === 'bar' ? 0 : porPonto(o.bw === undefined ? 0 : o.bw, i)));
+          if (tipo === 'doughnut' || tipo === 'pie') ds.offset = idx.map(i => (sel.d === d && sel.i === i) ? 14 : 0);
+        });
+        chart.update('none');
+      }
+      Chart.register({
+        id: 'destaqueClique',
+        afterEvent(chart, args) {
+          const ev = args.event;
+          if (!ev || (ev.type !== 'click' && ev.type !== 'touchstart')) return;
+          const els = chart.getElementsAtEventForMode(ev, 'nearest', { intersect: true }, false);
+          const el = els[0];
+          const ant = chart.$destaque;
+          let novo = el ? { d: el.datasetIndex, i: el.index } : null;
+          if (novo && ant && ant.d === novo.d && ant.i === novo.i) novo = null;
+          chart.$destaque = novo;
+          aplicarDestaque(chart);
+          if (chart.tooltip && chart.tooltip.setActiveElements) {
+            chart.tooltip.setActiveElements(novo ? [{ datasetIndex: novo.d, index: novo.i }] : [], { x: ev.x, y: ev.y });
+            chart.update('none');
+          }
+          args.changed = true;
+        }
+      });
+    })();
 
     if (window.Chart && Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
       Chart.defaults.plugins.tooltip.callbacks.title = (items) => {
@@ -2286,6 +2364,19 @@
       });
     }
 
+    // Linhas exibidas abaixo do período no tooltip dos rankings de escalas
+    function linhasDetalheEscala(e) {
+      return [
+        `QTD. DE ATIVIDADES: ${e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : e.atividades}`,
+        `QTD. DE HORAS TRABALHADAS: ${formatarHorasDecimal(e.horas)}`,
+        `VALOR POR HORA TRABALHADA: ${formatMoeda(e.valorHora)}`,
+        `VALOR DIÁRIO DO JETON: ${formatMoeda(e.jetonBruto)}`,
+        `VALOR DIÁRIO TOTAL: ${formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto)}`,
+        `VALOR DIÁRIO DO DESCONTO DE IR: ${formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22)}`,
+        `VALOR DIÁRIO REAL APÓS IR: ${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}`
+      ];
+    }
+
     function renderizarGraficoTopEscalas(canvasId, chaveInstancia, listaTop, campo, cor, labelDataset, ehMoeda) {
       const ctx = document.getElementById(canvasId).getContext('2d');
       if (graficosExtras[chaveInstancia]) graficosExtras[chaveInstancia].destroy();
@@ -2307,13 +2398,17 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          events: ['click', 'touchstart'], // informações detalhadas aparecem ao clicar no indicador
           plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: (item) => ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y) } }
+            tooltip: { callbacks: {
+              afterTitle: (items) => items && items.length ? linhasDetalheEscala(listaTop[items[0].dataIndex]) : [],
+              label: (item) => (ehMoeda ? 'VALOR POR HORA (R$): ' : 'HORAS TRABALHADAS: ') + (ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y))
+            } }
           },
           scales: {
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => ehMoeda ? formatMoeda(v) : `${v}H` } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            x: { grid: { display: false }, ticks: { display: false } }
           }
         }
       });
@@ -2348,27 +2443,19 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          events: ['click', 'touchstart'],
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
-                label: (item) => {
-                  const e = lista[item.dataIndex];
-                  const h = Math.floor(e.horas);
-                  const m = Math.round((e.horas - h) * 60);
-                  return [
-                    `ATIVIDADES (${e.periodoAtiv}): ${e.atividades}`,
-                    `HORAS TRABALHADAS: ${formatarHorasDecimal(e.horas)}`,
-                    `VALOR POR HORA: ${formatMoeda(e.valorHora)}`,
-                    `JETON: ${formatMoeda(e.jetonBruto)}`
-                  ];
-                }
+                afterTitle: (items) => items && items.length ? linhasDetalheEscala(lista[items[0].dataIndex]) : [],
+                label: (item) => `ATIVIDADES NO MESMO PERÍODO (${lista[item.dataIndex].periodoAtiv}): ${lista[item.dataIndex].atividades}`
               }
             }
           },
           scales: {
             y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8', precision: 0, stepSize: 1 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
+            x: { grid: { display: false }, ticks: { display: false } }
           }
         }
       });

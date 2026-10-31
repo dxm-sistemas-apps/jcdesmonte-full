@@ -425,11 +425,21 @@
           </div>
           <div id="wrapperHomeOffice">
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Home Office</label>
-            <div class="flex items-center gap-2 h-[42px]">
-              <button type="button" data-joinha="sim" onclick="alternarHomeOffice('', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
-              <button type="button" data-joinha="nao" onclick="alternarHomeOffice('', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 min-h-[42px]">
+              <div class="flex items-center gap-2">
+                <button type="button" data-joinha="sim" onclick="alternarHomeOffice('', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
+                <button type="button" data-joinha="nao" onclick="alternarHomeOffice('', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+              </div>
+              <div id="wrapperHaveraAtividade" tabindex="-1" class="hidden">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] uppercase font-bold text-slate-400 leading-tight max-w-[110px]">Haverá atividade neste dia *</span>
+                  <button type="button" data-havera="sim" onclick="alternarHaveraAtividade('', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
+                  <button type="button" data-havera="nao" onclick="alternarHaveraAtividade('', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+                </div>
+              </div>
             </div>
             <input type="checkbox" id="chkHomeOffice" class="hidden" data-decidido="1">
+            <input type="checkbox" id="chkHaveraAtividade" class="hidden" data-decidido="0">
           </div>
         </div>
 
@@ -813,11 +823,21 @@
           </div>
           <div id="modalWrapperHomeOffice">
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Home Office</label>
-            <div class="flex items-center gap-2 h-[42px]">
-              <button type="button" data-joinha="sim" onclick="alternarHomeOffice('modal', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
-              <button type="button" data-joinha="nao" onclick="alternarHomeOffice('modal', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+            <div class="flex flex-wrap items-center gap-x-5 gap-y-1 min-h-[42px]">
+              <div class="flex items-center gap-2">
+                <button type="button" data-joinha="sim" onclick="alternarHomeOffice('modal', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
+                <button type="button" data-joinha="nao" onclick="alternarHomeOffice('modal', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+              </div>
+              <div id="modalWrapperHaveraAtividade" tabindex="-1" class="hidden">
+                <div class="flex items-center gap-2">
+                  <span class="text-[11px] uppercase font-bold text-slate-400 leading-tight max-w-[110px]">Haverá atividade neste dia *</span>
+                  <button type="button" data-havera="sim" onclick="alternarHaveraAtividade('modal', true)" title="Sim" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-emerald-600 hover:text-emerald-400 transition"><i class="fa-solid fa-thumbs-up"></i></button>
+                  <button type="button" data-havera="nao" onclick="alternarHaveraAtividade('modal', false)" title="Não" class="w-10 h-10 rounded-xl border border-slate-700 text-slate-500 flex items-center justify-center hover:border-red-600 hover:text-red-400 transition"><i class="fa-solid fa-thumbs-down"></i></button>
+                </div>
+              </div>
             </div>
             <input type="checkbox" id="modalChkHomeOffice" class="hidden" data-decidido="1">
+            <input type="checkbox" id="modalChkHaveraAtividade" class="hidden" data-decidido="0">
           </div>
         </div>
 
@@ -1421,6 +1441,7 @@
 
     function qtdAtividadePeriodo(P) {
       const el = document.getElementById('qtdAtividade' + P);
+      if (el && el.disabled) return 0; // Home Office: campo bloqueado = 0 atividades
       let q = parseInt(el ? el.value : '1', 10);
       if (!q || q < 1) q = 1;
       if (q > 4) q = 4;
@@ -1826,6 +1847,7 @@
     const JETON_MEDIO_DOBRADA = 220;
     const JETON_MEDIO_QUADRUPLA = 440;
     const ALIQUOTA_IR_HOME_OFFICE = 0.22;
+    const VALOR_PERDA_RENDIMENTO_COM_ATIVIDADE = 160;
     const VALOR_MEDIA_PERDA_RENDIMENTO =
       ((JETON_MEDIO_DOBRADA + JETON_MEDIO_QUADRUPLA) / 2) * (1 - ALIQUOTA_IR_HOME_OFFICE);
 
@@ -1845,16 +1867,75 @@
         motivoTextoId: prefixo ? `${prefixo}TextoMotivoHomeOffice` : 'textoMotivoHomeOffice',
         mediaPerdaId: prefixo ? `${prefixo}ValorMediaPerdaRendimento` : 'valorMediaPerdaRendimento',
         motivoCampoWrapperId: prefixo ? `${prefixo}WrapperHomeOfficeMotivo` : 'wrapperHomeOfficeMotivo',
-        motivoCampoId: prefixo ? `${prefixo}HomeOfficeMotivo` : 'homeOfficeMotivo'
+        motivoCampoId: prefixo ? `${prefixo}HomeOfficeMotivo` : 'homeOfficeMotivo',
+        haveraChkId: prefixo ? `${prefixo}ChkHaveraAtividade` : 'chkHaveraAtividade',
+        haveraWrapperId: prefixo ? `${prefixo}WrapperHaveraAtividade` : 'wrapperHaveraAtividade'
       };
     }
 
-    function definirEstadoHomeOffice(prefixo, valor, decidido, condicao, motivo) {
+    // ===== "HAVERÁ ATIVIDADE NESTE DIA" (só no Home Office Reunião/Sede) =====
+    function definirEstadoHaveraAtividade(prefixo, valor) {
+      const { haveraChkId } = idsHomeOffice(prefixo);
+      const chk = document.getElementById(haveraChkId);
+      if (!chk) return;
+      chk.checked = valor === true;
+      chk.dataset.decidido = (valor === true || valor === false) ? '1' : '0';
+    }
+
+    function alternarHaveraAtividade(prefixo, valor) {
+      const { haveraChkId } = idsHomeOffice(prefixo);
+      const chk = document.getElementById(haveraChkId);
+      if (!chk) return;
+      const jaEstava = chk.dataset.decidido === '1' && chk.checked === valor;
+      definirEstadoHaveraAtividade(prefixo, jaEstava ? null : valor);
+      atualizarVisualHaveraAtividade(prefixo);
+      chk.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    function atualizarVisualHaveraAtividade(prefixo) {
+      const { haveraChkId, haveraWrapperId, chkId, condicaoInputId } = idsHomeOffice(prefixo);
+      const chk = document.getElementById(haveraChkId);
+      const wrapper = document.getElementById(haveraWrapperId);
+      const chkHO = document.getElementById(chkId);
+      const condicao = document.getElementById(condicaoInputId);
+      if (!chk || !wrapper) return;
+      const visivel = !!(chkHO && chkHO.dataset.decidido === '1' && chkHO.checked && condicao && condicao.value === 'reuniao');
+      if (!visivel) definirEstadoHaveraAtividade(prefixo, null);
+      wrapper.classList.toggle('hidden', !visivel);
+      const decidido = chk.dataset.decidido === '1';
+      const btnSim = wrapper.querySelector('[data-havera="sim"]');
+      const btnNao = wrapper.querySelector('[data-havera="nao"]');
+      [btnSim, btnNao].forEach(btn => {
+        if (!btn) return;
+        btn.classList.remove('bg-emerald-600', 'border-emerald-500', 'bg-red-600', 'border-red-500', 'text-white');
+        btn.classList.add('border-slate-700', 'text-slate-500');
+      });
+      if (decidido && chk.checked && btnSim) {
+        btnSim.classList.remove('border-slate-700', 'text-slate-500');
+        btnSim.classList.add('bg-emerald-600', 'border-emerald-500', 'text-white');
+      } else if (decidido && !chk.checked && btnNao) {
+        btnNao.classList.remove('border-slate-700', 'text-slate-500');
+        btnNao.classList.add('bg-red-600', 'border-red-500', 'text-white');
+      }
+      const valorMediaEl = document.getElementById(idsHomeOffice(prefixo).mediaPerdaId);
+      if (valorMediaEl && chkHO && chkHO.dataset.decidido === '1' && chkHO.checked) valorMediaEl.textContent = formatarMoeda(perdaRendimentoHomeOffice(prefixo));
+    }
+
+    function haveraAtividadeParaSalvar(prefixo) {
+      if (condicaoHomeOfficeParaSalvar(prefixo) !== 'reuniao') return null;
+      const { haveraChkId } = idsHomeOffice(prefixo);
+      const chk = document.getElementById(haveraChkId);
+      if (!chk || chk.dataset.decidido !== '1') return null;
+      return chk.checked === true;
+    }
+
+    function definirEstadoHomeOffice(prefixo, valor, decidido, condicao, motivo, haveraAtividade) {
       const { chkId, condicaoInputId, motivoCampoId } = idsHomeOffice(prefixo);
       const chk = document.getElementById(chkId);
       if (!chk) return;
       chk.checked = valor === true;
       chk.dataset.decidido = decidido ? '1' : '0';
+      definirEstadoHaveraAtividade(prefixo, haveraAtividade === true || haveraAtividade === false ? haveraAtividade : null);
       const inputCondicao = document.getElementById(condicaoInputId);
       if (inputCondicao) inputCondicao.value = condicao || '';
       const campoMotivo = document.getElementById(motivoCampoId);
@@ -1898,7 +1979,7 @@
       const motivoBox = document.getElementById(motivoBoxId);
       const valorMediaEl = document.getElementById(mediaPerdaId);
       if (motivoBox) motivoBox.classList.toggle('hidden', !mostrarCondicao);
-      if (valorMediaEl) valorMediaEl.textContent = mostrarCondicao ? formatarMoeda(VALOR_MEDIA_PERDA_RENDIMENTO) : formatarMoeda(0);
+      if (valorMediaEl) valorMediaEl.textContent = mostrarCondicao ? formatarMoeda(perdaRendimentoHomeOffice(prefixo)) : formatarMoeda(0);
       atualizarVisualCondicaoHomeOffice(prefixo);
     }
 
@@ -1930,6 +2011,7 @@
       const { motivoCampoWrapperId } = idsHomeOffice(prefixo);
       const wrapperMotivo = document.getElementById(motivoCampoWrapperId);
       if (wrapperMotivo) wrapperMotivo.classList.toggle('hidden', valor !== 'compulsorio');
+      atualizarVisualHaveraAtividade(prefixo);
       aplicarBloqueioCamposHomeOffice(prefixo);
     }
 
@@ -1955,8 +2037,12 @@
       return texto || null;
     }
 
+    // Perda de rendimento: R$ 160,00 quando haverá atividade no dia (Reunião/Sede); caso contrário, a média padrão
+    function perdaRendimentoHomeOffice(prefixo) {
+      return haveraAtividadeParaSalvar(prefixo) === true ? VALOR_PERDA_RENDIMENTO_COM_ATIVIDADE : VALOR_MEDIA_PERDA_RENDIMENTO;
+    }
     function valorMediaPerdaRendimentoParaSalvar(prefixo) {
-      return valorHomeOfficeParaSalvar(prefixo) === true ? VALOR_MEDIA_PERDA_RENDIMENTO : null;
+      return valorHomeOfficeParaSalvar(prefixo) === true ? perdaRendimentoHomeOffice(prefixo) : null;
     }
 
     function calcularMinutosEntreHorarios(horarioInicio, horarioFim) {
@@ -1986,8 +2072,10 @@
       if (bloquear) {
         if (elemento.tagName === 'SELECT') elemento.selectedIndex = 0;
         else if (elemento.type === 'checkbox') elemento.checked = false;
-        else if (elemento.type === 'number') elemento.value = '1';
+        else if (elemento.type === 'number') elemento.value = '0'; // Home Office: qtd. de atividade sempre 0
         else elemento.value = '';
+      } else if (elemento.type === 'number' && elemento.value === '0') {
+        elemento.value = '1';
       }
     }
 
@@ -2386,7 +2474,8 @@
         let maiorDataCheck = '';
         escalasExistentesCheck.forEach((esc, idx) => {
           if (indiceEmEdicaoCheck >= 0 && idx === indiceEmEdicaoCheck) return;
-          if (esc.data && (!maiorDataCheck || esc.data > maiorDataCheck)) maiorDataCheck = esc.data;
+          const dEf = dataLimiteEscala(esc);
+          if (dEf && (!maiorDataCheck || dEf > maiorDataCheck)) maiorDataCheck = dEf;
         });
         // Regra só vale para NOVA escala; ao atualizar uma escala existente (inclusive passada) não se aplica
         if (indiceEmEdicaoCheck < 0 && maiorDataCheck && data <= maiorDataCheck) {
@@ -2399,6 +2488,10 @@
       const ehHomeOfficeSalvar = valorHomeOfficeParaSalvar('') === true;
       if (ehHomeOfficeSalvar && !condicaoHomeOfficeParaSalvar('')) {
         await alertarCampoObrigatorio('wrapperHomeOfficeCondicao', 'SELECIONE A CONDIÇÃO DO HOME OFFICE.');
+        return;
+      }
+      if (ehHomeOfficeSalvar && condicaoHomeOfficeParaSalvar('') === 'reuniao' && haveraAtividadeParaSalvar('') === null) {
+        await alertarCampoObrigatorio('wrapperHaveraAtividade', 'RESPONDA SE HAVERÁ ATIVIDADE NESTE DIA (HOME OFFICE - REUNIÃO).');
         return;
       }
 
@@ -2567,6 +2660,7 @@
         auxTransporteRecebivel: flagsSalvar.auxTransporteRecebivel,
         homeOffice: valorHomeOfficeParaSalvar(''),
         homeOfficeCondicao: condicaoHomeOfficeParaSalvar(''),
+        haveraAtividade: haveraAtividadeParaSalvar(''),
         homeOfficeMotivo: motivoHomeOfficeParaSalvar(''),
         valorMediaPerdaRendimento: valorMediaPerdaRendimentoParaSalvar(''),
         horasTrabalhadasStr,
@@ -2843,6 +2937,16 @@
       aplicarLimitesDataAtividade(dados.dataAbertura || '', dados.dataFechamento || '');
     }
 
+    // Data que conta como "última atividade registrada": Home Office Reunião com "haverá atividade = SIM"
+    // libera o próprio dia para o lançamento da atividade (conta como o dia anterior).
+    function dataLimiteEscala(esc) {
+      if (!esc || !esc.data) return '';
+      if (esc.homeOffice === true && esc.homeOfficeCondicao === 'reuniao' && esc.haveraAtividade === true) {
+        return adicionarDias(esc.data, -1);
+      }
+      return esc.data;
+    }
+
     function aplicarLimitesDataAtividade(dataAbertura, dataFechamento, indexEmEdicao) {
       const campoDataAtividade = document.getElementById('dataAtividade');
       if (!campoDataAtividade) return;
@@ -2851,7 +2955,8 @@
       let maiorData = '';
       escalasSalvas.forEach((esc, idx) => {
         if (indexEmEdicao !== undefined && indexEmEdicao !== null && idx === indexEmEdicao) return;
-        if (esc.data && (!maiorData || esc.data > maiorData)) maiorData = esc.data;
+        const dEf = dataLimiteEscala(esc);
+        if (dEf && (!maiorData || dEf > maiorData)) maiorData = dEf;
       });
 
       const editando = indexEmEdicao !== undefined && indexEmEdicao !== null && indexEmEdicao >= 0;
@@ -3083,7 +3188,7 @@
       definirEstadoRecebivel('', 'DiariaTraslado', esc.diariaTrasladoRecebivel === true, esc.diariaTrasladoRecebivel !== undefined && esc.diariaTrasladoRecebivel !== null);
       definirEstadoRecebivel('', 'AuxAlimentacao', esc.auxAlimentacaoRecebivel === true, esc.auxAlimentacaoRecebivel !== undefined && esc.auxAlimentacaoRecebivel !== null);
       definirEstadoRecebivel('', 'AuxTransporte', esc.auxTransporteRecebivel === true, esc.auxTransporteRecebivel !== undefined && esc.auxTransporteRecebivel !== null);
-      definirEstadoHomeOffice('', esc.homeOffice === true, esc.homeOffice !== null, esc.homeOfficeCondicao, esc.homeOfficeMotivo);
+      definirEstadoHomeOffice('', esc.homeOffice === true, esc.homeOffice !== null, esc.homeOfficeCondicao, esc.homeOfficeMotivo, esc.haveraAtividade);
 
       document.querySelectorAll('input[name="funcaoManha"]').forEach(cb => { cb.checked = esc.funcaoManha?.includes(cb.value); });
       document.querySelectorAll('input[name="funcaoTarde"]').forEach(cb => { cb.checked = esc.funcaoTarde?.includes(cb.value); });
@@ -3237,6 +3342,7 @@
       const blocoHomeOfficeCard = esc.homeOffice === true ? `
             <div class="bg-purple-900/20 border border-purple-800/50 rounded-xl px-3 py-2 text-xs text-slate-300 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
               <span class="font-bold text-purple-400 uppercase"><i class="fa-solid fa-house-laptop mr-1"></i> HOME OFFICE${esc.homeOfficeCondicao && LABELS_CONDICAO_HOME_OFFICE[esc.homeOfficeCondicao] ? ': ' + LABELS_CONDICAO_HOME_OFFICE[esc.homeOfficeCondicao] : ''}</span>
+              ${esc.homeOfficeCondicao === 'reuniao' && (esc.haveraAtividade === true || esc.haveraAtividade === false) ? `<span><strong>HAVERÁ ATIVIDADE NESTE DIA:</strong> <span class="text-white font-bold">${esc.haveraAtividade ? 'SIM' : 'NÃO'}</span></span>` : ''}
               ${esc.homeOfficeCondicao === 'compulsorio' && esc.homeOfficeMotivo ? `<span><strong>MOTIVO:</strong> <span class="text-white font-bold">${escaparHtml(esc.homeOfficeMotivo)}</span></span>` : ''}
             </div>` : '';
 
@@ -3316,12 +3422,13 @@
                   <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
-                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${totalAtividadesEscala(esc) || 1}</span></div>
+                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${esc.homeOffice === true ? 0 : (totalAtividadesEscala(esc) || 1)}</span></div>
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
+                  ${(esc.homeOffice === true && esc.homeOfficeCondicao === 'reuniao') ? `<div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>` : ''}
                 </div>
               </div>
 
@@ -3595,7 +3702,7 @@
       definirEstadoRecebivel('modal', 'DiariaTraslado', esc.diariaTrasladoRecebivel === true, esc.diariaTrasladoRecebivel !== undefined && esc.diariaTrasladoRecebivel !== null);
       definirEstadoRecebivel('modal', 'AuxAlimentacao', esc.auxAlimentacaoRecebivel === true, esc.auxAlimentacaoRecebivel !== undefined && esc.auxAlimentacaoRecebivel !== null);
       definirEstadoRecebivel('modal', 'AuxTransporte', esc.auxTransporteRecebivel === true, esc.auxTransporteRecebivel !== undefined && esc.auxTransporteRecebivel !== null);
-      definirEstadoHomeOffice('modal', esc.homeOffice === true, esc.homeOffice !== null, esc.homeOfficeCondicao, esc.homeOfficeMotivo);
+      definirEstadoHomeOffice('modal', esc.homeOffice === true, esc.homeOffice !== null, esc.homeOfficeCondicao, esc.homeOfficeMotivo, esc.haveraAtividade);
       atualizarVisibilidadeItensRecebiveis('modal', obterValoresExtrasEscala(esc.data, [
         { local: esc.localManha || '', pernoite: esc.pernoiteManha },
         { local: esc.localTarde || '', pernoite: esc.pernoiteTarde },
@@ -3640,7 +3747,18 @@
       const horarioSaida = document.getElementById('modalHorarioSaida').value;
       const horarioChegada = document.getElementById('modalHorarioChegada').value;
 
-      if (!data || !horarioSaida || !horarioChegada) {
+      const modalHOSim = valorHomeOfficeParaSalvar('modal') === true;
+      if (modalHOSim && !condicaoHomeOfficeParaSalvar('modal')) {
+        await mostrarAlertaEstilizado('SELECIONE A CONDIÇÃO DO HOME OFFICE.');
+        return;
+      }
+      if (modalHOSim && condicaoHomeOfficeParaSalvar('modal') === 'reuniao' && haveraAtividadeParaSalvar('modal') === null) {
+        await mostrarAlertaEstilizado('RESPONDA SE HAVERÁ ATIVIDADE NESTE DIA (HOME OFFICE - REUNIÃO).');
+        return;
+      }
+      const horarioSaidaLiberado = !document.getElementById('modalHorarioSaida').disabled;
+      const horarioChegadaLiberado = !document.getElementById('modalHorarioChegada').disabled;
+      if (!data || (!horarioSaida && horarioSaidaLiberado) || (!horarioChegada && horarioChegadaLiberado)) {
         await mostrarAlertaEstilizado('PREENCHA A DATA E OS HORÁRIOS DE SAÍDA E CHEGADA.');
         return;
       }
@@ -3754,6 +3872,7 @@
         auxTransporteRecebivel: flagsModal.auxTransporteRecebivel,
         homeOffice: valorHomeOfficeParaSalvar('modal'),
         homeOfficeCondicao: condicaoHomeOfficeParaSalvar('modal'),
+        haveraAtividade: haveraAtividadeParaSalvar('modal'),
         homeOfficeMotivo: motivoHomeOfficeParaSalvar('modal'),
         valorMediaPerdaRendimento: valorMediaPerdaRendimentoParaSalvar('modal'),
         horasTrabalhadasStr, valorHoraStr,

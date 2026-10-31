@@ -1382,7 +1382,7 @@
               r0: '24%',
               r: '58%',
               itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
-              label: { rotate: 'radial', fontSize: 9, color: '#f8fafc', fontWeight: 'bold' }
+              label: { rotate: 'radial', fontSize: 10, color: '#f8fafc', fontWeight: 'bold' }
             },
             {
               r0: '58%',
@@ -2056,6 +2056,53 @@
         // chartTop6DescontoIR: 9
       }
     };
+    // ============================================================
+    // COMO O VALOR É EXIBIDO AO CLICAR NO INDICADOR
+    //   'grafico' = só o valor escrito no próprio gráfico (em cima do indicador)
+    //   'quadro'  = só o quadro com os detalhes (período, valor e demais informações)
+    //   'ambos'   = os dois
+    // Para mudar TODOS: altere "padrao". Para mudar UM gráfico: use "porGrafico"
+    // (a chave é o id do <canvas>, a mesma lista da fonte acima).
+    // ============================================================
+    const MODO_EXIBICAO_VALOR = {
+      padrao: 'grafico',
+      porGrafico: {
+        // Rankings: o quadro traz as informações da escala (atividades, horas, valor/hora, jeton, IR...)
+        charttop12Horas: 'quadro',
+        charttop12ValorHora: 'quadro',
+        charttop12ValorRealJetonEscala: 'quadro',
+        chartTop12Atividades: 'quadro'
+        // chartTipologiaCarga: 'ambos',
+        // chartLocaisFiscalizados: 'quadro',
+      }
+    };
+    // ============================================================
+    // VALORES SEMPRE VISÍVEIS NO GRÁFICO (já ao abrir a página, sem precisar clicar)
+    //   true  = escreve o valor sobre cada indicador o tempo todo
+    //   false = só aparece ao clicar (conforme MODO_EXIBICAO_VALOR acima)
+    // Para mudar TODOS: altere "padrao". Para mudar UM gráfico: use "porGrafico" (id do <canvas>).
+    // ============================================================
+    const VALORES_SEMPRE_VISIVEIS = {
+      padrao: true,
+      porGrafico: {
+        charttop12Horas: false,
+        charttop12ValorHora: false,
+        charttop12ValorRealJetonEscala: false,
+        chartTop12Atividades: false
+      }
+    };
+    function valoresFixosAtivos(chart) {
+      const id = chart.canvas && chart.canvas.id;
+      const v = id && Object.prototype.hasOwnProperty.call(VALORES_SEMPRE_VISIVEIS.porGrafico, id)
+        ? VALORES_SEMPRE_VISIVEIS.porGrafico[id] : VALORES_SEMPRE_VISIVEIS.padrao;
+      return v === true;
+    }
+    function modoExibicaoValor(chart) {
+      const id = chart.canvas && chart.canvas.id;
+      const m = (id && MODO_EXIBICAO_VALOR.porGrafico[id]) || MODO_EXIBICAO_VALOR.padrao;
+      return { quadro: m === 'quadro' || m === 'ambos', grafico: m === 'grafico' || m === 'ambos' };
+    }
+
     if (window.Chart && Chart.register) {
       Chart.register({
         id: 'fonteRotulosX',
@@ -2068,13 +2115,18 @@
       });
     }
 
-    // ===== DESTAQUE DO INDICADOR CLICADO (todos os gráficos Chart.js) =====
+    // ===== DESTAQUE DO INDICADOR CLICADO (barras, linha e histograma) =====
+    // Ao clicar num indicador, os demais ficam "fantasma" (esmaecidos) e o tooltip com os detalhes é exibido.
     (function () {
       if (!window.Chart || !Chart.register) return;
       const esmaecer = (cor) => {
         if (typeof cor !== 'string') return cor;
-        const m = cor.match(/^#([0-9a-f]{6})$/i);
-        if (m) { const n = parseInt(m[1], 16); return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, 0.28)`; }
+        let m = cor.match(/^#([0-9a-f]{6})([0-9a-f]{2})?$/i);
+        if (m) { const n = parseInt(m[1], 16); return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, 0.25)`; }
+        m = cor.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+        if (m) return `rgba(${parseInt(m[1] + m[1], 16)}, ${parseInt(m[2] + m[2], 16)}, ${parseInt(m[3] + m[3], 16)}, 0.25)`;
+        m = cor.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*([\d.]+))?\s*\)$/i);
+        if (m) return `rgba(${m[1]}, ${m[2]}, ${m[3]}, ${Math.min(0.25, m[4] === undefined ? 1 : parseFloat(m[4]))})`;
         return cor;
       };
       const porPonto = (v, i) => Array.isArray(v) ? v[i % v.length] : v;
@@ -2084,49 +2136,180 @@
           const tipo = ds.type || chart.config.type;
           const n = (ds.data || []).length;
           if (ds.$orig === undefined) {
-            ds.$orig = { bg: ds.backgroundColor, bc: ds.borderColor, bw: ds.borderWidth, off: ds.offset, pr: ds.pointRadius, pbw: ds.pointBorderWidth, pbc: ds.pointBorderColor };
+            ds.$orig = { bg: ds.backgroundColor, pbg: ds.pointBackgroundColor, pbc: ds.pointBorderColor };
           }
           const o = ds.$orig;
-          if (!sel) {
-            ds.backgroundColor = o.bg; ds.borderColor = o.bc; ds.borderWidth = o.bw; ds.offset = o.off;
-            ds.pointRadius = o.pr; ds.pointBorderWidth = o.pbw; ds.pointBorderColor = o.pbc;
-            return;
-          }
           const idx = Array.from({ length: n }, (_, i) => i);
+          const ehSel = (i) => !!sel && sel.d === d && sel.i === i;
           if (tipo === 'line') {
-            const base = o.pr === undefined ? 3 : o.pr;
-            ds.pointRadius = idx.map(i => (sel.d === d && sel.i === i) ? 9 : porPonto(base, i));
-            ds.pointBorderWidth = idx.map(i => (sel.d === d && sel.i === i) ? 3 : porPonto(o.pbw === undefined ? 1 : o.pbw, i));
-            ds.pointBorderColor = idx.map(i => (sel.d === d && sel.i === i) ? '#ffffff' : porPonto(o.pbc === undefined ? ds.borderColor : o.pbc, i));
+            if (!sel) { ds.pointBackgroundColor = o.pbg; ds.pointBorderColor = o.pbc; return; }
+            const baseFill = o.pbg !== undefined ? o.pbg : (ds.borderColor || '#3b82f6');
+            const baseBorda = o.pbc !== undefined ? o.pbc : baseFill;
+            ds.pointBackgroundColor = idx.map(i => ehSel(i) ? porPonto(baseFill, i) : esmaecer(porPonto(baseFill, i)));
+            ds.pointBorderColor = idx.map(i => ehSel(i) ? porPonto(baseBorda, i) : esmaecer(porPonto(baseBorda, i)));
             return;
           }
-          ds.backgroundColor = idx.map(i => (sel.d === d && sel.i === i) ? porPonto(o.bg, i) : esmaecer(porPonto(o.bg, i)));
-          ds.borderColor = idx.map(i => (sel.d === d && sel.i === i) ? '#ffffff' : porPonto(o.bc === undefined ? 'transparent' : o.bc, i));
-          ds.borderWidth = idx.map(i => (sel.d === d && sel.i === i) ? 3 : (tipo === 'bar' ? 0 : porPonto(o.bw === undefined ? 0 : o.bw, i)));
-          if (tipo === 'doughnut' || tipo === 'pie') ds.offset = idx.map(i => (sel.d === d && sel.i === i) ? 14 : 0);
+          if (!sel) { ds.backgroundColor = o.bg; return; }
+          ds.backgroundColor = idx.map(i => ehSel(i) ? porPonto(o.bg, i) : esmaecer(porPonto(o.bg, i)));
         });
         chart.update('none');
       }
+      // Quadro com os valores do indicador clicado (próprio, igual para barras, linha e histograma)
+      let popover = null;
+      function ocultarPopoverIndicador() { if (popover) popover.style.display = 'none'; }
+      window.ocultarPopoverIndicador = ocultarPopoverIndicador;
+      function mostrarPopoverIndicador(chart, sel, ev) {
+        const ds = chart.data.datasets[sel.d];
+        const bruto = ds.data[sel.i];
+        if (bruto === undefined || bruto === null) { ocultarPopoverIndicador(); return; }
+        const valor = (bruto !== null && typeof bruto === 'object') ? (bruto.y !== undefined ? bruto.y : bruto.v) : bruto;
+        const rotulo = chart.data.labels ? chart.data.labels[sel.i] : '';
+        const item = {
+          chart, datasetIndex: sel.d, dataIndex: sel.i, dataset: ds, raw: bruto, label: rotulo,
+          parsed: { x: sel.i, y: valor }, formattedValue: String(valor)
+        };
+        const opT = (chart.config.options && chart.config.options.plugins && chart.config.options.plugins.tooltip) || {};
+        const cb = opT.callbacks || {};
+        const plano = (l) => Array.isArray(l) ? l.join(' ') : String(l);
+        const titulo = cb.title ? cb.title([item]) : plano(rotulo);
+        const antes = cb.afterTitle ? cb.afterTitle([item]) : [];
+        let corpo = cb.label ? cb.label(item) : `${ds.label ? ds.label + ': ' : ''}${valor}`;
+        const linhas = [].concat(antes || [], corpo || []);
+        if (!popover) {
+          popover = document.createElement('div');
+          popover.id = 'popoverIndicadorGrafico';
+          popover.style.cssText = 'position:absolute;z-index:99999;pointer-events:none;background:#0f172a;color:#f8fafc;border:1px solid #475569;border-radius:10px;padding:9px 12px;font-size:12px;line-height:1.5;max-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);text-transform:uppercase;';
+          document.body.appendChild(popover);
+        }
+        popover.innerHTML = '';
+        const t = document.createElement('div');
+        t.style.cssText = 'font-weight:800;margin-bottom:4px;color:#e2e8f0;';
+        t.textContent = Array.isArray(titulo) ? titulo.join(' ') : String(titulo);
+        popover.appendChild(t);
+        linhas.forEach(l => { const d = document.createElement('div'); d.textContent = String(l); popover.appendChild(d); });
+        popover.style.display = 'block';
+        const r = chart.canvas.getBoundingClientRect();
+        let x = r.left + window.scrollX + (ev.x || 0) + 14;
+        let y = r.top + window.scrollY + (ev.y || 0) + 14;
+        const w = popover.offsetWidth, h = popover.offsetHeight;
+        if (x + w > window.scrollX + document.documentElement.clientWidth - 8) x = Math.max(8, x - w - 28);
+        if (y + h > window.scrollY + document.documentElement.clientHeight - 8) y = Math.max(window.scrollY + 8, y - h - 28);
+        x = Math.min(Math.max(x, window.scrollX + 8), window.scrollX + document.documentElement.clientWidth - w - 8);
+        y = Math.max(y, window.scrollY + 8);
+        popover.style.left = x + 'px';
+        popover.style.top = y + 'px';
+      }
+      function mostrarPopoverSimples(chart, sel, ev) {
+        const ds = chart.data.datasets[sel.d];
+        const rot = chart.data.labels ? chart.data.labels[sel.i] : '';
+        const v = ds.data[sel.i];
+        if (v === undefined || v === null) return;
+        if (!popover) {
+          popover = document.createElement('div');
+          popover.id = 'popoverIndicadorGrafico';
+          popover.style.cssText = 'position:absolute;z-index:99999;pointer-events:none;background:#0f172a;color:#f8fafc;border:1px solid #475569;border-radius:10px;padding:9px 12px;font-size:12px;line-height:1.5;max-width:300px;box-shadow:0 8px 24px rgba(0,0,0,.5);text-transform:uppercase;';
+          document.body.appendChild(popover);
+        }
+        popover.textContent = (Array.isArray(rot) ? rot.join(' ') : String(rot)) + ' — ' + (ds.label ? ds.label + ': ' : '') + v;
+        popover.style.display = 'block';
+        const r = chart.canvas.getBoundingClientRect();
+        popover.style.left = (r.left + window.scrollX + (ev.x || 0) + 14) + 'px';
+        popover.style.top = (r.top + window.scrollY + (ev.y || 0) + 14) + 'px';
+      }
+      // Valor escrito direto no gráfico, acima do indicador selecionado (barras, linha e histograma)
+      function textoValorIndicador(chart, sel) {
+        const ds = chart.data.datasets[sel.d];
+        const v = ds.data[sel.i];
+        const num = (v !== null && typeof v === 'object') ? v.y : v;
+        const cbY = chart.config.options && chart.config.options.scales && chart.config.options.scales.y && chart.config.options.scales.y.ticks && chart.config.options.scales.y.ticks.callback;
+        if (typeof cbY === 'function') { try { return String(cbY(num, 0, [])); } catch (_) {} }
+        return Number.isInteger(num) ? String(num) : Number(num).toFixed(1);
+      }
+      document.addEventListener('click', (e) => { if (!e.target.closest || !e.target.closest('canvas')) ocultarPopoverIndicador(); });
+      window.addEventListener('scroll', ocultarPopoverIndicador, { passive: true });
       Chart.register({
         id: 'destaqueClique',
+        afterDatasetsDraw(chart) {
+          const fixos = valoresFixosAtivos(chart);
+          if (fixos) {
+            const c0 = chart.ctx, a0 = chart.chartArea;
+            c0.save();
+            c0.font = 'bold 11px sans-serif';
+            chart.data.datasets.forEach((ds0, d0) => {
+              const m0 = chart.getDatasetMeta(d0);
+              if (!m0 || (chart.isDatasetVisible && !chart.isDatasetVisible(d0))) return;
+              (m0.data || []).forEach((el0, i0) => {
+                if (!el0 || ds0.data[i0] === undefined || ds0.data[i0] === null) return;
+                const txt0 = textoValorIndicador(chart, { d: d0, i: i0 });
+                const w0 = c0.measureText(txt0).width + 10, h0 = 18;
+                const x0 = Math.min(Math.max(el0.x - w0 / 2, a0.left + 1), a0.right - w0 - 1);
+                // no topo do indicador, sempre dentro da área do gráfico
+                let y0 = el0.y - h0 - 3;
+                if (y0 < a0.top + 1) y0 = a0.top + 1;
+                if (y0 + h0 > a0.bottom - 1) y0 = a0.bottom - h0 - 1;
+                c0.fillStyle = '#0f172a'; c0.strokeStyle = '#64748b'; c0.lineWidth = 1;
+                c0.beginPath();
+                if (c0.roundRect) c0.roundRect(x0, y0, w0, h0, 5); else c0.rect(x0, y0, w0, h0);
+                c0.fill(); c0.stroke();
+                c0.fillStyle = '#f8fafc'; c0.textAlign = 'center'; c0.textBaseline = 'middle';
+                c0.fillText(txt0, x0 + w0 / 2, y0 + h0 / 2 + 1);
+              });
+            });
+            c0.restore();
+          }
+          const sel = chart.$destaque;
+          if (!sel || fixos || !modoExibicaoValor(chart).grafico) return;
+          const meta = chart.getDatasetMeta(sel.d);
+          const el = meta && meta.data && meta.data[sel.i];
+          if (!el) return;
+          const txt = textoValorIndicador(chart, sel);
+          const c = chart.ctx, area = chart.chartArea;
+          c.save();
+          c.font = 'bold 12px sans-serif';
+          const w = c.measureText(txt).width + 14, h = 22;
+          let x = Math.min(Math.max(el.x - w / 2, area.left), area.right - w);
+          let y = el.y - h - 8;
+          if (y < area.top) y = el.y + 8;
+          c.fillStyle = '#0f172a'; c.strokeStyle = '#64748b'; c.lineWidth = 1;
+          c.beginPath();
+          if (c.roundRect) c.roundRect(x, y, w, h, 6); else c.rect(x, y, w, h);
+          c.fill(); c.stroke();
+          c.fillStyle = '#f8fafc'; c.textAlign = 'center'; c.textBaseline = 'middle';
+          c.fillText(txt, x + w / 2, y + h / 2 + 1);
+          c.restore();
+        },
         afterEvent(chart, args) {
           const ev = args.event;
           if (!ev || (ev.type !== 'click' && ev.type !== 'touchstart')) return;
-          const els = chart.getElementsAtEventForMode(ev, 'nearest', { intersect: true }, false);
+          // Pega o indicador da coluna clicada (não exige acertar exatamente a barra/ponto, que pode ser bem pequeno)
+          const els = args.inChartArea === false ? [] : chart.getElementsAtEventForMode(ev, 'nearest', { intersect: false, axis: 'x' }, false);
           const el = els[0];
           const ant = chart.$destaque;
           let novo = el ? { d: el.datasetIndex, i: el.index } : null;
           if (novo && ant && ant.d === novo.d && ant.i === novo.i) novo = null;
           chart.$destaque = novo;
           aplicarDestaque(chart);
-          if (chart.tooltip && chart.tooltip.setActiveElements) {
-            chart.tooltip.setActiveElements(novo ? [{ datasetIndex: novo.d, index: novo.i }] : [], { x: ev.x, y: ev.y });
-            chart.update('none');
-          }
+          if (novo && modoExibicaoValor(chart).quadro) {
+            try { mostrarPopoverIndicador(chart, novo, ev); }
+            catch (err) { console.error('Quadro do indicador:', err); try { mostrarPopoverSimples(chart, novo, ev); } catch (_) {} }
+          } else ocultarPopoverIndicador();
           args.changed = true;
         }
       });
     })();
+
+    // Tooltip (hover/clique) pela coluna inteira, mesmo para barras/pontos pequenos
+    if (window.Chart && Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
+      Chart.defaults.plugins.tooltip.enabled = false; // os valores aparecem no quadro próprio, ao clicar no indicador
+    }
+    if (window.Chart && Chart.defaults && Chart.defaults.layout) {
+      Chart.defaults.layout.padding = { top: 4, right: 8, bottom: 0, left: 0 };
+    }
+    if (window.Chart && Chart.defaults && Chart.defaults.interaction) {
+      Chart.defaults.interaction.mode = 'nearest';
+      Chart.defaults.interaction.intersect = false;
+      Chart.defaults.interaction.axis = 'x';
+    }
 
     if (window.Chart && Chart.defaults && Chart.defaults.plugins && Chart.defaults.plugins.tooltip) {
       Chart.defaults.plugins.tooltip.callbacks.title = (items) => {
@@ -2268,7 +2451,7 @@
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } }
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
             }
           }
         }
@@ -2301,7 +2484,7 @@
             legend: {
               display: true,
               position: 'bottom',
-              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } }
+              labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } }
             }
           }
         }
@@ -2332,7 +2515,7 @@
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1, precision: 0 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, font: { size: 9 } } }
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, font: { size: 10 } } }
           }
         }
       });
@@ -2443,7 +2626,7 @@
             legend: { display: false },
             tooltip: { callbacks: {
               afterTitle: (items) => items && items.length ? linhasDetalheEscala(listaTop[items[0].dataIndex]) : [],
-              label: (item) => (ehMoeda ? 'VALOR POR HORA (R$): ' : 'HORAS TRABALHADAS: ') + (ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y))
+              label: (item) => `${labelDataset}: ` + (ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y))
             } }
           },
           scales: {
@@ -2621,7 +2804,8 @@
       }
     }
 
-    const TIPOS_GRAFICO = [['original', 'Padrão'], ['bar', 'Barras'], ['doughnut', 'rosca'], ['line', 'Linha'], ['hist', 'Histograma']];
+    const TIPOS_GRAFICO = [['bar', 'Barras'], ['line', 'Linha'], ['hist', 'Histograma']];
+    const TIPO_GRAFICO_PADRAO = 'bar';
     const CHAVE_TIPOS_GRAFICO = 'jetcontrol_dash_tipos_grafico';
     const PALETA_FATIAS = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#ef4444', '#ec4899', '#84cc16', '#f97316', '#14b8a6'];
     const snapshotsGraficos = {};
@@ -2657,7 +2841,12 @@
         y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: fmtEixo || undefined } },
         x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
       };
-      const tooltipValor = { callbacks: { label: (item) => `${item.dataset.label ? item.dataset.label + ': ' : ''}${fmtValor(item.parsed.y)}` } };
+      let tooltipValor = { callbacks: { label: (item) => `${item.dataset.label ? item.dataset.label + ': ' : ''}${fmtValor(item.parsed.y)}` } };
+      // Rankings (top 12 / Top 12): mantêm tooltip detalhado, clique como gatilho e SEM rótulos no eixo X em qualquer tipo
+      const tooltipOrig = optsOrig.plugins && optsOrig.plugins.tooltip;
+      if (tooltipOrig && tooltipOrig.callbacks && tooltipOrig.callbacks.afterTitle) tooltipValor = tooltipOrig;
+      if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks && optsOrig.scales.x.ticks.display === false) eixos.x.ticks.display = false;
+      const eventosOrig = optsOrig.events ? { events: optsOrig.events } : {};
       const legendaMulti = snap.datasets.length > 1
         ? { display: true, position: 'bottom', labels: { color: '#f8fafc', padding: 15 } } : { display: false };
 
@@ -2682,7 +2871,7 @@
             maintainAspectRatio: false,
             cutout: '68%',
             plugins: {
-              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 9 } } },
+              legend: { display: true, position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, padding: 10, font: { size: 10 } } },
               tooltip: { callbacks: { label: (item) => `${item.dataset.label ? item.dataset.label + ' — ' : ''}${item.label}: ${fmtValor(item.parsed)}` } }
             }
           }
@@ -2698,7 +2887,7 @@
           };
         });
         return { type: 'line', data: { labels: snap.labels, datasets: ds },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendaMulti, tooltip: tooltipValor }, scales: eixos } };
+          options: { responsive: true, maintainAspectRatio: false, ...eventosOrig, plugins: { legend: legendaMulti, tooltip: tooltipValor }, scales: eixos } };
       }
       const ds = clonar().map(d => {
         const cor = corBase(d);
@@ -2709,7 +2898,7 @@
           : { ...base, borderRadius: 6 };
       });
       return { type: 'bar', data: { labels: snap.labels, datasets: ds },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: legendaMulti, tooltip: tooltipValor }, scales: eixos } };
+        options: { responsive: true, maintainAspectRatio: false, ...eventosOrig, plugins: { legend: legendaMulti, tooltip: tooltipValor }, scales: eixos } };
     }
 
     function converterGrafico(canvasId, tipo) {
@@ -2749,10 +2938,10 @@
           });
           header.appendChild(sw);
         }
-        const tipo = salvos[id] || 'original';
+        const tipo = TIPOS_GRAFICO.some(([t]) => t === salvos[id]) ? salvos[id] : TIPO_GRAFICO_PADRAO;
         const sw = header && header.querySelector('.chart-type-switch');
         if (sw) sw.querySelectorAll('button').forEach(b => b.classList.toggle('ativo', b.dataset.tipo === tipo));
-        if (tipo !== 'original') converterGrafico(id, tipo);
+        converterGrafico(id, tipo); // barras por padrão em todos os cards
       });
     }
 

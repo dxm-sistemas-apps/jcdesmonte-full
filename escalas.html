@@ -277,7 +277,7 @@
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
             <span class="block text-sm uppercase font-bold text-slate-400">Total de Horas Trabalhadas</span>
-            <span id="statTotalHoras" class="text-xl font-black text-white">0,0H</span>
+            <span id="statTotalHoras" class="text-xl font-black text-white">0H</span>
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
             <i class="fa-solid fa-clock"></i>
@@ -300,7 +300,7 @@
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
             <span class="block text-sm uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span>
-            <span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-white">0,0H</span>
+            <span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-white">0H</span>
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
             <i class="fa-solid fa-people-group"></i>
@@ -1592,8 +1592,9 @@
 
     // Horas em formato decimal (ex.: 9h20m -> 9,3H). Não exibe minutos.
     function formatarHorasDecimal(horas) {
-      const n = Number(horas) || 0;
-      return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + 'H';
+      const n = Math.round((Number(horas) || 0) * 10) / 10;
+      // valor exato (10, 8...) sem decimal; os demais com 1 casa (9,3)
+      return n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + 'H';
     }
     function formatarMinutosComoHoras(min) { return formatarHorasDecimal((Number(min) || 0) / 60); }
     function horasDecimalDaEscala(esc) {
@@ -2168,7 +2169,7 @@
         horasTrabalhadasNum = diffMinutos / 60;
         document.getElementById('calcHorasTrabalhadas').value = formatarMinutosComoHoras(diffMinutos);
       } else {
-        document.getElementById('calcHorasTrabalhadas').value = `0,0H`;
+        document.getElementById('calcHorasTrabalhadas').value = `0H`;
       }
 
       if (horasTrabalhadasNum > 0) {
@@ -2596,7 +2597,7 @@
       const auxiliosComputadosSalvar = recebivelSalvar.auxilios;
       const valorDiarioTotal = totalJeton + diariasComputadasSalvar + auxiliosComputadosSalvar;
 
-      let horasTrabalhadasStr = '0,0H';
+      let horasTrabalhadasStr = '0H';
       let valorHoraStr = 'R$ 0,00 /H';
       let horasTrabalhadasNum = 0;
 
@@ -3826,7 +3827,7 @@
       const auxiliosComputadosModal = recebivelModal.auxilios;
       const valorDiarioTotal = jManha + jTarde + jNoiteEfetivo + diariasComputadasModal + auxiliosComputadosModal;
 
-      let horasTrabalhadasStr = '0,0H';
+      let horasTrabalhadasStr = '0H';
       let valorHoraStr = 'R$ 0,00 /H';
       let horasTrabalhadasNum = 0;
       const [sH, sM] = horarioSaida.split(':').map(Number);

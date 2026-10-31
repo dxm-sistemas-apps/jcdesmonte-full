@@ -144,7 +144,7 @@
               GESTÃO DE <span class="text-brand-500">VALORES DO JETON</span>
             </h1>
           </div>
-          <p class="text-sm sm:text-base text-slate-400 font-medium">
+          <p class="text-sm sm:text-base text-justify text-slate-400 font-medium">
             REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
           </p>
         </div>
@@ -204,6 +204,9 @@
           <i class="fa-solid fa-calculator text-brand-500 text-xl"></i>
           <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo</h2>
         </div>
+        <p>
+
+        </p>
         <button 
           type="button" 
           onclick="puxarDadosDoSistema(true)" 
@@ -255,7 +258,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton JETCONTROL (Bruto)</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do JETCONTROL (Bruto)</label>
             <input 
               type="text" readonly disabled
               id="formJetonJetcontrol"
@@ -270,7 +273,7 @@
               type="text" 
               id="formIrpf"
               value="22"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 text-center"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500"
               required
             />
             <span class="text-[10px] text-slate-500 mt-1 block">Padrão: 22% sobre o Jeton</span>
@@ -279,7 +282,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton Contracheque (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do Contracheque (Bruto) *</label>
             <input 
               type="text" 
               id="formJetonContracheque"
@@ -290,7 +293,7 @@
           </div>
 
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton DGAD (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton da DGAD (Bruto) *</label>
             <input 
               type="text" 
               id="formJetonDgad"

@@ -1006,7 +1006,7 @@
           <p class="text-xs text-slate-400 mt-1">A data limite do ciclo foi atingida. Revise as informações antes de fechar.</p>
         </div>
       </div>
-      <div class="flex justify-center">
+      <div class="flex justify-end">
         <button type="button" id="btnFecharCiclo" class="bg-red-700 hover:bg-red-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition flex items-center gap-2 uppercase">
           <i class="fa-solid fa-lock"></i>
           <span>FECHAR CICLO</span>
@@ -1206,7 +1206,7 @@
       "CABO FRIO", "ARMAÇÃO DOS BÚZIOS", "BUZIOS", "ARRAIAL DO CABO", "SÃO PEDRO DA ALDEIA", "ARARUAMA", "SAQUAREMA", "IGUABA GRANDE",
       "PETRÓPOLIS", "PETROPOLIS", "TERESÓPOLIS", "TERESOPOLIS", "NOVA FRIBURGO", "GUAPIMIRIM", "CACHOEIRAS DE MACACU", "CANTAGALO", "CORDEIRO", "BOM JARDIM",
       "VOLTA REDONDA", "BARRA MANSA", "RESENDE", "ITATIAIA", "PIRAÍ", "PIRAI", "BARRA DO PIRAÍ", "BARRA DO PIRAI", "VALENÇA", "VALENCA", "VASSOURAS",
-      "CAMPOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA", 
+      "CAMPOS DOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA", 
       "ITAOCARA", "ITAPERUNA", "SANTO ANTÔNIO DE PÁDUA", "SANTO ANTONIO DE PADUA", "BOM JESUS DO ITABAPOANA", "MIRACEMA",
       "ANGRA DOS REIS", "PARATY", "PARATI", "MANGARATIBA"
     ];
@@ -2186,7 +2186,7 @@
     });
 
     const LOCAIS_JETON_100 = ["Abolição", "Acari", "Água Santa", "Alto da Boa Vista", "Anchieta", "Andaraí", "Anil", "Bairro de Fátima", "Bangu", "Barra da Tijuca", "Barros Filho", "Belford Roxo", "Benfica", "Bento Ribeiro", "Bonsucesso", "Botafogo", "Brás de Pina", "Cachambi", "Caju", "Camorim", "Catete", "Catumbi", "Cavalcanti", "Caxias", "Centro", "Cidade de Deus", "Cidade Nova", "Coelho Neto", "Colégio", "Copacabana", "Cordovil", "Cosme Velho", "Costa Barros", "Curicica", "Del Castilho", "Deodoro", "Duque de Caxias", "Encantado", "Engenho da Rainha", "Engenho de Dentro", "Engenho Novo", "Estácio", "Flamengo", "Freguesia de Jacarepaguá", "Gamboa", "Gávea", "Gericinó", "Glória", "Grajaú", "Guadalupe", "Higienópolis", "Honório Gurgel", "Humaitá", "Ilha do Governador", "Inhaúma", "Ipanema", "Irajá", "Itanhangá", "Jardim América", "Jardim Botânico", "Joá", "Lagoa", "Lapa", "Laranjeiras", "Leblon", "Leme", "Lins de Vasconcelos", "Madureira", "Magalhães Bastos", "Mangueira", "Manguinhos", "Maracanã", "Marechal Hermes", "Maria da Graça", "Méier", "Mesquita", "Nilópolis", "Niterói", "Nova Iguaçu", "Olaria", "Oswaldo Cruz", "Padre Miguel", "Parada de Lucas", "Parque Anchieta", "Parque Colúmbia", "Pavuna", "Pechincha", "Penha", "Penha Circular", "Piedade", "Pilares", "Praça da Bandeira", "Praça Seca", "Ramos", "Realengo", "Riachuelo", "Ricardo de Albuquerque", "Rio Comprido", "Rocha", "Rocha Miranda", "Rocinha", "Sampaio", "Santa Teresa", "Santo Cristo", "São Conrado", "São Cristóvão", "São Francisco Xavier", "São Gonçalo", "São João de Meriti", "Saúde", "Senador Camará", "Sulacap", "Tanque", "Taquara", "Tijuca", "Todos os Santos", "Tomás Coelho", "Turiaçu", "Urca", "Vargem Grande", "Vargem Pequena", "Vasco da Gama", "Vaz Lobo", "Vicente de Carvalho", "Vidigal", "Vigário Geral", "Vila da Penha", "Vila Isabel", "Vila Kosmos", "Vila Militar", "Vila Valqueire", "Vista Alegre"];
-    const LOCAIS_JETON_220 = ["Angra dos Reis", "Aperibé", "Araruama", "Areal", "Armação dos Búzios", "Arraial do Cabo", "Barra do Piraí", "Barra Mansa", "Bom Jardim", "Bom Jesus do Itabapoana", "Búzios", "Cabo Frio", "Cachoeiras de Macacu", "Cambuci", "Campo Grande", "Campos", "CAMPOS GOYTACAZES", "Cantagalo", "Carapebus", "Cardoso Moreira", "Carmo", "Casimiro de Abreu", "Comendador Levy Gasparian", "Conceição de Macabu", "Cordeiro", "Duas Barras", "Engenheiro Paulo de Frontin", "Guapimirim", "Iguaba Grande", "Iguabinha", "Inhoaíba", "Itaboraí", "Itaguaí", "Italva", "Itaocara", "Itaperuna", "Itatiaia", "Japeri", "Laje do Muriaé", "Macaé", "Macuco", "Magé", "Mangaratiba", "Maricá", "Mendes", "Miguel Pereira", "Miracema", "Natividade", "Nova Friburgo", "Paciência", "Paracambi", "Paraíba do Sul", "Paraty", "Paty do Alferes", "Petrópolis", "Pinheiral", "Piraí", "Porciúncula", "Porto Real", "Quatis", "Queimados", "Quissamã", "Recreio dos Bandeirantes", "Resende", "Rio Bonito", "Rio Claro", "Rio das Flores", "Rio das Ostras", "Santa Cruz", "Santa Maria Madalena", "Santíssimo", "Santo Antônio de Pádua", "São Fidélis", "São Francisco de Itabapoana", "São João da Barra", "São José de Ubá", "São José do Vale do Rio Preto", "São Pedro da Aldeia", "São Sebastião do Alto", "Sapucaia", "Saquarema", "Senador Vasconcelos", "Seropédica", "Silva Jardim", "Sumidouro", "Tanguá", "Teresópolis", "Trajano de Moraes", "Três Rios", "Unamar", "Valença", "Varre-Sai", "Vassouras", "Volta Redonda"];
+    const LOCAIS_JETON_220 = ["Angra dos Reis", "Aperibé", "Araruama", "Areal", "Armação dos Búzios", "Arraial do Cabo", "Barra do Piraí", "Barra Mansa", "Bom Jardim", "Bom Jesus do Itabapoana", "Búzios", "Cabo Frio", "Cachoeiras de Macacu", "Cambuci", "Campo Grande", "Campos", "Campos dos Goytacazes", "Cantagalo", "Carapebus", "Cardoso Moreira", "Carmo", "Casimiro de Abreu", "Comendador Levy Gasparian", "Conceição de Macabu", "Cordeiro", "Duas Barras", "Engenheiro Paulo de Frontin", "Guapimirim", "Iguaba Grande", "Iguabinha", "Inhoaíba", "Itaboraí", "Itaguaí", "Italva", "Itaocara", "Itaperuna", "Itatiaia", "Japeri", "Laje do Muriaé", "Macaé", "Macuco", "Magé", "Mangaratiba", "Maricá", "Mendes", "Miguel Pereira", "Miracema", "Natividade", "Nova Friburgo", "Paciência", "Paracambi", "Paraíba do Sul", "Paraty", "Paty do Alferes", "Petrópolis", "Pinheiral", "Piraí", "Porciúncula", "Porto Real", "Quatis", "Queimados", "Quissamã", "Recreio dos Bandeirantes", "Resende", "Rio Bonito", "Rio Claro", "Rio das Flores", "Rio das Ostras", "Santa Cruz", "Santa Maria Madalena", "Santíssimo", "Santo Antônio de Pádua", "São Fidélis", "São Francisco de Itabapoana", "São João da Barra", "São José de Ubá", "São José do Vale do Rio Preto", "São Pedro da Aldeia", "São Sebastião do Alto", "Sapucaia", "Saquarema", "Senador Vasconcelos", "Seropédica", "Silva Jardim", "Sumidouro", "Tanguá", "Teresópolis", "Trajano de Moraes", "Três Rios", "Unamar", "Valença", "Varre-Sai", "Vassouras", "Volta Redonda"];
     const NOVA_IGUACU_220 = ["Cabuçu", "Austin", "Jaceruba", "Rio D'ouro", "Vila de Cava", "Santa Rita", "Adrianópolis", "Tinguá", "Lagoinha", "Marapicu", "Jardim Guandu", "Campo Alegre", "Prados Verdes", "Km 32", "Palhada"];
 
     const CHAVE_LOCAIS_MEMORIA = 'jetcontrol_locais_memoria';
@@ -3375,8 +3375,8 @@
                   <div>
                     <strong class="text-brand-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-sun"></i> MANHÃ</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localManha}</p>
-                    ${esc.pernoiteManha ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteManha}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoManha?.length ? esc.funcaoManha.join(', ') : '-'}</p>
+                    ${esc.pernoiteManha ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteManha}</p>` : ''}
                     ${blocoExtrasCard(esc, 'Manha')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonManha)}</p>
@@ -3388,8 +3388,8 @@
                   <div>
                     <strong class="text-amber-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-cloud-sun"></i> TARDE</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localTarde}</p>
-                    ${esc.pernoiteTarde ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteTarde}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoTarde?.length ? esc.funcaoTarde.join(', ') : '-'}</p>
+                    ${esc.pernoiteTarde ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteTarde}</p>` : ''}
                     ${blocoExtrasCard(esc, 'Tarde')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(esc.jetonTarde)}</p>
@@ -3401,8 +3401,8 @@
                   <div>
                     <strong class="text-indigo-400 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-moon"></i> NOITE</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localNoite}</p>
-                    ${esc.pernoiteNoite ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteNoite}</p>` : ''}
                     <p class="text-slate-300"><strong>FUNÇÃO:</strong> ${esc.funcaoNoite?.length ? esc.funcaoNoite.join(', ') : '-'}</p>
+                    ${esc.pernoiteNoite ? `<p class="text-slate-300"><strong>PERNOITE:</strong> ${esc.pernoiteNoite}</p>` : ''}
                     ${blocoExtrasCard(esc, 'Noite')}
                   </div>
                   <p class="text-slate-300 pt-2 border-t-4 border-slate-600/80"><strong>JETON:</strong> ${formatarMoeda(jetonNoiteEfetivoCard)} <span class="text-slate-400 block text-[10px]">(4º JETON: ${esc.percepcaoQuartoJeton || 'NÃO'})</span></p>
@@ -3447,6 +3447,30 @@
         `;
     }
 
+
+    // ===== Receita bruta / desconto de IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
+    function moedaParaNumero(txt) {
+      const n = parseFloat(String(txt || '').replace(/[^\d,\-]/g, '').replace(/\./g, '').replace(',', '.'));
+      return isFinite(n) ? n : 0;
+    }
+    function formatarMoedaBR(v) {
+      return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\u00a0/g, ' ');
+    }
+    function receitasResumoCiclo(ciclo) {
+      const temp = document.createElement('div');
+      temp.innerHTML = ciclo.receitas || '';
+      const lerEl = (id) => { const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0; };
+      const liquida = lerEl('recValorRealJeton');
+      const desconto = lerEl('recValorDescontoIR');
+      return { bruta: liquida + desconto, desconto, liquida };
+    }
+    function htmlResumoReceitasCiclo(ciclo) {
+      const r = receitasResumoCiclo(ciclo);
+      return `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + `<span class="block text-xs text-slate-300">DESCONTO DE IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+    }
+
     function nomeDoCicloFechado(ciclo) {
       return ciclo.nome || `CICLO - ${formatarDataBRPeriodo(ciclo.dataAbertura)} À ${formatarDataBRPeriodo(ciclo.dataFechamento)}`;
     }
@@ -3480,6 +3504,7 @@
                   <h3 class="text-lg font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h3>
                   <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || '-'}</p>
                   <p class="text-xs text-slate-400 mt-1 uppercase">${escalasArr.length} ESCALA(S) REGISTRADA(S) &nbsp;|&nbsp; FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</p>
+                  ${htmlResumoReceitasCiclo(ciclo)}
                 </div>
               </div>
             </div>

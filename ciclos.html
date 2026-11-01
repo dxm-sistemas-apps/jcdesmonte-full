@@ -1265,17 +1265,26 @@
 
         // Celulares (Chrome/Android) não permitem gravar em pasta fixa: usa o menu de compartilhar, onde se escolhe a pasta.
         const arquivoPdf = new File([blobPdf], nomeArquivo, { type: 'application/pdf' });
-        if (!window.showDirectoryPicker && navigator.canShare && navigator.canShare({ files: [arquivoPdf] })) {
+        const ehCelular = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+        if ((ehCelular || !window.showDirectoryPicker) && navigator.canShare && navigator.canShare({ files: [arquivoPdf] })) {
           painel.texto('PDF PRONTO! ESCOLHA COMO SALVAR:');
           for (;;) {
             const escolha = await painel.botoes([
               ['Salvar em uma pasta (Arquivos/Drive)', '#2563eb', 'share'],
+              ['Gravar na pasta escolhida no app', '#0f766e', 'pasta'],
               ['Baixar em Downloads', '#475569', 'down'],
               ['Fechar', '#334155', 'fim']
             ]);
             if (escolha === 'share') {
               try { await navigator.share({ files: [arquivoPdf], title: nomeArquivo }); break; }
               catch (e) { if (e && e.name === 'AbortError') continue; baixarBlob(blobPdf, nomeArquivo); break; }
+            } else if (escolha === 'pasta') {
+              if (window.showDirectoryPicker) {
+                const gravou = await salvarPdfLocalmente(blobPdf, nomeArquivo);
+                if (gravou) break;
+                continue;
+              }
+              baixarBlob(blobPdf, nomeArquivo); break;
             } else if (escolha === 'down') { baixarBlob(blobPdf, nomeArquivo); break; }
             else break;
           }

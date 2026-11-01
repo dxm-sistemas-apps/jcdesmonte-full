@@ -782,9 +782,9 @@
     // ===== QUALIDADE x VELOCIDADE DO PDF — escolha: 'rapida' | 'equilibrada' | 'alta' =====
     const PDF_QUALIDADE = 'equilibrada';
     const PDF_PRESETS = {
-      rapida:      { escalaCelular: 1,    escalaPc: 1.4, jpeg: 0.82 },
-      equilibrada: { escalaCelular: 1.35, escalaPc: 2,   jpeg: 0.9 },
-      alta:        { escalaCelular: 1.8,  escalaPc: 2.5, jpeg: 0.95 }
+      rapida:      { escalaCelular: 1.6, escalaPc: 2,   jpeg: 0.88 },
+      equilibrada: { escalaCelular: 2.4, escalaPc: 3,   jpeg: 0.93 },
+      alta:        { escalaCelular: 3,   escalaPc: 4,   jpeg: 0.96 }
     };
     const PDF_CACHE = new Map(); // PDFs já gerados nesta sessão (ciclo fechado não muda): reabrir é instantâneo
 
@@ -826,24 +826,27 @@
       .total{display:flex;justify-content:flex-end;align-items:baseline;gap:4mm;padding:2.6mm 4mm;background:#f6f8fb;border:.3mm solid #e2e8f0;border-radius:2.4mm}
       .total .r{font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#64748b}
       .total .v{font-family:${PDF_FONTE_TITULO};font-size:12pt;font-weight:800;color:#b45309}
-      .escala{border:.3mm solid #e2e8f0;border-radius:2.8mm;overflow:hidden;background:#fff}
-      .escala .cab{display:flex;align-items:center;gap:3mm;background:#f1f5f9;padding:2.4mm 4mm;border-bottom:.3mm solid #e2e8f0}
+      .escala{border:.3mm solid #cbd5e1;border-radius:2.8mm;overflow:hidden;background:#fff}
+      .escala .cab{display:flex;align-items:center;gap:3mm;background:#f1f5f9;padding:2.4mm 4mm;border-bottom:.3mm solid #cbd5e1}
       .escala .id{background:#1d4ed8;color:#fff;font-weight:800;font-size:7.4pt;padding:.8mm 2.4mm;border-radius:1.4mm;letter-spacing:.04em;text-transform:uppercase}
       .escala .dt{font-family:${PDF_FONTE_TITULO};font-weight:800;color:#0f172a;font-size:9.5pt}
       .escala .hr{margin-left:auto;color:#64748b;font-size:7.8pt;font-weight:600}
-      .escala .corpo{display:grid;grid-template-columns:1.1fr 1fr}
-      .escala .col+.col{border-left:.3mm solid #e2e8f0}
-      .escala .notas{grid-column:1 / -1;border-top:.3mm solid #e2e8f0;background:#fafbfd}
-      .grupo{padding:2.6mm 4mm}.grupo+.grupo{border-top:.3mm solid #e2e8f0}
-      .grupo h4{margin:0 0 1.5mm;font-size:6.9pt;letter-spacing:.12em;text-transform:uppercase;color:#1d4ed8;font-weight:800}
-      .grupo h4.bb{padding-bottom:1.4mm;border-bottom:.25mm solid #cbd5e1}
-      .linha{display:block;padding:.6mm 0;font-size:7.8pt;color:#0f172a;text-align:left}
-      .linha .l{font-weight:700;color:#475569;font-size:7.6pt;letter-spacing:.02em}
-      .linha .w{font-weight:600;color:#0f172a;margin-left:.8mm}
-      .linha.gap{margin-top:1.2mm}
-      .linha.sep{margin-top:1.6mm;padding-top:1.8mm;border-top:.25mm solid #cbd5e1}
-      .tag{font-size:5.8pt;font-weight:800;padding:.3mm 1.3mm;border-radius:1mm;margin-left:1.3mm;letter-spacing:.04em}
-      .tag.rec{background:#d1fae5;color:#065f46}.tag.nao{background:#fee2e2;color:#991b1b}.tag.pen{background:#e2e8f0;color:#334155}
+      .escala .conteudo{padding:3mm;display:flex;flex-direction:column;gap:2.6mm}
+      .escala .corpo{display:grid;grid-template-columns:1.25fr 1fr;gap:2.6mm;align-items:stretch}
+      .escala .periodos{display:flex;flex-direction:column;gap:2.6mm}
+      .box{border:.3mm solid #cbd5e1;border-radius:2.2mm;background:#f8fafc;padding:2.4mm 3mm}
+      .box h4{margin:0 0 1.6mm;font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--ct,#1d4ed8)}
+      .box.jornada h4{padding-bottom:1.4mm;border-bottom:.3mm solid #cbd5e1}
+      .ho{border:.3mm solid #d8b4fe;background:#faf5ff;border-radius:2.2mm;padding:2.2mm 3mm;display:flex;flex-wrap:wrap;gap:1.5mm 5mm;font-size:7.8pt}
+      .ho b.t{color:#7e22ce;text-transform:uppercase;letter-spacing:.04em}
+      .ln{padding:.5mm 0;font-size:7.8pt;line-height:1.4}
+      .ln.sep{margin-top:1.5mm;padding-top:1.7mm;border-top:.3mm solid #cbd5e1}
+      .ln .l{font-weight:700;color:#334155;text-transform:uppercase}
+      .ln .w{font-weight:700;margin-left:1mm}
+      .ln.forte .w{font-weight:800;font-size:8.6pt}
+      .tag{display:inline-block;font-size:5.8pt;font-weight:800;padding:.3mm 1.4mm;border-radius:1mm;margin-left:1.4mm;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
+      .tag.rec{background:rgba(52,211,153,.18);color:#34d399}.tag.nao{background:rgba(248,113,113,.18);color:#f87171}
+      .tag.nperc{background:rgba(17,24,39,.08);color:#111827}.tag.pen{background:#e2e8f0;color:#475569}
     `;
     function pdfPrefixarCss(css, pref) {
       return css.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, corpo) =>
@@ -981,71 +984,121 @@
       return itens;
     }
 
+    // Cores dos dados (tons 400 do Tailwind, conforme definido). Para trocar, altere aqui.
+    const PDF_CORES = { emerald: '#34d399', red: '#f87171', amber: '#fbbf24', preto: '#111827', padrao: '#0f172a' };
+
+    function pdfTxtCard(el) { return (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim(); }
+
+    function pdfLinhaCard(el) {
+      const forte = el.querySelector('strong');
+      if (!forte) return null;
+      const clone = el.cloneNode(true);
+      const tagEl = clone.querySelector('span[class*="bg-"]');
+      const tag = tagEl ? pdfTxtCard(tagEl) : '';
+      if (tagEl) tagEl.remove();
+      const rot = pdfTxtCard(clone.querySelector('strong')).replace(/:\s*$/, '');
+      clone.querySelector('strong').remove();
+      return { r: rot, v: pdfTxtCard(clone), tag, sep: /border-t/.test(String(el.className)) };
+    }
+
     function pdfCardEscala(card) {
       const spans = Array.from(card.querySelectorAll(':scope > div:first-child span'));
-      const grupos = [];
-      let atual = null;
-      const novo = (titulo) => { atual = { titulo, itens: [] }; grupos.push(atual); };
-      const txt = (el) => (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
-      const ehLinha = (el) => el.firstElementChild && el.firstElementChild.tagName === 'STRONG' && /:\s*$/.test(txt(el.firstElementChild));
+      const r = { id: pdfTxtCard(spans[0]), data: pdfTxtCard(spans[1]), horario: pdfTxtCard(spans[2]), ho: null, periodos: [], jornada: null, notas: null };
 
-      // Faixa de HOME OFFICE (condição e motivo) — fica como primeiro grupo do cartão
-      const faixaHO = card.querySelector('[class*="purple-900"]');
-      if (faixaHO) {
-        novo('Home Office');
-        const titulo = txt(faixaHO.querySelector('span.font-bold') || faixaHO.firstElementChild);
-        const pos = titulo.indexOf(':');
-        atual.itens.push({ r: 'HOME OFFICE', v: pos > -1 ? titulo.slice(pos + 1).trim() : 'SIM', tag: '' });
-        faixaHO.querySelectorAll('strong').forEach(st => {
-          const rot = txt(st).replace(/:$/, '');
-          const v = txt(st.parentElement).replace(txt(st), '').trim();
-          if (rot) atual.itens.push({ r: rot, v, tag: '' });
+      const ho = card.querySelector('[class*="bg-purple"]');
+      if (ho) {
+        const partes = [];
+        const titulo = ho.querySelector(':scope > span');
+        ho.querySelectorAll(':scope > span').forEach((sp, i) => {
+          if (i === 0) return;
+          const lin = pdfLinhaCard(sp);
+          partes.push(lin ? { r: lin.r, v: lin.v } : { r: '', v: pdfTxtCard(sp) });
         });
-        faixaHO.remove();
+        r.ho = { titulo: pdfTxtCard(titulo), itens: partes };
       }
 
-      card.querySelectorAll('strong, p, div').forEach(el => {
-        if (el.closest('button')) return;
-        if (el.tagName === 'STRONG') {
-          if (el.parentElement && ehLinha(el.parentElement) && el.parentElement.firstElementChild === el) return;
-          if (!/:\s*$/.test(txt(el)) && txt(el)) novo(txt(el));
-          return;
-        }
-        if (el.tagName === 'DIV' && /font-bold/.test(el.className) && !el.querySelector('strong') && txt(el) && !el.querySelector('div')) { novo(txt(el).replace(/:$/, '')); return; }
-        if (ehLinha(el)) {
-          const clone = el.cloneNode(true);
-          const tagEl = clone.querySelector('span[class*="bg-"]');
-          const tag = tagEl ? txt(tagEl) : '';
-          if (tagEl) tagEl.remove();
-          const rot = txt(clone.firstElementChild).replace(/:$/, '');
-          clone.firstElementChild.remove();
-          if (!atual) novo('');
-          const extra = el.closest('.atividade-extra');
-          const sep = /\bborder-t\b/.test(el.className) || (extra && extra.querySelector('p') === el);
-          const gap = !sep && /\bpt-1\b/.test(el.className);
-          atual.itens.push({ r: rot, v: txt(clone), tag, sep: !!sep, gap });
-        }
-      });
-      return { id: txt(spans[0]), data: txt(spans[1]), horario: txt(spans[2]), grupos: grupos.filter(g => g.itens.length) };
+      const colPeriodos = card.querySelector('[class*="col-span-8"]');
+      if (colPeriodos) {
+        Array.from(colPeriodos.children).forEach(bloco => {
+          const tit = bloco.querySelector('strong');
+          if (!tit) return;
+          const classe = String(tit.className);
+          const cor = /amber/.test(classe) ? '#b45309' : /indigo/.test(classe) ? '#4338ca' : '#1d4ed8';
+          const linhas = [];
+          bloco.querySelectorAll('p').forEach(pEl => { const l = pdfLinhaCard(pEl); if (l) linhas.push(l); });
+          // blocos de atividades extras: a linha com borda separa a atividade anterior
+          bloco.querySelectorAll('.atividade-extra').forEach(ex => {
+            const primeira = ex.querySelector('p');
+            const idx = linhas.findIndex(l => l.r === pdfLinhaCard(primeira).r && l.v === pdfLinhaCard(primeira).v);
+            if (idx >= 0) linhas[idx].sep = true;
+          });
+          r.periodos.push({ titulo: pdfTxtCard(tit), cor, linhas });
+        });
+      }
+
+      const colJornada = card.querySelector('[class*="col-span-4"]');
+      if (colJornada) {
+        const linhas = [];
+        const lista = colJornada.querySelector('[class*="space-y"]');
+        Array.from(lista ? lista.children : []).forEach(d => { const l = pdfLinhaCard(d); if (l) linhas.push(l); });
+        r.jornada = { titulo: pdfTxtCard(colJornada.firstElementChild).replace(/:$/, ''), linhas };
+      }
+
+      const caixaNotas = Array.from(card.querySelectorAll('div')).find(d => d.firstElementChild && /^ANOTA/i.test(pdfTxtCard(d.firstElementChild)));
+      if (caixaNotas) {
+        const linhas = [];
+        Array.from(caixaNotas.children).slice(1).forEach(d => { const l = pdfLinhaCard(d); if (l) linhas.push(l); });
+        r.notas = { titulo: pdfTxtCard(caixaNotas.firstElementChild).replace(/:$/, ''), linhas };
+      }
+      return r;
+    }
+
+    function pdfNumeroDe(txt) {
+      const m = String(txt || '').match(/-?\d{1,3}(?:\.\d{3})*,\d{2}/);
+      return m ? parseFloat(m[0].replace(/\./g, '').replace(',', '.')) : 0;
+    }
+
+    // Classe do status (recebido / não recebido / não perceptível / pendente)
+    function pdfStatusTag(tag) {
+      const t = String(tag || '').toUpperCase();
+      if (!t) return '';
+      if (/N[ÃA]O\s+RECEB/.test(t)) return 'nao';
+      if (/N[ÃA]O\s+PERCEB|N[ÃA]O\s+PERCEPT/.test(t)) return 'nperc';
+      if (/RECEB|PERCEB|PERCEPT/.test(t)) return 'rec';
+      return 'pen';
+    }
+
+    function pdfCorValor(l) {
+      const rot = String(l.r || '').toUpperCase();
+      const valor = pdfNumeroDe(l.v);
+      const st = pdfStatusTag(l.tag);
+      if (/^VALOR DI[ÁA]RIO (DO JETON|TOTAL|REAL)/.test(rot)) return PDF_CORES.emerald;
+      if (/DESCONTO DE IR/.test(rot)) return PDF_CORES.red;
+      if (/^QTD\. DE (ATIVIDADES|HORAS)|^VALOR POR HORA/.test(rot)) return PDF_CORES.preto;
+      if (/PERCEPT[ÍI]VEL|TOTAL DI[ÁA]RIO (DAS DI|DOS AUX)/.test(rot)) return valor > 0 ? PDF_CORES.amber : PDF_CORES.preto;
+      if (/DI[ÁA]RIA|AUX[ÍI]LIO/.test(rot)) {
+        if (st === 'nao') return valor > 0 ? PDF_CORES.red : PDF_CORES.preto;
+        if (st === 'rec') return valor > 0 ? PDF_CORES.emerald : PDF_CORES.preto;
+        if (st === 'nperc') return PDF_CORES.preto;
+        return valor > 0 ? PDF_CORES.amber : PDF_CORES.preto;
+      }
+      return PDF_CORES.padrao;
     }
 
     function pdfHtmlEscala(e) {
-      const grupo = (g) => `<div class="grupo"><h4 class="${/JORNADA/i.test(g.titulo) ? 'bb' : ''}">${esc(g.titulo)}</h4>${g.itens.map(i => {
-        const cor = /DESCONTO|\bIR\b/i.test(i.r) ? 'neg' : (/REAL|^VALOR DI[AÁ]RIO TOTAL/i.test(i.r) ? 'pos' : (/DI[AÁ]RIA|AUX[IÍ]LIO/i.test(i.r) ? 'amb' : ''));
-        const tag = i.tag ? `<span class="tag ${/N[ÃA]O/i.test(i.tag) ? 'nao' : (/PEND/i.test(i.tag) ? 'pen' : 'rec')}">${esc(i.tag)}</span>` : '';
-        const cls = (i.sep ? ' sep' : '') + (i.gap ? ' gap' : '');
-        return `<div class="linha${cls}"><strong class="l">${esc(i.r)}:</strong> <span class="w ${cor}">${esc(i.v)}${tag}</span></div>`;
-      }).join('')}</div>`;
-      const notas = e.grupos.filter(g => /ANOTA/i.test(g.titulo));
-      const jornada = e.grupos.filter(g => /JORNADA/i.test(g.titulo));
-      const periodos = e.grupos.filter(g => !/ANOTA|JORNADA/i.test(g.titulo));
+      const linha = (l) => {
+        const tag = l.tag ? `<span class="tag ${pdfStatusTag(l.tag)}">${esc(l.tag)}</span>` : '';
+        const forte = /^VALOR DI[ÁA]RIO (TOTAL|REAL|DO DESCONTO)/i.test(l.r) ? ' forte' : '';
+        return `<div class="ln${l.sep ? ' sep' : ''}${forte}"><span class="l">${esc(l.r)}:</span><span class="w" style="color:${pdfCorValor(l)}">${esc(l.v || '-')}</span>${tag}</div>`;
+      };
+      const ho = e.ho ? `<div class="ho"><b class="t">${esc(e.ho.titulo)}</b>${e.ho.itens.map(i => `<span>${i.r ? `<b>${esc(i.r)}:</b> ` : ''}<b>${esc(i.v)}</b></span>`).join('')}</div>` : '';
+      const periodos = e.periodos.map(p => `<div class="box" style="--ct:${p.cor}"><h4>${esc(p.titulo)}</h4>${p.linhas.map(linha).join('')}</div>`).join('');
+      const jornada = e.jornada ? `<div class="box jornada"><h4>${esc(e.jornada.titulo)}</h4>${e.jornada.linhas.map(linha).join('')}</div>` : '';
+      const corpo = (periodos || jornada) ? `<div class="corpo" ${periodos ? '' : 'style="grid-template-columns:1fr"'}>${periodos ? `<div class="periodos">${periodos}</div>` : ''}${jornada}</div>` : '';
+      const notas = e.notas ? `<div class="box"><h4>${esc(e.notas.titulo)}:</h4>${e.notas.linhas.map(linha).join('')}</div>` : '';
       return `<article class="escala">
         <div class="cab"><span class="id">${esc(e.id)}</span><span class="dt">${esc(e.data)}</span><span class="hr">${esc(e.horario)}</span></div>
-        <div class="corpo">
-          <div class="col">${periodos.map(grupo).join('')}</div>
-          <div class="col">${jornada.map(grupo).join('')}</div>
-          ${notas.length ? `<div class="notas">${notas.map(grupo).join('')}</div>` : ''}
-        </div></article>`;
+        <div class="conteudo">${ho}${corpo}${notas}</div></article>`;
     }
 
     function pdfItensEscalas(ciclo, medidor) {

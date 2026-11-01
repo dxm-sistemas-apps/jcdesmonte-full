@@ -718,28 +718,28 @@
         <!-- ANOTAÇÕES -->
         <div class="space-y-4">
           <h3 class="text-sm font-bold text-white uppercase tracking-wide flex items-center gap-2">
-            <i class="fa-solid fa-pen-to-square text-brand-500"></i> Anotações da Escala
+            <i class="fa-solid fa-pen-to-square text-brand-500"></i> Anotações
           </h3>
           <div class="space-y-3">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">VTR</label>
-              <input type="text" id="notaVtr" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaVtr" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Manhã</label>
-              <input type="text" id="notaLocalManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaLocalManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Tarde</label>
-              <input type="text" id="notaLocalTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaLocalTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Noite</label>
-              <input type="text" id="notaLocalNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaLocalNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Outros Assuntos</label>
-              <input type="text" id="notaOutros" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaOutros" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
           </div>
         </div>
@@ -3415,6 +3415,10 @@
                   <i class="fa-solid fa-business-time"></i> JORNADA
                 </div>
                 <div class="space-y-2">
+                ${esc.homeOffice === true ? `
+                  ${esc.homeOfficeCondicao === 'reuniao' ? `<div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>` : ''}
+                  <div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>
+                ` : `
                   <div><strong>VALOR DIÁRIO DO JETON:</strong> <span class="text-emerald-400 font-bold">${formatarMoeda(jetonCard)}</span></div>
                   <div class="pt-1"><strong>DIÁRIA DE ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.diariaAlimentacao)} font-bold">${formatarMoeda(valorItemCard('diariaAlimentacao'))}</span>${badgeStatus(stCard.diariaAlimentacao)}</div>
                   <div><strong>DIÁRIA DE PERNOITE:</strong> <span class="${classeCorItemStatus(stCard.diariaPernoite)} font-bold">${formatarMoeda(valorItemCard('diariaPernoite'))}</span>${badgeStatus(stCard.diariaPernoite)}</div>
@@ -3429,14 +3433,14 @@
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
-                  ${(esc.homeOffice === true && esc.homeOfficeCondicao === 'reuniao') ? `<div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>` : ''}
+                `}
                 </div>
               </div>
 
             </div>
 
             <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs text-slate-300">
-              <div class="font-bold text-brand-500 uppercase mb-1.5 border-b-4 border-slate-600 pb-1.5"><i class="fa-solid fa-note-sticky mr-1"></i> ANOTAÇÕES DA ESCALA:</div>
+              <div class="font-bold text-brand-500 uppercase mb-1.5 border-b-4 border-slate-600 pb-1.5"><i class="fa-solid fa-note-sticky mr-1"></i> ANOTAÇÕES:</div>
               <div class="border-b-4 border-slate-600 pb-1.5"><strong>VTR:</strong> ${esc.anotacoes?.notaVtr || '-'}</div>
               <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - MANHÃ:</strong> ${esc.anotacoes?.notaLocalManha || '-'}</div>
               <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - TARDE:</strong> ${esc.anotacoes?.notaLocalTarde || '-'}</div>
@@ -3511,7 +3515,7 @@
                 <div>
                   <h3 class="text-lg font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h3>
                   <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || '-'}</p>
-                  <p class="text-xs text-slate-400 mt-1 uppercase">${escalasArr.length} ESCALA(S) REGISTRADA(S) &nbsp;|&nbsp; FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</p>
+                  <p class="text-xs text-slate-400 mt-1 uppercase">${escalasArr.length} ESCALA(S) REGISTRADA(S) &nbsp;&nbsp; <br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</p>
                   ${htmlResumoReceitasCiclo(ciclo)}
                 </div>
               </div>

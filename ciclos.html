@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0f172a">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,76 +14,90 @@
   <link rel="icon" type="image/png" href="icons/icon-192.png">
   <script src="pwa.js" defer></script>
   <title>JETCONTROL 2026®™ - CICLOS</title>
-<script src="jetcontrol-sync.js"></script>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          brand: {
-            500: '#3b82f6',
-            600: '#2563eb',
-            700: '#1d4ed8',
-            dark: '#0f172a',
-            card: '#1e293b'
+  <script src="jetcontrol-sync.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              dark: '#0f172a',
+              card: '#1e293b'
+            }
           }
         }
       }
     }
-  }
-</script>
+  </script>
   <style>
     /* Reserva permanentemente o espaço da barra vertical para impedir que
        o menu e o conteúdo centralizado mudem de posição horizontalmente. */
     html {
       overflow-y: scroll;
     }
-    html, body {
+
+    html,
+    body {
       overflow-x: hidden;
       max-width: 100vw;
     }
+
     body {
       text-transform: uppercase;
     }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 
   <!-- Oculta o aviso "sincronizando... N pendente" (gerado por jetcontrol-sync.js) -->
-  <style id="jet-oculta-sync">.jet-sync-oculto{display:none !important;}</style>
+  <style id="jet-oculta-sync">
+    .jet-sync-oculto {
+      display: none !important;
+    }
+  </style>
   <script>
-  (function () {
-    var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
-    var agendado = false;
-    function varrer() {
-      agendado = false;
-      if (!document.body) return;
-      var els = document.body.querySelectorAll('*');
-      for (var i = 0; i < els.length; i++) {
-        var el = els[i];
-        if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
-        if (el.children.length > 3) continue;
-        var t = el.textContent || '';
-        if (t.length > 100 || !RE.test(t)) continue;
-        var alvo = el;
-        while (alvo.parentElement && alvo.parentElement !== document.body) {
-          var pt = alvo.parentElement.textContent || '';
-          if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+      (function () {
+        var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
+        var agendado = false;
+        function varrer() {
+          agendado = false;
+          if (!document.body) return;
+          var els = document.body.querySelectorAll('*');
+          for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+            if (el.children.length > 3) continue;
+            var t = el.textContent || '';
+            if (t.length > 100 || !RE.test(t)) continue;
+            var alvo = el;
+            while (alvo.parentElement && alvo.parentElement !== document.body) {
+              var pt = alvo.parentElement.textContent || '';
+              if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+            }
+            alvo.classList.add('jet-sync-oculto');
+          }
         }
-        alvo.classList.add('jet-sync-oculto');
-      }
-    }
-    function agendar() { if (!agendado) { agendado = true; (window.requestAnimationFrame || setTimeout)(varrer); } }
-    function iniciar() {
-      varrer();
-      new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, characterData: true });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
-  })();
+        function agendar() {if (!agendado) {agendado = true; (window.requestAnimationFrame || setTimeout)(varrer);} }
+        function iniciar() {
+          varrer();
+          new MutationObserver(agendar).observe(document.body, {childList: true, subtree: true, characterData: true});
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+      })();
   </script>
 </head>
 
@@ -94,24 +109,38 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center space-x-3">
           <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
-          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span
+              class="text-brand-500">2026®™</span></span>
         </div>
 
         <!-- Navigation Desktop -->
         <nav class="hidden md:flex space-x-1">
-          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
-          <a href="cotas-extras.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS EXTRAS</a>
-          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
-          <a href="ciclos.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">CICLOS</a>
-          <a href="jeton-valores.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">VALORES JETON</a>
-          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
-          <a href="backups.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
-          <a href="resetar-dados.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR DADOS</a>
+          <a href="index.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA
+            INICIAL</a>
+          <a href="cotas-extras.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS
+            EXTRAS</a>
+          <a href="escalas.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html"
+            class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">CICLOS</a>
+          <a href="jeton-valores.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">VALORES
+            JETON</a>
+          <a href="dashboard.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
+          <a href="resetar-dados.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR
+            DADOS</a>
         </nav>
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden">
-          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+          <button id="mobile-menu-btn"
+            class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
@@ -120,25 +149,39 @@
 
     <!-- Mobile Dropdown Navigation -->
     <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
-      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
-      <a href="cotas-extras.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS EXTRAS</a>
-      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
-      <a href="ciclos.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">CICLOS</a>
-      <a href="jeton-valores.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">VALORES JETON</a>
-      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
-      <a href="backups.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
-      <a href="resetar-dados.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR DADOS</a>
+      <a href="index.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA
+        INICIAL</a>
+      <a href="cotas-extras.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS
+        EXTRAS</a>
+      <a href="escalas.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html"
+        class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">CICLOS</a>
+      <a href="jeton-valores.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">VALORES
+        JETON</a>
+      <a href="dashboard.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
+      <a href="resetar-dados.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR
+        DADOS</a>
     </div>
   </header>
 
   <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
 
-    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
+    <section
+      class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
       <div class="flex items-center gap-3">
         <i class="fa-solid fa-recycle text-brand-500 text-2xl"></i>
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Ciclos Fechados</h1>
-          <p class="text-justify text-sm text-slate-400 mt-1">Histórico permanente dos ciclos encerrados pelo sistema. Clique no título de um ciclo para expandir ou recolher os dados.</p>
+          <p class="text-justify text-sm text-slate-400 mt-1">Histórico permanente dos ciclos encerrados pelo sistema.
+            Clique no título de um ciclo para expandir ou recolher os dados.</p>
         </div>
       </div>
     </section>
@@ -147,37 +190,46 @@
       <div id="listaCiclos" class="space-y-6"></div>
     </section>
 
-    <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+    <nav id="bottom-nav-container"
+      class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
       <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
-        <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="index.html" data-page="index.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
         </a>
-        <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="cotas-extras.html" data-page="cotas-extras.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
         </a>
-        <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="escalas.html" data-page="escalas.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
         </a>
-        <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="ciclos.html" data-page="ciclos.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
         </a>
-        <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="jeton-valores.html" data-page="jeton-valores.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
         </a>
-        <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="dashboard.html" data-page="dashboard.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
         </a>
-        <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="backups.html" data-page="backups.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
         </a>
-        <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+        <a href="resetar-dados.html" data-page="resetar-dados.html"
+          class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
           <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
           <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
         </a>
@@ -199,7 +251,7 @@
       itens.forEach(item => {
         const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
         const icone = item.querySelector('i');
-        
+
         if (paginaItem === paginaAtual || (paginaAtual === '' && paginaItem === 'index.html')) {
           itemAtivo = item;
           item.classList.remove('text-slate-400');
@@ -232,7 +284,7 @@
     const STORAGE_KEY_CICLOS = 'jetcontrol_ciclos_fechados';
 
     function esc(v) {
-      return String(v ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
+      return String(v ?? '').replace(/[&<>\"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'}[c]));
     }
 
     function dataBR(iso) {
@@ -248,15 +300,15 @@
       return isFinite(n) ? n : 0;
     }
     function formatarMoedaBR(v) {
-      return (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }).replace(/\u00a0/g, ' ');
+      return (Number(v) || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}).replace(/\u00a0/g, ' ');
     }
     function receitasResumoCiclo(ciclo) {
       const temp = document.createElement('div');
       temp.innerHTML = ciclo.receitas || '';
-      const lerEl = (id) => { const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0; };
+      const lerEl = (id) => {const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0;};
       const liquida = lerEl('recValorRealJeton');
       const desconto = lerEl('recValorDescontoIR');
-      return { bruta: liquida + desconto, desconto, liquida };
+      return {bruta: liquida + desconto, desconto, liquida};
     }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
@@ -295,7 +347,7 @@
 
     // PERNOITE deve ficar abaixo de FUNÇÃO (corrige também os cards de ciclos já salvos)
     function reordenarPernoiteAposFuncao(raiz) {
-      const rot = (p) => { const st = p.querySelector(':scope > strong'); return st ? st.textContent.trim().toUpperCase() : ''; };
+      const rot = (p) => {const st = p.querySelector(':scope > strong'); return st ? st.textContent.trim().toUpperCase() : '';};
       raiz.querySelectorAll('p').forEach(p => {
         if (!/^PERNOITE:/.test(rot(p))) return;
         let prox = p.nextElementSibling;
@@ -323,10 +375,10 @@
           perda = document.createElement('div');
           perda.innerHTML = `<strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoedaBR(valor)}</span>`;
         }
-        if (horas) { const sp = horas.querySelector('span'); if (sp) sp.className = 'text-white font-bold'; }
+        if (horas) {const sp = horas.querySelector('span'); if (sp) sp.className = 'text-white font-bold';}
         const perdaSpan = perda.querySelector('span');
         if (perdaSpan) perdaSpan.className = 'text-red-400 font-black text-sm';
-        [horas, perda].forEach(d => { if (d) d.className = ''; });
+        [horas, perda].forEach(d => {if (d) d.className = '';});
         lista.innerHTML = '';
         if (horas) lista.appendChild(horas);
         lista.appendChild(perda);
@@ -428,12 +480,12 @@
         return parseFloat(String(v).replace('R$', '').replace(/\./g, '').replace(',', '.')) || padrao;
       };
       const turnos = [
-        { local: escala.localManha || escala.local, pernoite: escala.pernoiteManha || escala.pernoite },
-        { local: escala.localTarde, pernoite: escala.pernoiteTarde },
-        { local: escala.localNoite, pernoite: escala.pernoiteNoite }
+        {local: escala.localManha || escala.local, pernoite: escala.pernoiteManha || escala.pernoite},
+        {local: escala.localTarde, pernoite: escala.pernoiteTarde},
+        {local: escala.localNoite, pernoite: escala.pernoiteNoite}
       ];
       ['Manha', 'Tarde', 'Noite'].forEach(P => (escala['atividadesExtras' + P] || []).forEach(a => {
-        if (a && a.local) turnos.push({ local: a.local, pernoite: escala['pernoite' + P] || '' });
+        if (a && a.local) turnos.push({local: a.local, pernoite: escala['pernoite' + P] || ''});
       }));
       const elegivel = turnos.some(t => localElegivelCiclo(t.local));
       const possuiPernoite = turnos.some(t => localElegivelCiclo(t.local) && ['SIM', 'TRUE', '1', 'S'].includes(String(t.pernoite || '').toUpperCase().trim()));
@@ -459,8 +511,8 @@
     function reconstruirOrganogramasCiclo(ciclo) {
       const escalas = Array.isArray(ciclo.escalasData) ? ciclo.escalasData : [];
       let valores = {};
-      try { valores = JSON.parse(localStorage.getItem('jetcontrol_valores_custom') || '{}') || {}; } catch (_) {}
-      const moeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      try {valores = JSON.parse(localStorage.getItem('jetcontrol_valores_custom') || '{}') || {};} catch (_) { }
+      const moeda = v => (v || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
       const cor = v => ((Number(v) || 0) < -0.004 ? 'text-red-400' : ((Number(v) || 0) > 0.004 ? 'text-amber-400' : 'text-slate-300'));
       let linhasD = '', linhasA = '', totD = 0, totA = 0;
       escalas.forEach((e, idx) => {
@@ -493,10 +545,10 @@
       return {
         temDiarias: linhasD !== '', temAuxilios: linhasA !== '',
         diarias: secao('secao-organograma-diarias', '<i class="fa-solid fa-hotel text-amber-400 text-xl"></i>', 'ORGANOGRAMA DAS DIÁRIAS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-right') + th('DIÁRIA DE PERNOITE', 'text-right') + th('DIÁRIA DE TRASLADO', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-center') + th('DIÁRIA DE PERNOITE', 'text-center') + th('DIÁRIA DE TRASLADO', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
           linhasD, 'NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA NESTE CICLO.', 7, 'totalDiarias', totD),
         auxilios: secao('secao-organograma-auxilios', '<i class="fa-solid fa-utensils text-amber-400 text-xl"></i><i class="fa-solid fa-car text-amber-400 text-xl"></i>', 'ORGANOGRAMA DOS AUXÍLIOS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-right') + th('AUXÍLIO TRANSPORTE', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-center') + th('AUXÍLIO TRANSPORTE', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
           linhasA, 'NENHUMA ESCALA COM DATA ELEGÍVEL AOS AUXÍLIOS CADASTRADA NESTE CICLO.', 6, 'totalAuxilios', totA)
       };
     }
@@ -536,13 +588,13 @@
     // Grava de volta, uma única vez, os organogramas recuperados (evita recalcular e mantém o histórico completo)
     function repararOrganogramasCiclos() {
       let ciclos;
-      try { ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]'); } catch (_) { return; }
+      try {ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]');} catch (_) {return;}
       let mudou = false;
       ciclos.forEach(c => {
         const antes = [c.organogramaDiarias, c.organogramaAuxilios];
         const r = organogramasDoCiclo(c);
-        if (organogramaTemLinhas(r.diarias) && !organogramaTemLinhas(c.organogramaDiarias)) { c.organogramaDiarias = r.diarias; mudou = true; }
-        if (organogramaTemLinhas(r.auxilios) && !organogramaTemLinhas(c.organogramaAuxilios)) { c.organogramaAuxilios = r.auxilios; mudou = true; }
+        if (organogramaTemLinhas(r.diarias) && !organogramaTemLinhas(c.organogramaDiarias)) {c.organogramaDiarias = r.diarias; mudou = true;}
+        if (organogramaTemLinhas(r.auxilios) && !organogramaTemLinhas(c.organogramaAuxilios)) {c.organogramaAuxilios = r.auxilios; mudou = true;}
       });
       if (mudou) localStorage.setItem(STORAGE_KEY_CICLOS, JSON.stringify(ciclos));
     }
@@ -581,7 +633,7 @@
         const estaAberto = abertosAtuais.includes(idCiclo);
 
         // Garante o carregamento dos organogramas salvos ou recupera via dados de cotas se necessário
-        const { diarias: htmlDiarias, auxilios: htmlAuxilios } = organogramasDoCiclo(ciclo);
+        const {diarias: htmlDiarias, auxilios: htmlAuxilios} = organogramasDoCiclo(ciclo);
 
         return `
       <article class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -636,8 +688,8 @@
       }).join('');
 
       // Restaura exatamente a posição onde o usuário estava
-      container.querySelectorAll('.overflow-x-auto').forEach((el, i) => { if (rolagensInternas[i]) el.scrollLeft = rolagensInternas[i]; });
-      window.scrollTo({ top: scrollY, left: scrollX, behavior: 'instant' });
+      container.querySelectorAll('.overflow-x-auto').forEach((el, i) => {if (rolagensInternas[i]) el.scrollLeft = rolagensInternas[i];});
+      window.scrollTo({top: scrollY, left: scrollX, behavior: 'instant'});
     }
 
     function alternarCiclo(id) {
@@ -735,10 +787,10 @@
       });
 
       raiz.querySelectorAll('[class*="space-y-"]').forEach(container => {
-        Array.from(container.children).forEach(filho => { filho.style.marginTop = '5px'; });
+        Array.from(container.children).forEach(filho => {filho.style.marginTop = '5px';});
       });
 
-      raiz.querySelectorAll('[class*="gap-"]').forEach(el => { el.style.gap = '5px'; });
+      raiz.querySelectorAll('[class*="gap-"]').forEach(el => {el.style.gap = '5px';});
     }
 
     function montarConteudoImpressao(ciclo) {
@@ -820,7 +872,7 @@
     // Cada bloco é medido e empacotado inteiro na página; tabelas só se dividem
     // entre linhas (com o cabeçalho repetido); blocos maiores que a página são reduzidos.
     // =====================================================================
-    const PDF_PAG = { W: 794, H: 1122, MX: 48, TOPO: 84, RODAPE: 60 };
+    const PDF_PAG = {W: 794, H: 1122, MX: 48, TOPO: 84, RODAPE: 60};
     PDF_PAG.CW = PDF_PAG.W - PDF_PAG.MX * 2;
     PDF_PAG.CH = PDF_PAG.H - PDF_PAG.TOPO - PDF_PAG.RODAPE;
     const PDF_GAP = 16;
@@ -828,9 +880,9 @@
     // ===== QUALIDADE x VELOCIDADE DO PDF — escolha: 'rapida' | 'equilibrada' | 'alta' =====
     const PDF_QUALIDADE = 'equilibrada';
     const PDF_PRESETS = {
-      rapida:      { escalaCelular: 1.6, escalaPc: 2,   jpeg: 0.88 },
-      equilibrada: { escalaCelular: 2.4, escalaPc: 3,   jpeg: 0.93 },
-      alta:        { escalaCelular: 3,   escalaPc: 4,   jpeg: 0.96 }
+      rapida: {escalaCelular: 1.6, escalaPc: 2, jpeg: 0.88},
+      equilibrada: {escalaCelular: 2.4, escalaPc: 3, jpeg: 0.93},
+      alta: {escalaCelular: 3, escalaPc: 4, jpeg: 0.96}
     };
     // ===== TEMA DO PDF — escolha: 'claro' (papel branco) | 'escuro' (fundo escuro, igual ao sistema) =====
     const PDF_TEMA = 'escuro';
@@ -975,7 +1027,7 @@
       t.style.width = it.total + 'px';
       if (it.larguras.length) {
         const cg = document.createElement('colgroup');
-        it.larguras.forEach(w => { const c = document.createElement('col'); c.style.width = w + 'px'; cg.appendChild(c); });
+        it.larguras.forEach(w => {const c = document.createElement('col'); c.style.width = w + 'px'; cg.appendChild(c);});
         t.appendChild(cg);
       }
       if (it.cab) t.appendChild(it.cab.cloneNode(true));
@@ -998,7 +1050,7 @@
       const h2 = Math.min(PDF_PAG.CH, Math.ceil(el.getBoundingClientRect().height));
       wrap.style.height = h2 + 'px';
       wrap.remove();
-      return { el: wrap, h: h2 };
+      return {el: wrap, h: h2};
     }
 
     function pdfItens(el, medidor) {
@@ -1016,14 +1068,14 @@
         return [pdfEscalarBloco(el, h, medidor)];
       }
       el.remove();
-      return [{ el, h }];
+      return [{el, h}];
     }
 
     function pdfMedirItem(el, medidor, extra) {
       medidor.appendChild(el);
       const h = Math.ceil(el.getBoundingClientRect().height);
       el.remove();
-      return Object.assign({ el, h }, extra || {});
+      return Object.assign({el, h}, extra || {});
     }
 
     function pdfTituloSecao(num, titulo, cor, sub) {
@@ -1046,7 +1098,7 @@
     }
 
     function pdfItensOrganograma(num, titulo, cor, org, medidor) {
-      const itens = [pdfMedirItem(pdfTituloSecao(num, titulo, cor), medidor, { keepNext: true })];
+      const itens = [pdfMedirItem(pdfTituloSecao(num, titulo, cor), medidor, {keepNext: true})];
       const tabelas = (org.tabelas || []).filter(t => t.colunas && t.colunas.length);
       const comLinhas = tabelas.filter(t => t.linhas.length);
       if (!comLinhas.length) {
@@ -1067,24 +1119,24 @@
 
     // Cores dos dados (tons 400 do Tailwind, conforme definido). Para trocar, altere aqui.
     // >>> Para mudar a intensidade de uma cor, altere SÓ o número (300, 400, 500, 600, 700, 800 ou 900). <<<
-    const PDF_TONS = { emerald: 400, red: 400, amber: 400, preto: 400 };
+    const PDF_TONS = {emerald: 400, red: 400, amber: 400, preto: 400};
     const PDF_PALETA = {
-      emerald: { 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
-      red:     { 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
-      amber:   { 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
-      preto:   { 300: '#374151', 400: '#111827', 500: '#0b0f19', 600: '#060912', 700: '#000000', 800: '#000000', 900: '#000000' }
+      emerald: {300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b'},
+      red: {300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d'},
+      amber: {300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f'},
+      preto: {300: '#374151', 400: '#111827', 500: '#0b0f19', 600: '#060912', 700: '#000000', 800: '#000000', 900: '#000000'}
     };
     const pdfTom = (nome) => (PDF_ESCURO && nome === 'preto') ? '#e2e8f0' : (PDF_PALETA[nome][PDF_TONS[nome]] || PDF_PALETA[nome][400]);
     const PDF_CORES = {
-      get emerald() { return pdfTom('emerald'); }, get red() { return pdfTom('red'); },
-      get amber() { return pdfTom('amber'); }, get preto() { return pdfTom('preto'); }, get padrao() { return PDF_ESCURO ? '#f1f5f9' : '#0f172a'; }
+      get emerald() {return pdfTom('emerald');}, get red() {return pdfTom('red');},
+      get amber() {return pdfTom('amber');}, get preto() {return pdfTom('preto');}, get padrao() {return PDF_ESCURO ? '#f1f5f9' : '#0f172a';}
     };
     function pdfRgba(hex, a) {
       const n = parseInt(hex.slice(1), 16);
       return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
     }
 
-    function pdfTxtCard(el) { return (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim(); }
+    function pdfTxtCard(el) {return (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();}
 
     function pdfLinhaCard(el) {
       const forte = el.querySelector('strong');
@@ -1095,12 +1147,12 @@
       if (tagEl) tagEl.remove();
       const rot = pdfTxtCard(clone.querySelector('strong')).replace(/:\s*$/, '');
       clone.querySelector('strong').remove();
-      return { r: rot, v: pdfTxtCard(clone), tag, sep: /border-t/.test(String(el.className)) };
+      return {r: rot, v: pdfTxtCard(clone), tag, sep: /border-t/.test(String(el.className))};
     }
 
     function pdfCardEscala(card) {
       const spans = Array.from(card.querySelectorAll(':scope > div:first-child span'));
-      const r = { id: pdfTxtCard(spans[0]), data: pdfTxtCard(spans[1]), horario: pdfTxtCard(spans[2]), ho: null, periodos: [], jornada: null, notas: null };
+      const r = {id: pdfTxtCard(spans[0]), data: pdfTxtCard(spans[1]), horario: pdfTxtCard(spans[2]), ho: null, periodos: [], jornada: null, notas: null};
 
       const ho = card.querySelector('[class*="bg-purple"]');
       if (ho) {
@@ -1109,9 +1161,9 @@
         ho.querySelectorAll(':scope > span').forEach((sp, i) => {
           if (i === 0) return;
           const lin = pdfLinhaCard(sp);
-          partes.push(lin ? { r: lin.r, v: lin.v } : { r: '', v: pdfTxtCard(sp) });
+          partes.push(lin ? {r: lin.r, v: lin.v} : {r: '', v: pdfTxtCard(sp)});
         });
-        r.ho = { titulo: pdfTxtCard(titulo), itens: partes };
+        r.ho = {titulo: pdfTxtCard(titulo), itens: partes};
       }
 
       const colPeriodos = card.querySelector('[class*="col-span-8"]');
@@ -1122,14 +1174,14 @@
           const classe = String(tit.className);
           const cor = /amber/.test(classe) ? (PDF_ESCURO ? '#fbbf24' : '#b45309') : /indigo/.test(classe) ? (PDF_ESCURO ? '#818cf8' : '#4338ca') : (PDF_ESCURO ? '#60a5fa' : '#1d4ed8');
           const linhas = [];
-          bloco.querySelectorAll('p').forEach(pEl => { const l = pdfLinhaCard(pEl); if (l) linhas.push(l); });
+          bloco.querySelectorAll('p').forEach(pEl => {const l = pdfLinhaCard(pEl); if (l) linhas.push(l);});
           // blocos de atividades extras: a linha com borda separa a atividade anterior
           bloco.querySelectorAll('.atividade-extra').forEach(ex => {
             const primeira = ex.querySelector('p');
             const idx = linhas.findIndex(l => l.r === pdfLinhaCard(primeira).r && l.v === pdfLinhaCard(primeira).v);
             if (idx >= 0) linhas[idx].sep = true;
           });
-          r.periodos.push({ titulo: pdfTxtCard(tit), cor, linhas });
+          r.periodos.push({titulo: pdfTxtCard(tit), cor, linhas});
         });
       }
 
@@ -1137,15 +1189,15 @@
       if (colJornada) {
         const linhas = [];
         const lista = colJornada.querySelector('[class*="space-y"]');
-        Array.from(lista ? lista.children : []).forEach(d => { const l = pdfLinhaCard(d); if (l) linhas.push(l); });
-        r.jornada = { titulo: pdfTxtCard(colJornada.firstElementChild).replace(/:$/, ''), linhas };
+        Array.from(lista ? lista.children : []).forEach(d => {const l = pdfLinhaCard(d); if (l) linhas.push(l);});
+        r.jornada = {titulo: pdfTxtCard(colJornada.firstElementChild).replace(/:$/, ''), linhas};
       }
 
       const caixaNotas = Array.from(card.querySelectorAll('div')).find(d => d.firstElementChild && /^ANOTA/i.test(pdfTxtCard(d.firstElementChild)));
       if (caixaNotas) {
         const linhas = [];
-        Array.from(caixaNotas.children).slice(1).forEach(d => { const l = pdfLinhaCard(d); if (l) linhas.push(l); });
-        r.notas = { titulo: pdfTxtCard(caixaNotas.firstElementChild).replace(/:$/, ''), linhas };
+        Array.from(caixaNotas.children).slice(1).forEach(d => {const l = pdfLinhaCard(d); if (l) linhas.push(l);});
+        r.notas = {titulo: pdfTxtCard(caixaNotas.firstElementChild).replace(/:$/, ''), linhas};
       }
       return r;
     }
@@ -1195,9 +1247,9 @@
       let jornadaDados = e.jornada;
       if (e.ho && jornadaDados) {
         const reuniao = /REUNI/i.test(e.ho.titulo);
-        const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
-        const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
-        jornadaDados = { titulo: jornadaDados.titulo, linhas: horas.concat(perda) };
+        const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, {sep: false}));
+        const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, {sep: false})) : [];
+        jornadaDados = {titulo: jornadaDados.titulo, linhas: horas.concat(perda)};
         if (!jornadaDados.linhas.length) jornadaDados = null;
       }
       const jornada = jornadaDados ? `<div class="box jornada"><h4>${esc(jornadaDados.titulo)}</h4>${jornadaDados.linhas.map(linha).join('')}</div>` : '';
@@ -1211,9 +1263,9 @@
     function pdfItensEscalas(ciclo, medidor) {
       const t = document.createElement('div');
       t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData);
-      const cards = Array.from((t.querySelector('#containerCardsEscalas') || { children: [] }).children);
+      const cards = Array.from((t.querySelector('#containerCardsEscalas') || {children: []}).children);
       const sub = cards.length ? `${cards.length} ${cards.length === 1 ? 'escala' : 'escalas'}` : '';
-      const itens = [pdfMedirItem(pdfTituloSecao(5, 'Escalas Cadastradas', '#475569', sub), medidor, { keepNext: true })];
+      const itens = [pdfMedirItem(pdfTituloSecao(5, 'Escalas Cadastradas', '#475569', sub), medidor, {keepNext: true})];
       if (!cards.length) {
         itens.push(pdfMedirItem(pdfEl('<div class="vazio">Nenhuma escala registrada neste ciclo.</div>'), medidor));
         return itens;
@@ -1226,9 +1278,9 @@
       const CH = PDF_PAG.CH;
       const paginas = [];
       let atual = [], usado = 0;
-      const fecha = () => { if (atual.length) paginas.push(atual); atual = []; usado = 0; };
+      const fecha = () => {if (atual.length) paginas.push(atual); atual = []; usado = 0;};
       const cabe = h => usado + (atual.length ? PDF_GAP : 0) + h <= CH;
-      const colocar = (el, h) => { usado += (atual.length ? PDF_GAP : 0) + h; atual.push(el); };
+      const colocar = (el, h) => {usado += (atual.length ? PDF_GAP : 0) + h; atual.push(el);};
 
       for (let i = 0; i < itens.length; i++) {
         const it = itens[i];
@@ -1236,13 +1288,13 @@
         if (it.tabela) {
           let idx = 0;
           const n = it.linhas.length;
-          if (!n) { colocar(pdfConstruirTabela(it, 0, 0), it.hCab + 2); continue; }
+          if (!n) {colocar(pdfConstruirTabela(it, 0, 0), it.hCab + 2); continue;}
           while (idx < n) {
             if (!cabe(it.hCab + it.hLinhas[idx] + 2)) fecha();
             let soma = it.hCab + 2;
             const ini = idx;
-            while (idx < n && usado + (atual.length ? PDF_GAP : 0) + soma + it.hLinhas[idx] <= CH) { soma += it.hLinhas[idx]; idx++; }
-            if (idx === ini) { soma += it.hLinhas[idx]; idx++; }
+            while (idx < n && usado + (atual.length ? PDF_GAP : 0) + soma + it.hLinhas[idx] <= CH) {soma += it.hLinhas[idx]; idx++;}
+            if (idx === ini) {soma += it.hLinhas[idx]; idx++;}
             colocar(pdfConstruirTabela(it, ini, idx), soma);
             if (idx < n) fecha();
           }
@@ -1281,9 +1333,9 @@
         <div class="kpi"><div class="r">Horas trabalhadas</div><div class="v">${esc(r.horas)}</div></div>
         <div class="kpi"><div class="r">Valor médio por hora</div><div class="v">${esc(r.mediaHora)}</div></div></div>`), medidor));
 
-      itens.push(pdfMedirItem(pdfTituloSecao(1, 'Estatísticas do Ciclo', '#4f46e5'), medidor, { keepNext: true }));
+      itens.push(pdfMedirItem(pdfTituloSecao(1, 'Estatísticas do Ciclo', '#4f46e5'), medidor, {keepNext: true}));
       itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.estatisticas, '#4f46e5')), medidor));
-      itens.push(pdfMedirItem(pdfTituloSecao(2, 'Receitas do Ciclo', '#0e7490'), medidor, { keepNext: true }));
+      itens.push(pdfMedirItem(pdfTituloSecao(2, 'Receitas do Ciclo', '#0e7490'), medidor, {keepNext: true}));
       itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.receitas, '#0e7490')), medidor));
       itens.push(...pdfItensOrganograma(3, 'Organograma das Diárias', '#b45309', p.diarias, medidor));
       itens.push(...pdfItensOrganograma(4, 'Organograma dos Auxílios', '#047857', p.auxilios, medidor));
@@ -1320,7 +1372,7 @@
       const carga = Promise.all([
         document.fonts.load('400 12px Inter'), document.fonts.load('700 12px Inter'),
         document.fonts.load('800 12px Inter'), document.fonts.load('800 12px "Plus Jakarta Sans"')
-      ]).catch(() => {});
+      ]).catch(() => { });
       await Promise.race([carga, espera]);
     }
 
@@ -1347,8 +1399,8 @@
         const celular = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
         const opcoes = {
           margin: 0,
-          html2canvas: { scale: celular ? preset.escalaCelular : preset.escalaPc, backgroundColor: PDF_ESCURO ? '#020617' : '#ffffff', useCORS: true, logging: false },
-          jsPDF: { unit: 'px', format: [PDF_PAG.W, PDF_PAG.H], orientation: 'portrait', hotfixes: ['px_scaling'] }
+          html2canvas: {scale: celular ? preset.escalaCelular : preset.escalaPc, backgroundColor: PDF_ESCURO ? '#020617' : '#ffffff', useCORS: true, logging: false},
+          jsPDF: {unit: 'px', format: [PDF_PAG.W, PDF_PAG.H], orientation: 'portrait', hotfixes: ['px_scaling']}
         };
         const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         let pdf = JsPDF ? new JsPDF(opcoes.jsPDF) : null;
@@ -1400,7 +1452,7 @@
         const detalhe = spans.filter(x => x !== spans[0] && x !== valorEl).map(x => x.textContent.replace(/\s+/g, ' ').trim()).join(' • ');
         const cls = valorEl ? String(valorEl.className) : '';
         const tom = /emerald/.test(cls) ? 'pos' : /red/.test(cls) ? 'neg' : /amber/.test(cls) ? 'amb' : '';
-        return { rotulo: rotulo.trim(), valor: valorEl ? valorEl.textContent.trim() : '', detalhe, tom };
+        return {rotulo: rotulo.trim(), valor: valorEl ? valorEl.textContent.trim() : '', detalhe, tom};
       }).filter(x => x.rotulo);
     }
 
@@ -1413,22 +1465,22 @@
           .filter(tr => !tr.querySelector('td[colspan]'))
           .map(tr => Array.from(tr.children).map(td => td.textContent.replace(/\s+/g, ' ').trim()));
         const alinhamentos = cab.map(th => /text-right/.test(th.className) ? 'dir' : /text-center/.test(th.className) ? 'cen' : '');
-        return { colunas: cab.map(th => th.textContent.trim()), alinhamentos, linhas };
+        return {colunas: cab.map(th => th.textContent.trim()), alinhamentos, linhas};
       });
       const spans = Array.from(t.querySelectorAll('.justify-end span'));
       const totais = [];
-      for (let i = 0; i + 1 < spans.length; i += 2) totais.push({ rotulo: spans[i].textContent.replace(/:$/, '').trim(), valor: spans[i + 1].textContent.trim() });
-      return { tabelas, totais };
+      for (let i = 0; i + 1 < spans.length; i += 2) totais.push({rotulo: spans[i].textContent.replace(/:$/, '').trim(), valor: spans[i + 1].textContent.trim()});
+      return {tabelas, totais};
     }
 
     function montarPayloadPdf(ciclo) {
       const t = document.createElement('div');
       t.innerHTML = (ciclo.estatisticas || '') + (ciclo.receitas || '');
-      const q = id => { const e = t.querySelector('#' + id); return e ? e.textContent.trim() : '-'; };
+      const q = id => {const e = t.querySelector('#' + id); return e ? e.textContent.trim() : '-';};
       const r = receitasResumoCiclo(ciclo);
       return {
-        ciclo: { nome: nomeDoCiclo(ciclo, ciclo.numero || ''), dataAbertura: ciclo.dataAbertura, dataFechamento: ciclo.dataFechamento, recebimentoEm: ciclo.recebimentoEm, fechadoEm: ciclo.fechadoEm },
-        resumo: { bruta: r.bruta, desconto: r.desconto, liquida: r.liquida, totalEscalas: q('statTotalEscalas'), horas: q('statTotalHoras'), mediaHora: q('recValorMedioHora') },
+        ciclo: {nome: nomeDoCiclo(ciclo, ciclo.numero || ''), dataAbertura: ciclo.dataAbertura, dataFechamento: ciclo.dataFechamento, recebimentoEm: ciclo.recebimentoEm, fechadoEm: ciclo.fechadoEm},
+        resumo: {bruta: r.bruta, desconto: r.desconto, liquida: r.liquida, totalEscalas: q('statTotalEscalas'), horas: q('statTotalHoras'), mediaHora: q('recValorMedioHora')},
         estatisticas: pdfLerCartoes(ciclo.estatisticas),
         receitas: pdfLerCartoes(ciclo.receitas),
         diarias: pdfLerOrganograma(removerQuadroInformativoLocais(organogramasDoCiclo(ciclo).diarias)),
@@ -1467,14 +1519,14 @@
         const worker = html2pdf()
           .set({
             margin: [8, 8, 8, 8],
-            image: { type: 'jpeg', quality: 0.98 },
+            image: {type: 'jpeg', quality: 0.98},
             html2canvas: {
               scale: 2,
               backgroundColor: '#020617',
               useCORS: true
             },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'], before: '.pdf-quebra-pagina', avoid: ['.pdf-card', '.pdf-quebra-pagina'] }
+            jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait'},
+            pagebreak: {mode: ['css', 'legacy'], before: '.pdf-quebra-pagina', avoid: ['.pdf-card', '.pdf-quebra-pagina']}
           })
           .from(containerImpressao);
 
@@ -1532,16 +1584,16 @@
       let handle = await obterHandleDoBanco(CHAVE_HANDLE_CICLOS).catch(() => null);
 
       if (handle) {
-        const permissao = await handle.queryPermission({ mode: 'readwrite' });
+        const permissao = await handle.queryPermission({mode: 'readwrite'});
         if (permissao === 'granted') return handle;
-        const novaPermissao = await handle.requestPermission({ mode: 'readwrite' }).catch(() => 'denied');
+        const novaPermissao = await handle.requestPermission({mode: 'readwrite'}).catch(() => 'denied');
         if (novaPermissao === 'granted') return handle;
         handle = null;
       }
 
       try {
         alert('SELECIONE (OU CRIE) A PASTA "DETRAN-RJ/DESMONTE/JETCONTROL2026/CICLOS" NO ARMAZENAMENTO INTERNO. ESSA ESCOLHA SERÁ LEMBRADA PARA OS PRÓXIMOS PDFs.');
-        handle = await window.showDirectoryPicker({ id: 'jetcontrol-ciclos', mode: 'readwrite' });
+        handle = await window.showDirectoryPicker({id: 'jetcontrol-ciclos', mode: 'readwrite'});
         await salvarHandleNoBanco(CHAVE_HANDLE_CICLOS, handle);
         return handle;
       } catch (erro) {
@@ -1554,7 +1606,7 @@
 
       if (pastaHandle) {
         try {
-          const arquivoHandle = await pastaHandle.getFileHandle(nomeArquivo, { create: true });
+          const arquivoHandle = await pastaHandle.getFileHandle(nomeArquivo, {create: true});
           const gravavel = await arquivoHandle.createWritable();
           await gravavel.write(blobPdf);
           await gravavel.close();
@@ -1588,7 +1640,7 @@
         tokenClientGoogle = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: GOOGLE_DRIVE_SCOPE,
-          callback: () => {}
+          callback: () => { }
         });
       }
       return tokenClientGoogle;
@@ -1602,11 +1654,11 @@
           return;
         }
         cliente.callback = (resposta) => {
-          if (resposta.error) { reject(resposta); return; }
+          if (resposta.error) {reject(resposta); return;}
           tokenAcessoGoogle = resposta.access_token;
           resolve(tokenAcessoGoogle);
         };
-        cliente.requestAccessToken({ prompt: tokenAcessoGoogle ? '' : 'consent' });
+        cliente.requestAccessToken({prompt: tokenAcessoGoogle ? '' : 'consent'});
       });
     }
 
@@ -1620,7 +1672,7 @@
       const consulta = encodeURIComponent(partesConsulta.join(' and '));
 
       const respBusca = await fetch(`https://www.googleapis.com/drive/v3/files?q=${consulta}&fields=files(id,name)`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: {Authorization: `Bearer ${token}`}
       });
       const dadosBusca = await respBusca.json();
 
@@ -1628,12 +1680,12 @@
         return dadosBusca.files[0].id;
       }
 
-      const metadados = { name: nomePasta, mimeType: 'application/vnd.google-apps.folder' };
+      const metadados = {name: nomePasta, mimeType: 'application/vnd.google-apps.folder'};
       if (idPastaPai) metadados.parents = [idPastaPai];
 
       const respCriacao = await fetch('https://www.googleapis.com/drive/v3/files', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: {Authorization: `Bearer ${token}`, 'Content-Type': 'application/json'},
         body: JSON.stringify(metadados)
       });
       const dadosCriacao = await respCriacao.json();
@@ -1654,14 +1706,14 @@
       const token = await obterTokenAcessoGoogle();
       const idPastaDestino = await obterPastaDestinoDrive(token);
 
-      const metadados = { name: nomeArquivo, parents: [idPastaDestino] };
+      const metadados = {name: nomeArquivo, parents: [idPastaDestino]};
       const formulario = new FormData();
-      formulario.append('metadata', new Blob([JSON.stringify(metadados)], { type: 'application/json' }));
+      formulario.append('metadata', new Blob([JSON.stringify(metadados)], {type: 'application/json'}));
       formulario.append('file', blobPdf);
 
       const resposta = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {Authorization: `Bearer ${token}`},
         body: formulario
       });
 
@@ -1678,7 +1730,7 @@
       const btns = fundo.querySelector('#pdfPainelBtns');
       txt.textContent = texto;
       return {
-        texto: t => { txt.textContent = t; },
+        texto: t => {txt.textContent = t;},
         botoes: lista => new Promise(resolve => {
           btns.innerHTML = '';
           lista.forEach(([rotulo, cor, valor]) => {
@@ -1714,11 +1766,11 @@
         const blobPdf = await gerarBlobPdfCiclo(ciclo, (i, n) => painel.texto(`GERANDO PDF... PÁGINA ${i} DE ${n}`));
 
         // Celulares (Chrome/Android) não permitem gravar em pasta fixa: usa o menu de compartilhar, onde se escolhe a pasta.
-        const arquivoPdf = new File([blobPdf], nomeArquivo, { type: 'application/pdf' });
+        const arquivoPdf = new File([blobPdf], nomeArquivo, {type: 'application/pdf'});
         const ehCelular = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
-        if ((ehCelular || !window.showDirectoryPicker) && navigator.canShare && navigator.canShare({ files: [arquivoPdf] })) {
+        if ((ehCelular || !window.showDirectoryPicker) && navigator.canShare && navigator.canShare({files: [arquivoPdf]})) {
           painel.texto('PDF PRONTO! ESCOLHA COMO SALVAR:');
-          for (;;) {
+          for (; ;) {
             const escolha = await painel.botoes([
               ['Salvar em uma pasta (Arquivos/Drive)', '#2563eb', 'share'],
               ['Gravar na pasta escolhida no app', '#0f766e', 'pasta'],
@@ -1726,8 +1778,8 @@
               ['Fechar', '#334155', 'fim']
             ]);
             if (escolha === 'share') {
-              try { await navigator.share({ files: [arquivoPdf], title: nomeArquivo }); break; }
-              catch (e) { if (e && e.name === 'AbortError') continue; baixarBlob(blobPdf, nomeArquivo); break; }
+              try {await navigator.share({files: [arquivoPdf], title: nomeArquivo}); break;}
+              catch (e) {if (e && e.name === 'AbortError') continue; baixarBlob(blobPdf, nomeArquivo); break;}
             } else if (escolha === 'pasta') {
               if (window.showDirectoryPicker) {
                 const gravou = await salvarPdfLocalmente(blobPdf, nomeArquivo);
@@ -1735,7 +1787,7 @@
                 continue;
               }
               baixarBlob(blobPdf, nomeArquivo); break;
-            } else if (escolha === 'down') { baixarBlob(blobPdf, nomeArquivo); break; }
+            } else if (escolha === 'down') {baixarBlob(blobPdf, nomeArquivo); break;}
             else break;
           }
           painel.fechar();
@@ -1772,7 +1824,7 @@
 
     window.addEventListener('DOMContentLoaded', function () {
       inicializarMenuRodape();
-      var prosseguir = function () { renderizarCiclos(); };
+      var prosseguir = function () {renderizarCiclos();};
       if (window.JetSyncReady && typeof window.JetSyncReady.finally === 'function') {
         window.JetSyncReady.finally(prosseguir);
       } else {
@@ -1781,8 +1833,9 @@
     });
 
     if (window.JetSyncOnChange) {
-      window.JetSyncOnChange(function () { renderizarCiclos(); });
+      window.JetSyncOnChange(function () {renderizarCiclos();});
     }
   </script>
 </body>
+
 </html>

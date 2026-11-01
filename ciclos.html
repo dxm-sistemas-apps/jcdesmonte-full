@@ -431,7 +431,7 @@
       let valores = {};
       try { valores = JSON.parse(localStorage.getItem('jetcontrol_valores_custom') || '{}') || {}; } catch (_) {}
       const moeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-      const cor = v => ((Number(v) || 0) < -0.004 ? 'text-red-400' : 'text-amber-400');
+      const cor = v => ((Number(v) || 0) < -0.004 ? 'text-red-400' : ((Number(v) || 0) > 0.004 ? 'text-amber-400' : 'text-slate-300'));
       let linhasD = '', linhasA = '', totD = 0, totA = 0;
       escalas.forEach((e, idx) => {
         const num = e.numero || `#${idx + 1}`;
@@ -463,12 +463,28 @@
       return {
         temDiarias: linhasD !== '', temAuxilios: linhasA !== '',
         diarias: secao('secao-organograma-diarias', '<i class="fa-solid fa-hotel text-amber-400 text-xl"></i>', 'ORGANOGRAMA DAS DIÁRIAS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-right') + th('DIÁRIA DE PERNOITE', 'text-right') + th('DIÁRIA DE TRASLADO', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-center') + th('DIÁRIA DE PERNOITE', 'text-center') + th('DIÁRIA DE TRASLADO', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
           linhasD, 'NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA NESTE CICLO.', 7, 'totalDiarias', totD),
         auxilios: secao('secao-organograma-auxilios', '<i class="fa-solid fa-utensils text-amber-400 text-xl"></i><i class="fa-solid fa-car text-amber-400 text-xl"></i>', 'ORGANOGRAMA DOS AUXÍLIOS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-right') + th('AUXÍLIO TRANSPORTE', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-center') + th('AUXÍLIO TRANSPORTE', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
           linhasA, 'NENHUMA ESCALA COM DATA ELEGÍVEL AOS AUXÍLIOS CADASTRADA NESTE CICLO.', 6, 'totalAuxilios', totA)
       };
+    }
+
+    // Valores > R$ 0,00 em amber-400; negativos em red-400; zero em cor neutra (vale para snapshots antigos também)
+    function recolorirValoresOrganograma(html) {
+      if (!html) return html;
+      const t = document.createElement('div');
+      t.innerHTML = html;
+      t.querySelectorAll('td, #totalDiarias, #totalAuxilios').forEach(el => {
+        if (el.children.length) return;
+        const txt = el.textContent.trim();
+        if (!/^-?R\$\s*[\d.]+,\d{2}$/.test(txt)) return;
+        const n = moedaParaNumero(txt);
+        el.classList.remove('text-amber-400', 'text-red-400', 'text-emerald-400', 'text-white', 'text-slate-300');
+        el.classList.add(n < -0.004 ? 'text-red-400' : (n > 0.004 ? 'text-amber-400' : 'text-slate-300'));
+      });
+      return t.innerHTML;
     }
 
     // Devolve o organograma salvo; se ele não tiver linhas, usa o recalculado com as escalas do ciclo.
@@ -482,8 +498,8 @@
         if (faltaA && rec.temAuxilios) auxilios = rec.auxilios;
       }
       return {
-        diarias: diarias || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>',
-        auxilios: auxilios || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>'
+        diarias: recolorirValoresOrganograma(diarias) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>',
+        auxilios: recolorirValoresOrganograma(auxilios) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>'
       };
     }
 
@@ -828,7 +844,7 @@
       .vazio{text-align:center;color:#64748b;font-style:italic;padding:6mm;text-transform:uppercase;border:.3mm dashed #cbd5e1;border-radius:2.4mm}
       .total{display:flex;justify-content:flex-end;align-items:baseline;gap:4mm;padding:2.6mm 4mm;background:#f6f8fb;border:.3mm solid #e2e8f0;border-radius:2.4mm}
       .total .r{font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#64748b}
-      .total .v{font-family:${PDF_FONTE_TITULO};font-size:12pt;font-weight:800;color:#b45309}
+      .total .v{font-family:${PDF_FONTE_TITULO};font-size:12pt;font-weight:800}
       .escala{border:.3mm solid #cbd5e1;border-radius:2.8mm;overflow:hidden;background:#fff}
       .escala .cab{display:flex;align-items:center;gap:3mm;background:#f1f5f9;padding:2.4mm 4mm;border-bottom:.3mm solid #cbd5e1}
       .escala .id{background:#1d4ed8;color:#fff;font-weight:800;font-size:7.4pt;padding:.8mm 2.4mm;border-radius:1.4mm;letter-spacing:.04em;text-transform:uppercase}
@@ -860,7 +876,7 @@
       td{border-bottom-color:#1e293b;color:#cbd5e1}
       tbody tr:nth-child(even) td{background:#0b1426}
       .vazio{color:#94a3b8;border-color:#334155}
-      .total{background:#0f172a;border-color:#1e293b}.total .r{color:#94a3b8}.total .v{color:#fbbf24}
+      .total{background:#0f172a;border-color:#1e293b}.total .r{color:#94a3b8}
       .escala{border-color:#1e293b;background:#0b1224}
       .escala .cab{background:#0f172a;border-bottom-color:#1e293b}
       .escala .dt{color:#fff}.escala .hr{color:#94a3b8}
@@ -990,6 +1006,15 @@
         <div class="card"><div class="r">${esc(i.rotulo)}</div><div class="v ${esc(i.tom || '')}">${esc(i.valor)}</div>${i.detalhe ? `<div class="d">${esc(i.detalhe)}</div>` : ''}</div>`).join('')}</div>`;
     }
 
+    // Valores > R$ 0,00 em amber-400 (tom definido em PDF_TONS); negativos em red; zero neutro
+    function pdfEstiloValorOrg(txt) {
+      const t = String(txt || '').trim();
+      if (!/^-?R\$\s*[\d.]+,\d{2}$/.test(t)) return '';
+      const n = moedaParaNumero(t);
+      const cor = n < -0.004 ? PDF_CORES.red : (n > 0.004 ? PDF_CORES.amber : PDF_CORES.padrao);
+      return ` style="color:${cor};font-weight:700"`;
+    }
+
     function pdfItensOrganograma(num, titulo, cor, org, medidor) {
       const itens = [pdfMedirItem(pdfTituloSecao(num, titulo, cor), medidor, { keepNext: true })];
       const tabelas = (org.tabelas || []).filter(t => t.colunas && t.colunas.length);
@@ -1000,12 +1025,12 @@
       comLinhas.forEach(t => {
         const alin = (i) => (t.alinhamentos && t.alinhamentos[i]) || '';
         const tb = pdfEl(`<table><thead><tr>${t.colunas.map((c, i) => `<th class="${alin(i)}">${esc(c)}</th>`).join('')}</tr></thead>
-          <tbody>${t.linhas.map(l => `<tr>${l.map((c, i) => `<td class="${alin(i)}">${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`);
+          <tbody>${t.linhas.map(l => `<tr>${l.map((c, i) => `<td class="${alin(i)}"${pdfEstiloValorOrg(c)}>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`);
         itens.push(pdfItemTabela(tb, medidor));
         tb.remove();
       });
       (org.totais || []).forEach(t => {
-        itens.push(pdfMedirItem(pdfEl(`<div class="total"><span class="r">${esc(t.rotulo)}</span><span class="v">${esc(t.valor)}</span></div>`), medidor));
+        itens.push(pdfMedirItem(pdfEl(`<div class="total"><span class="r">${esc(t.rotulo)}</span><span class="v"${pdfEstiloValorOrg(t.valor)}>${esc(t.valor)}</span></div>`), medidor));
       });
       return itens;
     }
@@ -1140,8 +1165,8 @@
       let jornadaDados = e.jornada;
       if (e.ho && jornadaDados) {
         const reuniao = /REUNI/i.test(e.ho.titulo);
-        const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
         const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
+        const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
         jornadaDados = { titulo: jornadaDados.titulo, linhas: perda.concat(horas) };
         if (!jornadaDados.linhas.length) jornadaDados = null;
       }

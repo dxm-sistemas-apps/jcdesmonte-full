@@ -182,7 +182,7 @@
               <i class="fa-solid fa-compass"></i> NORTE FLUMINENSE
             </span>
             <br>
-            <p class="text-justify text-xs text-slate-300">CAMPOS GOYTACAZES, CONCEIÇÃO DE MACABU, MACAÉ, QUISSAMÃ, SÃO JOÃO DA BARRA.</p>
+            <p class="text-justify text-xs text-slate-300">CAMPOS DOS GOYTACAZES, CONCEIÇÃO DE MACABU, MACAÉ, QUISSAMÃ, SÃO JOÃO DA BARRA.</p>
           </div>
 
           <div class="bg-slate-900/40 p-4 rounded-xl border border-slate-800 space-y-1">
@@ -217,12 +217,12 @@
           <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-800">
             <tr>
               <th scope="col" class="px-4 py-3 text-center">Nº DA ESCALA</th>
-              <th scope="col" class="px-4 py-3">LOCAL</th>
+              <th scope="col" class="px-4 py-3 text-center">LOCAL</th>
               <th scope="col" class="px-4 py-3 text-center">DATA</th>
-              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE ALIMENTAÇÃO</th>
-              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE PERNOITE</th>
-              <th scope="col" class="px-4 py-3 text-right">DIÁRIA DE TRASLADO</th>
-              <th scope="col" class="px-4 py-3 text-right">TOTAL DIÁRIO</th>
+              <th scope="col" class="px-4 py-3 text-center">DIÁRIA DE ALIMENTAÇÃO</th>
+              <th scope="col" class="px-4 py-3 text-center">DIÁRIA DE PERNOITE</th>
+              <th scope="col" class="px-4 py-3 text-center">DIÁRIA DE TRASLADO</th>
+              <th scope="col" class="px-4 py-3 text-center">TOTAL DIÁRIO</th>
             </tr>
           </thead>
           <tbody id="tabelaDiariasBody" class="divide-y divide-slate-800">
@@ -282,11 +282,11 @@
           <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-800">
             <tr>
               <th scope="col" class="px-4 py-3 text-center">Nº DA ESCALA</th>
-              <th scope="col" class="px-4 py-3">LOCAL</th>
+              <th scope="col" class="px-4 py-3 text-center">LOCAL</th>
               <th scope="col" class="px-4 py-3 text-center">DATA</th>
-              <th scope="col" class="px-4 py-3 text-right">AUXÍLIO ALIMENTAÇÃO</th>
-              <th scope="col" class="px-4 py-3 text-right">AUXÍLIO TRANSPORTE</th>
-              <th scope="col" class="px-4 py-3 text-right">TOTAL DIÁRIO</th>
+              <th scope="col" class="px-4 py-3 text-center">AUXÍLIO ALIMENTAÇÃO</th>
+              <th scope="col" class="px-4 py-3 text-center">AUXÍLIO TRANSPORTE</th>
+              <th scope="col" class="px-4 py-3 text-center">TOTAL DIÁRIO</th>
             </tr>
           </thead>
           <tbody id="tabelaAuxiliosBody" class="divide-y divide-slate-800">
@@ -374,7 +374,7 @@
       "CABO FRIO", "ARMAÇÃO DOS BÚZIOS", "BUZIOS", "ARRAIAL DO CABO", "SÃO PEDRO DA ALDEIA", "ARARUAMA", "SAQUAREMA", "IGUABA GRANDE",
       "PETRÓPOLIS", "PETROPOLIS", "TERESÓPOLIS", "TERESOPOLIS", "NOVA FRIBURGO", "GUAPIMIRIM", "CACHOEIRAS DE MACACU", "CANTAGALO", "CORDEIRO", "BOM JARDIM",
       "VOLTA REDONDA", "BARRA MANSA", "RESENDE", "ITATIAIA", "PIRAÍ", "PIRAI", "BARRA DO PIRAÍ", "BARRA DO PIRAI", "VALENÇA", "VALENCA", "VASSOURAS",
-      "CAMPOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA", 
+      "CAMPOS DOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA", 
       "ITAOCARA", "ITAPERUNA", "SANTO ANTÔNIO DE PÁDUA", "SANTO ANTONIO DE PADUA", "BOM JESUS DO ITABAPOANA", "MIRACEMA",
       "ANGRA DOS REIS", "PARATY", "PARATI", "MANGARATIBA"
     ];
@@ -394,7 +394,8 @@
 
     // Cor dos valores de diárias/auxílios: vermelho se negativo; amber-400 se zero ou positivo.
     function classeCorValorDiariaAux(v) {
-      return (Number(v) || 0) < -0.004 ? 'text-red-400' : 'text-amber-400';
+      const n = Number(v) || 0;
+      return n < -0.004 ? 'text-red-400' : (n > 0.004 ? 'text-amber-400' : 'text-slate-300');
     }
 
     function verificarElegibilidade(localStr) {
@@ -506,11 +507,11 @@
 
       const elTotalDiarias = document.getElementById('totalDiarias');
       elTotalDiarias.innerText = formatarMoeda(somaTotalDiarias);
-      elTotalDiarias.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400');
+      elTotalDiarias.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400', 'text-slate-300');
       elTotalDiarias.classList.add(classeCorValorDiariaAux(somaTotalDiarias));
       const elTotalAuxilios = document.getElementById('totalAuxilios');
       elTotalAuxilios.innerText = formatarMoeda(somaTotalAuxilios);
-      elTotalAuxilios.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400');
+      elTotalAuxilios.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400', 'text-slate-300');
       elTotalAuxilios.classList.add(classeCorValorDiariaAux(somaTotalAuxilios));
 
       // Grava MESCLANDO com o que já existe (escalas.html guarda ali também os

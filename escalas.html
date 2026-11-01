@@ -3488,6 +3488,11 @@
         return;
       }
 
+      // PASSO 1: Salva quais IDs de ciclos fechados estavam abertos antes da atualização
+      const abertosAtuais = Array.from(container.querySelectorAll('[id^="corpoEsc-"]'))
+        .filter(el => !el.classList.contains('hidden'))
+        .map(el => el.id.replace('corpoEsc-', ''));
+
       container.innerHTML = ciclos.slice().reverse().map((ciclo) => {
         const idCiclo = ciclo.id;
         const escalasArr = ciclo.escalasData || [];
@@ -3495,11 +3500,14 @@
           ? escalasArr.map((esc, idx) => montarCardEscalaHTML(esc, idx, 'fechado', idCiclo)).join('')
           : '<div class="p-6 text-center text-slate-500 italic">NENHUMA ESCALA NESTE CICLO.</div>';
 
+        // Verifica se este ciclo estava aberto
+        const estaAberto = abertosAtuais.includes(idCiclo);
+
         return `
           <article class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
             <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 cursor-pointer hover:bg-slate-900/40 transition" onclick="alternarCicloFechadoEscalas('${idCiclo}')">
               <div class="flex items-center gap-3">
-                <i id="chevronEsc-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200"></i>
+                <i id="chevronEsc-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200 ${estaAberto ? 'rotate-90' : ''}"></i>
                 <div>
                   <h3 class="text-lg font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h3>
                   <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || '-'}</p>
@@ -3508,7 +3516,7 @@
                 </div>
               </div>
             </div>
-            <div id="corpoEsc-${idCiclo}" class="hidden p-5 space-y-6 bg-slate-950/60">
+            <div id="corpoEsc-${idCiclo}" class="${estaAberto ? '' : 'hidden'} p-5 space-y-6 bg-slate-950/60">
               ${cardsHTML}
             </div>
           </article>

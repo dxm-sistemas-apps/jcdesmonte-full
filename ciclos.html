@@ -927,7 +927,7 @@
       });
     }
 
-    async function gerarBlobPdfCicloProfissional(ciclo) {
+    async function gerarBlobPdfCicloProfissional(ciclo, aoProgredir) {
       const estilo = document.createElement('style');
       estilo.id = 'jcpdf-css';
       estilo.textContent = PDF_CSS;
@@ -940,24 +940,25 @@
       document.body.appendChild(wrapper);
 
       try {
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 60));
         const paginas = pdfMontarPaginas(ciclo, medidor);
         medidor.innerHTML = '';
         paginas.forEach(p => wrapper.appendChild(p));
         if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
-        await new Promise(r => setTimeout(r, 300));
+        await new Promise(r => setTimeout(r, 60));
 
         const opcoes = {
           margin: 0,
-          html2canvas: { scale: 2, backgroundColor: '#020617', useCORS: true },
+          html2canvas: { scale: /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 1.4 : 2, backgroundColor: '#020617', useCORS: true, logging: false },
           jsPDF: { unit: 'px', format: [PDF_PAG.W, PDF_PAG.H], orientation: 'portrait', hotfixes: ['px_scaling'] }
         };
         const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
         let pdf = JsPDF ? new JsPDF(opcoes.jsPDF) : null;
 
         for (let i = 0; i < paginas.length; i++) {
+          if (aoProgredir) aoProgredir(i + 1, paginas.length);
           const canvas = await html2pdf().set(opcoes).from(paginas[i]).toCanvas().get('canvas');
-          const img = canvas.toDataURL('image/jpeg', 0.96);
+          const img = canvas.toDataURL('image/jpeg', 0.9);
           if (!pdf) {
             pdf = await html2pdf().set(opcoes).from(paginas[i]).toPdf().get('pdf');
             while (pdf.getNumberOfPages() > 1) pdf.deletePage(pdf.getNumberOfPages());
@@ -976,9 +977,9 @@
       }
     }
 
-    async function gerarBlobPdfCiclo(ciclo) {
+    async function gerarBlobPdfCiclo(ciclo, aoProgredir) {
       try {
-        return await gerarBlobPdfCicloProfissional(ciclo);
+        return await gerarBlobPdfCicloProfissional(ciclo, aoProgredir);
       } catch (erro) {
         console.warn('Layout profissional do PDF falhou; usando o layout anterior:', erro);
         return await gerarBlobPdfCicloLegado(ciclo);
@@ -1218,15 +1219,70 @@
       return true;
     }
 
+    function abrirPainelPdf(texto) {
+      const fundo = document.createElement('div');
+      fundo.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.85);display:flex;align-items:center;justify-content:center;padding:20px';
+      fundo.innerHTML = '<div style="max-width:360px;width:100%;background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:22px;text-align:center;color:#e2e8f0;font-family:Arial,sans-serif"><div id="pdfPainelTxt" style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em"></div><div id="pdfPainelBtns" style="margin-top:14px;display:flex;flex-direction:column;gap:8px"></div></div>';
+      document.body.appendChild(fundo);
+      const txt = fundo.querySelector('#pdfPainelTxt');
+      const btns = fundo.querySelector('#pdfPainelBtns');
+      txt.textContent = texto;
+      return {
+        texto: t => { txt.textContent = t; },
+        botoes: lista => new Promise(resolve => {
+          btns.innerHTML = '';
+          lista.forEach(([rotulo, cor, valor]) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.textContent = rotulo;
+            b.style.cssText = `padding:11px;border:0;border-radius:10px;font-weight:800;font-size:12px;text-transform:uppercase;color:#fff;background:${cor}`;
+            b.onclick = () => resolve(valor);
+            btns.appendChild(b);
+          });
+        }),
+        fechar: () => fundo.remove()
+      };
+    }
+
+    function baixarBlob(blob, nome) {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url; link.download = nome;
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+    }
+
     async function gerarPdfCiclo(id) {
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]');
       const ciclo = ciclos.find(c => c.id === id);
       if (!ciclo) return;
 
       const nomeArquivo = montarNomeArquivoPdf(ciclo);
+      const painel = abrirPainelPdf('GERANDO PDF...');
 
       try {
-        const blobPdf = await gerarBlobPdfCiclo(ciclo);
+        const blobPdf = await gerarBlobPdfCiclo(ciclo, (i, n) => painel.texto(`GERANDO PDF... PÁGINA ${i} DE ${n}`));
+
+        // Celulares (Chrome/Android) não permitem gravar em pasta fixa: usa o menu de compartilhar, onde se escolhe a pasta.
+        const arquivoPdf = new File([blobPdf], nomeArquivo, { type: 'application/pdf' });
+        if (!window.showDirectoryPicker && navigator.canShare && navigator.canShare({ files: [arquivoPdf] })) {
+          painel.texto('PDF PRONTO! ESCOLHA COMO SALVAR:');
+          for (;;) {
+            const escolha = await painel.botoes([
+              ['Salvar em uma pasta (Arquivos/Drive)', '#2563eb', 'share'],
+              ['Baixar em Downloads', '#475569', 'down'],
+              ['Fechar', '#334155', 'fim']
+            ]);
+            if (escolha === 'share') {
+              try { await navigator.share({ files: [arquivoPdf], title: nomeArquivo }); break; }
+              catch (e) { if (e && e.name === 'AbortError') continue; baixarBlob(blobPdf, nomeArquivo); break; }
+            } else if (escolha === 'down') { baixarBlob(blobPdf, nomeArquivo); break; }
+            else break;
+          }
+          painel.fechar();
+          return;
+        }
+        painel.fechar();
 
         await salvarPdfLocalmente(blobPdf, nomeArquivo);
 
@@ -1243,6 +1299,7 @@
           alert('O PDF FOI SALVO NO DISPOSITIVO, MAS OCORREU UM ERRO AO ENVIÁ-LO AO GOOGLE DRIVE. VERIFIQUE SUA CONEXÃO E AS PERMISSÕES DA SUA CONTA GOOGLE.');
         }
       } catch (erro) {
+        painel.fechar();
         console.error('Erro ao gerar o PDF do ciclo:', erro);
         alert('OCORREU UM ERRO AO GERAR O PDF DESTE CICLO.');
       }

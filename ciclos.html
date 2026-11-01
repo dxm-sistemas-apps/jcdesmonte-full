@@ -368,12 +368,156 @@
       return `CICLO ${numeroFallback}`;
     }
 
-    function renderizarCiclos() {
-      // Salva a posição atual do scroll antes de atualizar o HTML da página
-      const scrollAtual = window.scrollY;
 
+    // ===== Organogramas do ciclo: usa o salvo e, se estiver vazio, recalcula a partir das escalas do ciclo =====
+    const MUNICIPIOS_ELEGIVEIS_CICLO = [
+      "CABO FRIO", "ARMAÇÃO DOS BÚZIOS", "BUZIOS", "ARRAIAL DO CABO", "SÃO PEDRO DA ALDEIA", "ARARUAMA", "SAQUAREMA", "IGUABA GRANDE",
+      "PETRÓPOLIS", "PETROPOLIS", "TERESÓPOLIS", "TERESOPOLIS", "NOVA FRIBURGO", "GUAPIMIRIM", "CACHOEIRAS DE MACACU", "CANTAGALO", "CORDEIRO", "BOM JARDIM",
+      "VOLTA REDONDA", "BARRA MANSA", "RESENDE", "ITATIAIA", "PIRAÍ", "PIRAI", "BARRA DO PIRAÍ", "BARRA DO PIRAI", "VALENÇA", "VALENCA", "VASSOURAS",
+      "CAMPOS DOS GOYTACAZES", "CAMPOS", "MACAÉ", "MACAE", "QUISSAMÃ", "QUISSAMA", "CONCEIÇÃO DE MACABU", "CONCEICAO DE MACABU", "SÃO JOÃO DA BARRA", "SAO JOAO DA BARRA",
+      "ITAOCARA", "ITAPERUNA", "SANTO ANTÔNIO DE PÁDUA", "SANTO ANTONIO DE PADUA", "BOM JESUS DO ITABAPOANA", "MIRACEMA",
+      "ANGRA DOS REIS", "PARATY", "PARATI", "MANGARATIBA"
+    ];
+
+    function hashTexto(t) {
+      let h = 5381;
+      for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+      return h;
+    }
+
+    function localElegivelCiclo(l) {
+      if (!l) return false;
+      const up = String(l).toUpperCase().trim();
+      return MUNICIPIOS_ELEGIVEIS_CICLO.some(m => up.includes(m));
+    }
+
+    function valoresExtrasEscalaCiclo(escala, valoresSalvos) {
+      const conv = (v, padrao) => {
+        if (typeof v === 'number') return v;
+        if (!v) return padrao;
+        return parseFloat(String(v).replace('R$', '').replace(/\./g, '').replace(',', '.')) || padrao;
+      };
+      const turnos = [
+        { local: escala.localManha || escala.local, pernoite: escala.pernoiteManha || escala.pernoite },
+        { local: escala.localTarde, pernoite: escala.pernoiteTarde },
+        { local: escala.localNoite, pernoite: escala.pernoiteNoite }
+      ];
+      ['Manha', 'Tarde', 'Noite'].forEach(P => (escala['atividadesExtras' + P] || []).forEach(a => {
+        if (a && a.local) turnos.push({ local: a.local, pernoite: escala['pernoite' + P] || '' });
+      }));
+      const elegivel = turnos.some(t => localElegivelCiclo(t.local));
+      const possuiPernoite = turnos.some(t => localElegivelCiclo(t.local) && ['SIM', 'TRUE', '1', 'S'].includes(String(t.pernoite || '').toUpperCase().trim()));
+      const d = escala.data ? new Date(escala.data + 'T00:00:00') : null;
+      const diaEspecial = d ? (d.getDay() === 0 || d.getDay() === 6 || escala.isFeriado === true) : false;
+      return {
+        turnos, elegivel, diaEspecial,
+        diariaAlimentacao: elegivel ? conv(valoresSalvos.diariaAlimentacao, 52.00) : 0,
+        diariaPernoite: possuiPernoite ? conv(valoresSalvos.diariaHospedagem, 274.10) : 0,
+        diariaTraslado: elegivel ? conv(valoresSalvos.diariaTraslado, 0) : 0,
+        auxAlimentacao: diaEspecial ? conv(valoresSalvos.alimentacao, 57.70) : 0,
+        auxTransporte: diaEspecial ? conv(valoresSalvos.transporte, 31.08) : 0
+      };
+    }
+
+    function organogramaTemLinhas(html) {
+      if (!html) return false;
+      const t = document.createElement('div');
+      t.innerHTML = html;
+      return Array.from(t.querySelectorAll('tbody tr')).some(tr => !tr.querySelector('td[colspan]'));
+    }
+
+    function reconstruirOrganogramasCiclo(ciclo) {
+      const escalas = Array.isArray(ciclo.escalasData) ? ciclo.escalasData : [];
+      let valores = {};
+      try { valores = JSON.parse(localStorage.getItem('jetcontrol_valores_custom') || '{}') || {}; } catch (_) {}
+      const moeda = v => (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const cor = v => ((Number(v) || 0) < -0.004 ? 'text-red-400' : 'text-amber-400');
+      let linhasD = '', linhasA = '', totD = 0, totA = 0;
+      escalas.forEach((e, idx) => {
+        const num = e.numero || `#${idx + 1}`;
+        const dt = e.data ? new Date(e.data + 'T00:00:00').toLocaleDateString('pt-BR') : '-';
+        const ex = valoresExtrasEscalaCiclo(e, valores);
+        if (ex.elegivel) {
+          const tot = ex.diariaAlimentacao + ex.diariaPernoite + ex.diariaTraslado;
+          totD += tot;
+          const locais = [...new Set(ex.turnos.filter(t => localElegivelCiclo(t.local)).map(t => t.local))].join(' / ');
+          linhasD += `<tr class="uppercase"><td class="px-4 py-3 text-center font-bold text-brand-500">${esc(num)}</td><td class="px-4 py-3 font-semibold text-white">${esc(locais)}</td><td class="px-4 py-3 text-center">${dt}</td><td class="px-4 py-3 text-right ${cor(ex.diariaAlimentacao)}">${moeda(ex.diariaAlimentacao)}</td><td class="px-4 py-3 text-right ${cor(ex.diariaPernoite)}">${moeda(ex.diariaPernoite)}</td><td class="px-4 py-3 text-right ${cor(ex.diariaTraslado)}">${moeda(ex.diariaTraslado)}</td><td class="px-4 py-3 text-right font-bold ${cor(tot)}">${moeda(tot)}</td></tr>`;
+        }
+        if (ex.diaEspecial) {
+          const tot = ex.auxAlimentacao + ex.auxTransporte;
+          totA += tot;
+          const locais = [...new Set(ex.turnos.map(t => t.local).filter(l => l && String(l).trim() !== ''))].join(' / ') || '-';
+          linhasA += `<tr class="uppercase"><td class="px-4 py-3 text-center font-bold text-brand-500">${esc(num)}</td><td class="px-4 py-3 font-semibold text-white">${esc(locais)}</td><td class="px-4 py-3 text-center">${dt}</td><td class="px-4 py-3 text-right ${cor(ex.auxAlimentacao)}">${moeda(ex.auxAlimentacao)}</td><td class="px-4 py-3 text-right ${cor(ex.auxTransporte)}">${moeda(ex.auxTransporte)}</td><td class="px-4 py-3 text-right font-bold ${cor(tot)}">${moeda(tot)}</td></tr>`;
+        }
+      });
+      const secao = (id, icone, titulo, cab, linhas, vazio, colspan, idTotal, total) => `
+        <section id="${id}" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3"><div class="flex items-center space-x-2">${icone}<h2 class="text-lg font-bold uppercase tracking-wide text-white">${titulo}</h2></div></div>
+          <div class="overflow-x-auto"><table class="w-full text-center text-sm text-slate-300">
+            <thead class="bg-slate-900 text-xs uppercase text-slate-400 border-b border-slate-800"><tr>${cab}</tr></thead>
+            <tbody class="divide-y divide-slate-800">${linhas || `<tr><td colspan="${colspan}" class="text-center py-4 text-slate-500">${vazio}</td></tr>`}</tbody>
+          </table></div>
+          <div class="flex justify-end pt-2"><div class="bg-slate-900 border border-slate-800 rounded-xl px-5 py-3 flex items-center space-x-4 shadow-inner"><span class="text-xs uppercase font-bold text-slate-400 tracking-wider">${titulo.includes('DIÁRIAS') ? 'TOTAL GERAL DE DIÁRIAS:' : 'TOTAL GERAL DE AUXÍLIOS:'}</span><span id="${idTotal}" class="${cor(total)} font-black text-lg">${moeda(total)}</span></div></div>
+        </section>`;
+      const th = (t, cls) => `<th scope="col" class="px-4 py-3 ${cls || ''}">${t}</th>`;
+      return {
+        temDiarias: linhasD !== '', temAuxilios: linhasA !== '',
+        diarias: secao('secao-organograma-diarias', '<i class="fa-solid fa-hotel text-amber-400 text-xl"></i>', 'ORGANOGRAMA DAS DIÁRIAS',
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-right') + th('DIÁRIA DE PERNOITE', 'text-right') + th('DIÁRIA DE TRASLADO', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          linhasD, 'NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA NESTE CICLO.', 7, 'totalDiarias', totD),
+        auxilios: secao('secao-organograma-auxilios', '<i class="fa-solid fa-utensils text-amber-400 text-xl"></i><i class="fa-solid fa-car text-amber-400 text-xl"></i>', 'ORGANOGRAMA DOS AUXÍLIOS',
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-right') + th('AUXÍLIO TRANSPORTE', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
+          linhasA, 'NENHUMA ESCALA COM DATA ELEGÍVEL AOS AUXÍLIOS CADASTRADA NESTE CICLO.', 6, 'totalAuxilios', totA)
+      };
+    }
+
+    // Devolve o organograma salvo; se ele não tiver linhas, usa o recalculado com as escalas do ciclo.
+    function organogramasDoCiclo(ciclo) {
+      let diarias = ciclo.organogramaDiarias || ciclo.organogramaDiariasHTML || '';
+      let auxilios = ciclo.organogramaAuxilios || ciclo.organogramaAuxiliosHTML || '';
+      const faltaD = !organogramaTemLinhas(diarias), faltaA = !organogramaTemLinhas(auxilios);
+      if ((faltaD || faltaA) && Array.isArray(ciclo.escalasData) && ciclo.escalasData.length) {
+        const rec = reconstruirOrganogramasCiclo(ciclo);
+        if (faltaD && rec.temDiarias) diarias = rec.diarias;
+        if (faltaA && rec.temAuxilios) auxilios = rec.auxilios;
+      }
+      return {
+        diarias: diarias || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>',
+        auxilios: auxilios || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>'
+      };
+    }
+
+    // Grava de volta, uma única vez, os organogramas recuperados (evita recalcular e mantém o histórico completo)
+    function repararOrganogramasCiclos() {
+      let ciclos;
+      try { ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]'); } catch (_) { return; }
+      let mudou = false;
+      ciclos.forEach(c => {
+        const antes = [c.organogramaDiarias, c.organogramaAuxilios];
+        const r = organogramasDoCiclo(c);
+        if (organogramaTemLinhas(r.diarias) && !organogramaTemLinhas(c.organogramaDiarias)) { c.organogramaDiarias = r.diarias; mudou = true; }
+        if (organogramaTemLinhas(r.auxilios) && !organogramaTemLinhas(c.organogramaAuxilios)) { c.organogramaAuxilios = r.auxilios; mudou = true; }
+      });
+      if (mudou) localStorage.setItem(STORAGE_KEY_CICLOS, JSON.stringify(ciclos));
+    }
+
+    function renderizarCiclos(forcar) {
       const container = document.getElementById('listaCiclos');
-      const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]');
+
+      // Completa organogramas que foram salvos vazios (ciclo fechado sem abrir a página de Cotas Extras)
+      repararOrganogramasCiclos();
+
+      const bruto = localStorage.getItem(STORAGE_KEY_CICLOS) || '[]';
+      const assinatura = bruto.length + ':' + hashTexto(bruto);
+      // A sincronização avisa a cada poucos segundos; só redesenha se os dados realmente mudaram.
+      if (!forcar && container.dataset.assinatura === assinatura && container.children.length) return;
+      container.dataset.assinatura = assinatura;
+
+      // Guarda a posição exata (página e rolagens horizontais internas) para restaurar depois de redesenhar
+      const scrollY = window.scrollY, scrollX = window.scrollX;
+      const rolagensInternas = Array.from(container.querySelectorAll('.overflow-x-auto')).map(el => el.scrollLeft);
+
+      const ciclos = JSON.parse(bruto);
 
       if (!ciclos.length) {
         container.innerHTML = '<div class="p-10 text-center text-slate-500 italic uppercase">Nenhum ciclo fechado registrado.</div>';
@@ -391,8 +535,7 @@
         const estaAberto = abertosAtuais.includes(idCiclo);
 
         // Garante o carregamento dos organogramas salvos ou recupera via dados de cotas se necessário
-        const htmlDiarias = ciclo.organogramaDiarias || ciclo.organogramaDiariasHTML || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>';
-        const htmlAuxilios = ciclo.organogramaAuxilios || ciclo.organogramaAuxiliosHTML || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>';
+        const { diarias: htmlDiarias, auxilios: htmlAuxilios } = organogramasDoCiclo(ciclo);
 
         return `
       <article class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
@@ -446,8 +589,9 @@
     `;
       }).join('');
 
-      // Restaura exatamente a posição de scroll onde o usuário estava após redesenhar
-      window.scrollTo(0, scrollAtual);
+      // Restaura exatamente a posição onde o usuário estava
+      container.querySelectorAll('.overflow-x-auto').forEach((el, i) => { if (rolagensInternas[i]) el.scrollLeft = rolagensInternas[i]; });
+      window.scrollTo({ top: scrollY, left: scrollX, behavior: 'instant' });
     }
 
     function alternarCiclo(id) {
@@ -630,43 +774,96 @@
     // Cada bloco é medido e empacotado inteiro na página; tabelas só se dividem
     // entre linhas (com o cabeçalho repetido); blocos maiores que a página são reduzidos.
     // =====================================================================
-    const PDF_PAG = { W: 794, H: 1122, MX: 36, TOPO: 72, RODAPE: 52 };
+    const PDF_PAG = { W: 794, H: 1122, MX: 48, TOPO: 84, RODAPE: 60 };
     PDF_PAG.CW = PDF_PAG.W - PDF_PAG.MX * 2;
     PDF_PAG.CH = PDF_PAG.H - PDF_PAG.TOPO - PDF_PAG.RODAPE;
-    const PDF_GAP = 14;
+    const PDF_GAP = 16;
 
+    // ===== QUALIDADE x VELOCIDADE DO PDF — escolha: 'rapida' | 'equilibrada' | 'alta' =====
+    const PDF_QUALIDADE = 'equilibrada';
+    const PDF_PRESETS = {
+      rapida:      { escalaCelular: 1,    escalaPc: 1.4, jpeg: 0.82 },
+      equilibrada: { escalaCelular: 1.35, escalaPc: 2,   jpeg: 0.9 },
+      alta:        { escalaCelular: 1.8,  escalaPc: 2.5, jpeg: 0.95 }
+    };
+    const PDF_CACHE = new Map(); // PDFs já gerados nesta sessão (ciclo fechado não muda): reabrir é instantâneo
+
+    // Fontes do Google Fonts (carregadas só durante a geração; sem internet, usa fontes do sistema)
+    const PDF_FONTES_URL = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap';
+    const PDF_FONTE_TEXTO = "'Inter','Segoe UI',Arial,Helvetica,sans-serif";
+    const PDF_FONTE_TITULO = "'Plus Jakarta Sans','Inter','Segoe UI',Arial,sans-serif";
+
+    // CSS do documento (estilo relatório impresso, tema claro). Regras dentro de .jcp são prefixadas automaticamente.
+    const PDF_CSS_REGRAS = `
+      .hero{background:linear-gradient(135deg,#0b1f4d 0%,#1e3a8a 100%);color:#fff;border-radius:3.5mm;padding:8mm 8mm 7mm}
+      .hero .kicker{font-size:7.5pt;letter-spacing:.28em;text-transform:uppercase;color:#93c5fd;font-weight:700}
+      .hero h1{margin:2.4mm 0 0;font-family:${PDF_FONTE_TITULO};font-size:20pt;line-height:1.12;text-transform:uppercase;color:#fff;font-weight:800}
+      .hero .sub{margin-top:2.4mm;font-size:8pt;color:#bfdbfe;letter-spacing:.04em;text-transform:uppercase}
+      .hero .periodo{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:5mm;padding-top:4.5mm;border-top:.3mm solid rgba(255,255,255,.25)}
+      .hero .r{font-size:6.8pt;letter-spacing:.14em;text-transform:uppercase;color:#93c5fd;font-weight:700}
+      .hero .v{font-size:10.5pt;font-weight:700;margin-top:.8mm}
+      .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:3.6mm}
+      .kpi{border:.3mm solid #e2e8f0;border-radius:2.8mm;padding:3.6mm 4mm;background:#fff}
+      .kpi .r{font-size:6.8pt;letter-spacing:.12em;text-transform:uppercase;color:#64748b;font-weight:700}
+      .kpi .v{font-family:${PDF_FONTE_TITULO};font-size:14pt;font-weight:800;margin-top:1mm;color:#0f172a}
+      .kpi.destaque{border-color:#047857;background:#ecfdf5}
+      .pos{color:#047857 !important}.neg{color:#b91c1c !important}.amb{color:#b45309 !important}
+      .sec{display:flex;align-items:center;gap:3mm;padding-bottom:2.2mm;border-bottom:.5mm solid var(--c)}
+      .sec .n{background:var(--c);color:#fff;border-radius:1.6mm;min-width:7mm;height:7mm;display:inline-flex;align-items:center;justify-content:center;font-size:9pt;font-weight:800;padding:0 1.5mm}
+      .sec .t{font-family:${PDF_FONTE_TITULO};font-size:12.5pt;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#0f172a}
+      .sec .s{margin-left:auto;font-size:7.4pt;letter-spacing:.12em;color:#64748b;font-weight:700;text-transform:uppercase}
+      .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:3.4mm}
+      .card{border:.3mm solid #e2e8f0;border-left:1.2mm solid var(--c);border-radius:2.4mm;padding:2.8mm 3.4mm;background:#fff}
+      .card .r{font-size:6.8pt;letter-spacing:.1em;text-transform:uppercase;color:#64748b;font-weight:700}
+      .card .v{font-family:${PDF_FONTE_TITULO};font-size:11.5pt;font-weight:800;color:#0f172a;margin-top:.8mm}
+      .card .d{font-size:6.8pt;color:#64748b;margin-top:.8mm;text-transform:uppercase}
+      table{width:100%;border-collapse:collapse;font-size:8.2pt}
+      th{background:#0b1f4d;color:#fff;text-align:left;font-size:6.8pt;letter-spacing:.08em;text-transform:uppercase;padding:2.3mm 2.5mm;font-weight:700}
+      td{padding:2mm 2.5mm;border-bottom:.2mm solid #e2e8f0;vertical-align:top;color:#334155}
+      tbody tr:nth-child(even) td{background:#f6f8fb}
+      .dir{text-align:right}.cen{text-align:center}
+      .vazio{text-align:center;color:#64748b;font-style:italic;padding:6mm;text-transform:uppercase;border:.3mm dashed #cbd5e1;border-radius:2.4mm}
+      .total{display:flex;justify-content:flex-end;align-items:baseline;gap:4mm;padding:2.6mm 4mm;background:#f6f8fb;border:.3mm solid #e2e8f0;border-radius:2.4mm}
+      .total .r{font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:#64748b}
+      .total .v{font-family:${PDF_FONTE_TITULO};font-size:12pt;font-weight:800;color:#b45309}
+      .escala{border:.3mm solid #e2e8f0;border-radius:2.8mm;overflow:hidden;background:#fff}
+      .escala .cab{display:flex;align-items:center;gap:3mm;background:#f1f5f9;padding:2.4mm 4mm;border-bottom:.3mm solid #e2e8f0}
+      .escala .id{background:#1d4ed8;color:#fff;font-weight:800;font-size:7.4pt;padding:.8mm 2.4mm;border-radius:1.4mm;letter-spacing:.04em;text-transform:uppercase}
+      .escala .dt{font-family:${PDF_FONTE_TITULO};font-weight:800;color:#0f172a;font-size:9.5pt}
+      .escala .hr{margin-left:auto;color:#64748b;font-size:7.8pt;font-weight:600}
+      .escala .corpo{display:grid;grid-template-columns:1.1fr 1fr}
+      .escala .col+.col{border-left:.3mm solid #e2e8f0}
+      .escala .notas{grid-column:1 / -1;border-top:.3mm solid #e2e8f0;background:#fafbfd}
+      .grupo{padding:2.6mm 4mm}.grupo+.grupo{border-top:.3mm solid #e2e8f0}
+      .grupo h4{margin:0 0 1.5mm;font-size:6.9pt;letter-spacing:.12em;text-transform:uppercase;color:#1d4ed8;font-weight:800}
+      .grupo h4.bb{padding-bottom:1.4mm;border-bottom:.25mm solid #cbd5e1}
+      .linha{display:block;padding:.6mm 0;font-size:7.8pt;color:#0f172a;text-align:left}
+      .linha .l{font-weight:700;color:#475569;font-size:7.6pt;letter-spacing:.02em}
+      .linha .w{font-weight:600;color:#0f172a;margin-left:.8mm}
+      .linha.gap{margin-top:1.2mm}
+      .linha.sep{margin-top:1.6mm;padding-top:1.8mm;border-top:.25mm solid #cbd5e1}
+      .tag{font-size:5.8pt;font-weight:800;padding:.3mm 1.3mm;border-radius:1mm;margin-left:1.3mm;letter-spacing:.04em}
+      .tag.rec{background:#d1fae5;color:#065f46}.tag.nao{background:#fee2e2;color:#991b1b}.tag.pen{background:#e2e8f0;color:#334155}
+    `;
+    function pdfPrefixarCss(css, pref) {
+      return css.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, corpo) =>
+        sel.split(',').map(s => `${pref} ${s.trim()}`).join(',') + '{' + corpo + '}');
+    }
     const PDF_CSS = `
-      .jcpdf-medidor{position:absolute;left:0;top:0;width:${PDF_PAG.CW}px;visibility:hidden;font-family:'Segoe UI',Arial,Helvetica,sans-serif;color:#e2e8f0;font-size:11px;line-height:1.35}
-      .jcpdf-page{position:relative;width:${PDF_PAG.W}px;height:${PDF_PAG.H}px;overflow:hidden;box-sizing:border-box;background:#020617;color:#e2e8f0;font-family:'Segoe UI',Arial,Helvetica,sans-serif;font-size:11px;line-height:1.35}
-      .jcpdf-page *{box-sizing:border-box}
-      .jcpdf-barra{position:absolute;left:0;top:0;width:100%;height:4px;background:linear-gradient(90deg,#2563eb,#22d3ee 55%,#34d399)}
-      .jcpdf-topo{position:absolute;left:0;top:4px;width:100%;height:48px;padding:0 ${PDF_PAG.MX}px;display:flex;align-items:center;justify-content:space-between;background:#0a1226;border-bottom:1px solid #1e293b}
-      .jcpdf-marca{font-size:13px;font-weight:900;letter-spacing:.14em;color:#fff}
-      .jcpdf-marca b{color:#60a5fa}
-      .jcpdf-marca sup{font-size:7px;color:#64748b;letter-spacing:0}
-      .jcpdf-nome{font-size:9px;font-weight:700;letter-spacing:.08em;color:#94a3b8;text-transform:uppercase;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right}
+      .jcpdf-medidor{position:absolute;left:0;top:0;width:${PDF_PAG.CW}px;visibility:hidden}
+      .jcpdf-medidor,.jcpdf-page{font-family:${PDF_FONTE_TEXTO};color:#334155;font-size:9.2pt;line-height:1.42;font-variant-numeric:tabular-nums}
+      .jcpdf-page{position:relative;width:${PDF_PAG.W}px;height:${PDF_PAG.H}px;overflow:hidden;background:#fff}
+      .jcpdf-page *,.jcpdf-medidor *{box-sizing:border-box}
+      .jcpdf-barra{position:absolute;left:0;top:0;width:100%;height:1.6mm;background:linear-gradient(90deg,#1d4ed8,#0e7490 60%,#047857)}
+      .jcpdf-topo{position:absolute;left:${PDF_PAG.MX}px;right:${PDF_PAG.MX}px;top:8mm;display:flex;justify-content:space-between;align-items:center;padding-bottom:2.4mm;border-bottom:.3mm solid #e2e8f0}
+      .jcpdf-marca{font-size:8.5pt;font-weight:800;letter-spacing:.16em;color:#0f172a}
+      .jcpdf-marca b{color:#1d4ed8}.jcpdf-marca sup{font-size:5pt;color:#94a3b8;letter-spacing:0}
+      .jcpdf-nome{font-size:7pt;font-weight:600;letter-spacing:.06em;color:#64748b;text-transform:uppercase;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .jcpdf-corpo{position:absolute;left:${PDF_PAG.MX}px;top:${PDF_PAG.TOPO}px;width:${PDF_PAG.CW}px;height:${PDF_PAG.CH}px;display:flex;flex-direction:column;gap:${PDF_GAP}px;overflow:hidden}
       .jcpdf-corpo>*{flex:none}
-      .jcpdf-rodape{position:absolute;left:0;bottom:0;width:100%;height:38px;padding:0 ${PDF_PAG.MX}px;display:flex;align-items:center;justify-content:space-between;background:#0a1226;border-top:1px solid #1e293b;font-size:9px;letter-spacing:.06em;color:#64748b;text-transform:uppercase}
-      .jcpdf-rodape strong{color:#cbd5e1}
-      .jcpdf-sec{display:flex;align-items:center;gap:10px;padding-bottom:8px;border-bottom:2px solid var(--c);}
-      .jcpdf-sec .n{min-width:26px;height:26px;border-radius:7px;background:var(--c);color:#020617;font-weight:900;font-size:12px;display:flex;align-items:center;justify-content:center;padding:0 5px}
-      .jcpdf-sec .t{font-size:15px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#fff}
-      .jcpdf-sec .s{margin-left:auto;font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--c);text-transform:uppercase}
-      .jcpdf-capa{border:1px solid #1e3a8a;border-radius:16px;padding:22px 24px;background:linear-gradient(135deg,#0f172a 0%,#0b1d44 100%)}
-      .jcpdf-capa .k{font-size:9px;font-weight:800;letter-spacing:.24em;color:#60a5fa;text-transform:uppercase}
-      .jcpdf-capa .tt{margin-top:6px;font-size:22px;line-height:1.15;font-weight:900;color:#fff;text-transform:uppercase}
-      .jcpdf-capa .ss{margin-top:6px;font-size:10px;letter-spacing:.06em;color:#94a3b8;text-transform:uppercase}
-      .jcpdf-grade{display:grid;gap:10px;margin-top:14px}
-      .jcpdf-cx{background:rgba(15,23,42,.85);border:1px solid #1e293b;border-radius:10px;padding:10px 12px}
-      .jcpdf-cx .l{font-size:8.5px;font-weight:800;letter-spacing:.12em;color:#94a3b8;text-transform:uppercase}
-      .jcpdf-cx .v{margin-top:3px;font-size:14px;font-weight:900;color:#fff}
-      .jcpdf-cx.g .v{font-size:21px}
-      .jcpdf-cx.liq{border-color:#059669;background:rgba(5,150,105,.14)}
-      .jcpdf-divisor{margin-top:14px;font-size:8.5px;font-weight:800;letter-spacing:.2em;color:#64748b;text-transform:uppercase}
-      .jcpdf-escala{border:1px solid #1e293b;border-radius:12px;background:#0f172a;padding:12px}
-      .jcpdf-tile{background:#0f172a !important;border:1px solid #1e293b !important;border-left:3px solid var(--c) !important;border-radius:10px !important;padding:9px 11px !important}
-    `;
+      .jcpdf-rodape{position:absolute;left:${PDF_PAG.MX}px;right:${PDF_PAG.MX}px;bottom:9mm;display:flex;justify-content:space-between;padding-top:2.4mm;border-top:.3mm solid #e2e8f0;font-size:6.8pt;letter-spacing:.06em;color:#94a3b8;text-transform:uppercase}
+      .jcpdf-rodape strong{color:#475569}
+    ` + pdfPrefixarCss(PDF_CSS_REGRAS, '.jcp');
 
     function pdfEl(html) {
       const d = document.createElement('div');
@@ -674,43 +871,9 @@
       return d.firstElementChild;
     }
 
-    function pdfForcarGrades(raiz, maxCols) {
-      raiz.querySelectorAll('[class*="grid-cols-"]').forEach(el => {
-        const m = String(el.className).match(/(?:lg|md|sm)?:?grid-cols-(\d)/g) || [];
-        let n = 1;
-        m.forEach(c => { const x = parseInt(c.slice(-1), 10); if (x > n) n = x; });
-        n = Math.min(n, maxCols);
-        el.style.display = 'grid';
-        el.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
-        el.style.gap = '10px';
-      });
-      raiz.querySelectorAll('[class*="col-span-"]').forEach(el => { el.style.gridColumn = '1 / -1'; });
-      raiz.querySelectorAll('.overflow-x-auto').forEach(el => { el.style.overflow = 'visible'; });
-    }
-
-    function pdfEstilizarTabelas(raiz) {
-      raiz.querySelectorAll('table').forEach(t => {
-        t.style.width = '100%';
-        t.style.fontSize = '9.5px';
-        t.style.borderCollapse = 'collapse';
-      });
-      raiz.querySelectorAll('th, td').forEach(c => {
-        c.style.padding = '6px 7px';
-        c.style.wordBreak = 'break-word';
-        c.style.whiteSpace = 'normal';
-        c.style.borderBottom = '1px solid #1e293b';
-      });
-      raiz.querySelectorAll('th').forEach(c => {
-        c.style.background = '#111c33';
-        c.style.color = '#94a3b8';
-        c.style.fontSize = '8.5px';
-        c.style.letterSpacing = '.06em';
-      });
-    }
-
     function pdfGerarMedidor() {
       const m = document.createElement('div');
-      m.className = 'jcpdf-medidor';
+      m.className = 'jcpdf-medidor jcp';
       return m;
     }
 
@@ -721,8 +884,7 @@
       const largs = cab ? Array.from(cab.querySelectorAll('th, td')).map(c => c.getBoundingClientRect().width) : [];
       const total = tabela.getBoundingClientRect().width || PDF_PAG.CW;
       return {
-        tabela,
-        cab,
+        tabela, cab,
         corpoModelo: tabela.querySelector('tbody'),
         linhas,
         hCab: cab ? Math.ceil(cab.getBoundingClientRect().height) : 0,
@@ -748,9 +910,9 @@
       return t;
     }
 
+    // Bloco maior que a página inteira: reduz proporcionalmente até caber (nunca corta informação)
     function pdfEscalarBloco(el, h, medidor) {
-      const CH = PDF_PAG.CH;
-      const k = (CH - 2) / h;
+      const k = (PDF_PAG.CH - 2) / h;
       const wrap = document.createElement('div');
       wrap.style.cssText = `width:${PDF_PAG.CW}px;overflow:hidden;position:relative`;
       el.style.width = (PDF_PAG.CW / k) + 'px';
@@ -758,120 +920,145 @@
       el.style.transform = `scale(${k})`;
       wrap.appendChild(el);
       medidor.appendChild(wrap);
-      const h2 = Math.min(CH, Math.ceil(el.getBoundingClientRect().height));
+      const h2 = Math.min(PDF_PAG.CH, Math.ceil(el.getBoundingClientRect().height));
       wrap.style.height = h2 + 'px';
       wrap.remove();
       return { el: wrap, h: h2 };
     }
 
-    function pdfItens(el, medidor, atomico) {
+    function pdfItens(el, medidor) {
       if (el.tagName === 'TABLE') return [pdfItemTabela(el, medidor)];
       medidor.appendChild(el);
       const h = Math.ceil(el.getBoundingClientRect().height);
-      const filhos = Array.from(el.children);
-      const dividir = !atomico && filhos.length && (el.querySelector('table') || h > PDF_PAG.CH);
-      if (dividir) {
-        const out = [];
-        filhos.forEach(f => out.push(...pdfItens(f, medidor, false)));
-        el.remove();
-        return out;
+      if (h > PDF_PAG.CH) {
+        const filhos = Array.from(el.children);
+        if (filhos.length > 1 && !el.classList.contains('escala')) {
+          const out = [];
+          filhos.forEach(f => out.push(...pdfItens(f, medidor)));
+          el.remove();
+          return out;
+        }
+        return [pdfEscalarBloco(el, h, medidor)];
       }
-      if (h > PDF_PAG.CH) return [pdfEscalarBloco(el, h, medidor)];
       el.remove();
       return [{ el, h }];
     }
 
+    function pdfMedirItem(el, medidor, extra) {
+      medidor.appendChild(el);
+      const h = Math.ceil(el.getBoundingClientRect().height);
+      el.remove();
+      return Object.assign({ el, h }, extra || {});
+    }
+
     function pdfTituloSecao(num, titulo, cor, sub) {
-      return pdfEl(`<div class="jcpdf-sec" style="--c:${cor}"><span class="n">${String(num).padStart(2, '0')}</span><span class="t">${esc(titulo)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ''}</div>`);
+      return pdfEl(`<div class="sec" style="--c:${cor}"><span class="n">${String(num).padStart(2, '0')}</span><span class="t">${esc(titulo)}</span>${sub ? `<span class="s">${esc(sub)}</span>` : ''}</div>`);
     }
 
-    function pdfPrepararHTML(html) {
-      const t = document.createElement('div');
-      t.innerHTML = desabilitarCamposEditaveis(normalizarHTML(html));
-      return t;
+    function pdfHtmlCartoes(lista, cor) {
+      if (!lista.length) return '<div class="vazio">Dados não disponíveis.</div>';
+      return `<div class="cards" style="--c:${cor}">${lista.map(i => `
+        <div class="card"><div class="r">${esc(i.rotulo)}</div><div class="v ${esc(i.tom || '')}">${esc(i.valor)}</div>${i.detalhe ? `<div class="d">${esc(i.detalhe)}</div>` : ''}</div>`).join('')}</div>`;
     }
 
-    function pdfBlocosSecao(num, titulo, cor, html, medidor, cfg) {
-      cfg = cfg || {};
-      const t = pdfPrepararHTML(html);
-      const sec = t.querySelector('section') || t;
-      const primeiro = sec.firstElementChild;
-      if (primeiro && primeiro.querySelector('h1, h2, h3') && !primeiro.querySelector('table')) primeiro.remove();
-      pdfForcarGrades(sec, cfg.maxCols || 2);
-      pdfEstilizarTabelas(sec);
-      if (cfg.tiles) {
-        sec.querySelectorAll('[class*="grid-cols-"] > div').forEach(tile => {
-          tile.classList.add('jcpdf-tile');
-          tile.style.setProperty('--c', cor);
-        });
+    function pdfItensOrganograma(num, titulo, cor, org, medidor) {
+      const itens = [pdfMedirItem(pdfTituloSecao(num, titulo, cor), medidor, { keepNext: true })];
+      const tabelas = (org.tabelas || []).filter(t => t.colunas && t.colunas.length);
+      const comLinhas = tabelas.filter(t => t.linhas.length);
+      if (!comLinhas.length) {
+        itens.push(pdfMedirItem(pdfEl('<div class="vazio">Nenhuma escala elegível neste ciclo.</div>'), medidor));
       }
-      const titulo_ = pdfTituloSecao(num, titulo, cor, cfg.sub);
-      medidor.appendChild(titulo_);
-      const itens = [{ el: titulo_, h: Math.ceil(titulo_.getBoundingClientRect().height), keepNext: true }];
-      titulo_.remove();
-      Array.from(sec.children).forEach(f => {
-        if (!f.textContent.trim() && !f.querySelector('input, img, table')) return;
-        itens.push(...pdfItens(f, medidor, false));
+      comLinhas.forEach(t => {
+        const alin = (i) => (t.alinhamentos && t.alinhamentos[i]) || '';
+        const tb = pdfEl(`<table><thead><tr>${t.colunas.map((c, i) => `<th class="${alin(i)}">${esc(c)}</th>`).join('')}</tr></thead>
+          <tbody>${t.linhas.map(l => `<tr>${l.map((c, i) => `<td class="${alin(i)}">${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>`);
+        itens.push(pdfItemTabela(tb, medidor));
+        tb.remove();
+      });
+      (org.totais || []).forEach(t => {
+        itens.push(pdfMedirItem(pdfEl(`<div class="total"><span class="r">${esc(t.rotulo)}</span><span class="v">${esc(t.valor)}</span></div>`), medidor));
       });
       return itens;
     }
 
-    function pdfBlocoCapa(ciclo) {
-      const t = document.createElement('div');
-      t.innerHTML = (ciclo.estatisticas || '') + (ciclo.receitas || '');
-      const q = id => { const e = t.querySelector('#' + id); return e ? e.textContent.trim() : '-'; };
-      const r = receitasResumoCiclo(ciclo);
-      const fechado = ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-';
-      const cx = (l, v, extra) => `<div class="jcpdf-cx ${extra || ''}"><div class="l">${esc(l)}</div><div class="v">${esc(v)}</div></div>`;
-      return pdfEl(`
-        <div class="jcpdf-capa">
-          <div class="k">Relatório do Ciclo</div>
-          <div class="tt">${esc(nomeDoCiclo(ciclo, ciclo.numero || ''))}</div>
-          <div class="ss">Recebimento em ${esc(ciclo.recebimentoEm || '-')} &nbsp;•&nbsp; Fechado em ${esc(fechado)}</div>
-          <div class="jcpdf-grade" style="grid-template-columns:repeat(3,1fr)">
-            ${cx('Data de abertura', dataBR(ciclo.dataAbertura) || '-')}
-            ${cx('Data de fechamento', dataBR(ciclo.dataFechamento) || '-')}
-            ${cx('Recebimento em', ciclo.recebimentoEm || '-')}
-          </div>
-          <div class="jcpdf-divisor">Resultado financeiro</div>
-          <div class="jcpdf-grade" style="grid-template-columns:repeat(3,1fr);margin-top:8px">
-            <div class="jcpdf-cx g"><div class="l">Receita bruta</div><div class="v" style="color:#34d399">${formatarMoedaBR(r.bruta)}</div></div>
-            <div class="jcpdf-cx g"><div class="l">Desconto de IR</div><div class="v" style="color:#f87171">${formatarMoedaBR(r.desconto)}</div></div>
-            <div class="jcpdf-cx g liq"><div class="l">Receita líquida</div><div class="v" style="color:#34d399">${formatarMoedaBR(r.liquida)}</div></div>
-          </div>
-          <div class="jcpdf-divisor">Indicadores do ciclo</div>
-          <div class="jcpdf-grade" style="grid-template-columns:repeat(3,1fr);margin-top:8px">
-            ${cx('Total de escalas', q('statTotalEscalas'))}
-            ${cx('Horas trabalhadas', q('statTotalHoras'))}
-            ${cx('Valor médio por hora', q('recValorMedioHora'))}
-          </div>
-        </div>`);
+    function pdfCardEscala(card) {
+      const spans = Array.from(card.querySelectorAll(':scope > div:first-child span'));
+      const grupos = [];
+      let atual = null;
+      const novo = (titulo) => { atual = { titulo, itens: [] }; grupos.push(atual); };
+      const txt = (el) => (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim();
+      const ehLinha = (el) => el.firstElementChild && el.firstElementChild.tagName === 'STRONG' && /:\s*$/.test(txt(el.firstElementChild));
+
+      // Faixa de HOME OFFICE (condição e motivo) — fica como primeiro grupo do cartão
+      const faixaHO = card.querySelector('[class*="purple-900"]');
+      if (faixaHO) {
+        novo('Home Office');
+        const titulo = txt(faixaHO.querySelector('span.font-bold') || faixaHO.firstElementChild);
+        const pos = titulo.indexOf(':');
+        atual.itens.push({ r: 'HOME OFFICE', v: pos > -1 ? titulo.slice(pos + 1).trim() : 'SIM', tag: '' });
+        faixaHO.querySelectorAll('strong').forEach(st => {
+          const rot = txt(st).replace(/:$/, '');
+          const v = txt(st.parentElement).replace(txt(st), '').trim();
+          if (rot) atual.itens.push({ r: rot, v, tag: '' });
+        });
+        faixaHO.remove();
+      }
+
+      card.querySelectorAll('strong, p, div').forEach(el => {
+        if (el.closest('button')) return;
+        if (el.tagName === 'STRONG') {
+          if (el.parentElement && ehLinha(el.parentElement) && el.parentElement.firstElementChild === el) return;
+          if (!/:\s*$/.test(txt(el)) && txt(el)) novo(txt(el));
+          return;
+        }
+        if (el.tagName === 'DIV' && /font-bold/.test(el.className) && !el.querySelector('strong') && txt(el) && !el.querySelector('div')) { novo(txt(el).replace(/:$/, '')); return; }
+        if (ehLinha(el)) {
+          const clone = el.cloneNode(true);
+          const tagEl = clone.querySelector('span[class*="bg-"]');
+          const tag = tagEl ? txt(tagEl) : '';
+          if (tagEl) tagEl.remove();
+          const rot = txt(clone.firstElementChild).replace(/:$/, '');
+          clone.firstElementChild.remove();
+          if (!atual) novo('');
+          const extra = el.closest('.atividade-extra');
+          const sep = /\bborder-t\b/.test(el.className) || (extra && extra.querySelector('p') === el);
+          const gap = !sep && /\bpt-1\b/.test(el.className);
+          atual.itens.push({ r: rot, v: txt(clone), tag, sep: !!sep, gap });
+        }
+      });
+      return { id: txt(spans[0]), data: txt(spans[1]), horario: txt(spans[2]), grupos: grupos.filter(g => g.itens.length) };
+    }
+
+    function pdfHtmlEscala(e) {
+      const grupo = (g) => `<div class="grupo"><h4 class="${/JORNADA/i.test(g.titulo) ? 'bb' : ''}">${esc(g.titulo)}</h4>${g.itens.map(i => {
+        const cor = /DESCONTO|\bIR\b/i.test(i.r) ? 'neg' : (/REAL|^VALOR DI[AÁ]RIO TOTAL/i.test(i.r) ? 'pos' : (/DI[AÁ]RIA|AUX[IÍ]LIO/i.test(i.r) ? 'amb' : ''));
+        const tag = i.tag ? `<span class="tag ${/N[ÃA]O/i.test(i.tag) ? 'nao' : (/PEND/i.test(i.tag) ? 'pen' : 'rec')}">${esc(i.tag)}</span>` : '';
+        const cls = (i.sep ? ' sep' : '') + (i.gap ? ' gap' : '');
+        return `<div class="linha${cls}"><strong class="l">${esc(i.r)}:</strong> <span class="w ${cor}">${esc(i.v)}${tag}</span></div>`;
+      }).join('')}</div>`;
+      const notas = e.grupos.filter(g => /ANOTA/i.test(g.titulo));
+      const jornada = e.grupos.filter(g => /JORNADA/i.test(g.titulo));
+      const periodos = e.grupos.filter(g => !/ANOTA|JORNADA/i.test(g.titulo));
+      return `<article class="escala">
+        <div class="cab"><span class="id">${esc(e.id)}</span><span class="dt">${esc(e.data)}</span><span class="hr">${esc(e.horario)}</span></div>
+        <div class="corpo">
+          <div class="col">${periodos.map(grupo).join('')}</div>
+          <div class="col">${jornada.map(grupo).join('')}</div>
+          ${notas.length ? `<div class="notas">${notas.map(grupo).join('')}</div>` : ''}
+        </div></article>`;
     }
 
     function pdfItensEscalas(ciclo, medidor) {
       const t = document.createElement('div');
       t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas));
-      const container = t.querySelector('#containerCardsEscalas');
-      const cards = container ? Array.from(container.children) : [];
+      const cards = Array.from((t.querySelector('#containerCardsEscalas') || { children: [] }).children);
       const sub = cards.length ? `${cards.length} ${cards.length === 1 ? 'escala' : 'escalas'}` : '';
-      const tit = pdfTituloSecao(5, 'Escalas Cadastradas', '#cbd5e1', sub);
-      medidor.appendChild(tit);
-      const itens = [{ el: tit, h: Math.ceil(tit.getBoundingClientRect().height), keepNext: true }];
-      tit.remove();
+      const itens = [pdfMedirItem(pdfTituloSecao(5, 'Escalas Cadastradas', '#475569', sub), medidor, { keepNext: true })];
       if (!cards.length) {
-        const vazio = pdfEl('<div class="jcpdf-escala" style="color:#94a3b8;font-style:italic;text-transform:uppercase">Nenhuma escala registrada neste ciclo.</div>');
-        itens.push(...pdfItens(vazio, medidor, true));
+        itens.push(pdfMedirItem(pdfEl('<div class="vazio">Nenhuma escala registrada neste ciclo.</div>'), medidor));
         return itens;
       }
-      cards.forEach(card => {
-        card.querySelectorAll('input, select, textarea').forEach(c => { c.setAttribute('disabled', 'disabled'); });
-        card.querySelectorAll('button').forEach(b => b.remove());
-        const w = document.createElement('div');
-        w.className = 'jcpdf-escala';
-        w.appendChild(card);
-        pdfForcarGrades(w, 2);
-        itens.push(...pdfItens(w, medidor, true));
-      });
+      cards.forEach(card => itens.push(...pdfItens(pdfEl(pdfHtmlEscala(pdfCardEscala(card))), medidor)));
       return itens;
     }
 
@@ -911,30 +1098,45 @@
     }
 
     function pdfMontarPaginas(ciclo, medidor) {
+      const p = montarPayloadPdf(ciclo);
+      const c = p.ciclo, r = p.resumo;
+      const moeda = formatarMoedaBR;
+      const fechado = c.fechadoEm ? new Date(c.fechadoEm).toLocaleString('pt-BR') : '-';
       const itens = [];
-      const capa = pdfBlocoCapa(ciclo);
-      medidor.appendChild(capa);
-      itens.push({ el: capa, h: Math.ceil(capa.getBoundingClientRect().height) });
-      capa.remove();
 
-      itens.push(...pdfBlocosSecao(1, 'Estatísticas do Ciclo', '#818cf8', ciclo.estatisticas, medidor, { maxCols: 3, tiles: true }));
-      itens.push(...pdfBlocosSecao(2, 'Receitas do Ciclo', '#22d3ee', ciclo.receitas, medidor, { maxCols: 3, tiles: true }));
-      itens.push(...pdfBlocosSecao(3, 'Organograma das Diárias', '#fbbf24', removerQuadroInformativoLocais(ciclo.organogramaDiarias), medidor, { maxCols: 2 }));
-      itens.push(...pdfBlocosSecao(4, 'Organograma dos Auxílios', '#34d399', removerQuadroInformativoLocais(ciclo.organogramaAuxilios), medidor, { maxCols: 2 }));
+      itens.push(pdfMedirItem(pdfEl(`<div class="hero">
+        <div class="kicker">Relatório do ciclo</div>
+        <h1>${esc(c.nome)}</h1>
+        <div class="sub">Recebimento em ${esc(c.recebimentoEm || '-')} &nbsp;•&nbsp; Fechado em ${esc(fechado)}</div>
+        <div class="periodo">
+          <div><div class="r">Abertura</div><div class="v">${esc(dataBR(c.dataAbertura) || '-')}</div></div>
+          <div><div class="r">Fechamento</div><div class="v">${esc(dataBR(c.dataFechamento) || '-')}</div></div>
+          <div><div class="r">Recebimento</div><div class="v">${esc(c.recebimentoEm || '-')}</div></div>
+        </div></div>`), medidor));
+      itens.push(pdfMedirItem(pdfEl(`<div class="kpis">
+        <div class="kpi"><div class="r">Receita bruta</div><div class="v pos">${moeda(r.bruta)}</div></div>
+        <div class="kpi"><div class="r">Desconto de IR</div><div class="v neg">${moeda(r.desconto)}</div></div>
+        <div class="kpi destaque"><div class="r">Receita líquida</div><div class="v pos">${moeda(r.liquida)}</div></div>
+        <div class="kpi"><div class="r">Total de escalas</div><div class="v">${esc(r.totalEscalas)}</div></div>
+        <div class="kpi"><div class="r">Horas trabalhadas</div><div class="v">${esc(r.horas)}</div></div>
+        <div class="kpi"><div class="r">Valor médio por hora</div><div class="v">${esc(r.mediaHora)}</div></div></div>`), medidor));
+
+      itens.push(pdfMedirItem(pdfTituloSecao(1, 'Estatísticas do Ciclo', '#4f46e5'), medidor, { keepNext: true }));
+      itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.estatisticas, '#4f46e5')), medidor));
+      itens.push(pdfMedirItem(pdfTituloSecao(2, 'Receitas do Ciclo', '#0e7490'), medidor, { keepNext: true }));
+      itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.receitas, '#0e7490')), medidor));
+      itens.push(...pdfItensOrganograma(3, 'Organograma das Diárias', '#b45309', p.diarias, medidor));
+      itens.push(...pdfItensOrganograma(4, 'Organograma dos Auxílios', '#047857', p.auxilios, medidor));
       itens.push(...pdfItensEscalas(ciclo, medidor));
 
       const paginas = pdfEmpacotar(itens);
       const total = paginas.length;
       const geradoEm = new Date().toLocaleString('pt-BR');
-      const nome = nomeDoCiclo(ciclo, ciclo.numero || '');
       return paginas.map((blocos, i) => {
         const pg = pdfEl(`
-          <div class="jcpdf-page">
+          <div class="jcpdf-page jcp">
             <div class="jcpdf-barra"></div>
-            <div class="jcpdf-topo">
-              <div class="jcpdf-marca">JET<b>CONTROL</b> 2026<sup>®™</sup></div>
-              <div class="jcpdf-nome">${esc(nome)}</div>
-            </div>
+            <div class="jcpdf-topo"><div class="jcpdf-marca">JET<b>CONTROL</b> 2026<sup>®™</sup></div><div class="jcpdf-nome">${esc(c.nome)}</div></div>
             <div class="jcpdf-corpo"></div>
             <div class="jcpdf-rodape"><span>Gerado em ${esc(geradoEm)}</span><span>Página <strong>${i + 1}</strong> de <strong>${total}</strong></span></div>
           </div>`);
@@ -942,6 +1144,24 @@
         blocos.forEach(b => corpo.appendChild(b));
         return pg;
       });
+    }
+
+    async function pdfCarregarFontes() {
+      let link = document.getElementById('jcpdf-fontes');
+      if (!link) {
+        link = document.createElement('link');
+        link.id = 'jcpdf-fontes';
+        link.rel = 'stylesheet';
+        link.href = PDF_FONTES_URL;
+        document.head.appendChild(link);
+      }
+      if (!document.fonts || !document.fonts.load) return;
+      const espera = new Promise(r => setTimeout(r, 4000));
+      const carga = Promise.all([
+        document.fonts.load('400 12px Inter'), document.fonts.load('700 12px Inter'),
+        document.fonts.load('800 12px Inter'), document.fonts.load('800 12px "Plus Jakarta Sans"')
+      ]).catch(() => {});
+      await Promise.race([carga, espera]);
     }
 
     async function gerarBlobPdfCicloProfissional(ciclo, aoProgredir) {
@@ -957,16 +1177,17 @@
       document.body.appendChild(wrapper);
 
       try {
-        await new Promise(r => setTimeout(r, 60));
+        await pdfCarregarFontes();
         const paginas = pdfMontarPaginas(ciclo, medidor);
         medidor.innerHTML = '';
         paginas.forEach(p => wrapper.appendChild(p));
-        if (document.fonts && document.fonts.ready) { try { await document.fonts.ready; } catch (e) {} }
         await new Promise(r => setTimeout(r, 60));
 
+        const preset = PDF_PRESETS[PDF_QUALIDADE];
+        const celular = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
         const opcoes = {
           margin: 0,
-          html2canvas: { scale: /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent) ? 1.4 : 2, backgroundColor: '#020617', useCORS: true, logging: false },
+          html2canvas: { scale: celular ? preset.escalaCelular : preset.escalaPc, backgroundColor: '#ffffff', useCORS: true, logging: false },
           jsPDF: { unit: 'px', format: [PDF_PAG.W, PDF_PAG.H], orientation: 'portrait', hotfixes: ['px_scaling'] }
         };
         const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
@@ -975,7 +1196,7 @@
         for (let i = 0; i < paginas.length; i++) {
           if (aoProgredir) aoProgredir(i + 1, paginas.length);
           const canvas = await html2pdf().set(opcoes).from(paginas[i]).toCanvas().get('canvas');
-          const img = canvas.toDataURL('image/jpeg', 0.9);
+          const img = canvas.toDataURL('image/jpeg', preset.jpeg);
           if (!pdf) {
             pdf = await html2pdf().set(opcoes).from(paginas[i]).toPdf().get('pdf');
             while (pdf.getNumberOfPages() > 1) pdf.deletePage(pdf.getNumberOfPages());
@@ -995,12 +1216,64 @@
     }
 
     async function gerarBlobPdfCiclo(ciclo, aoProgredir) {
+      const chave = (ciclo.id || '') + '|' + (ciclo.fechadoEm || '') + '|' + PDF_QUALIDADE;
+      if (PDF_CACHE.has(chave)) return PDF_CACHE.get(chave);
+      let blob;
       try {
-        return await gerarBlobPdfCicloProfissional(ciclo, aoProgredir);
+        blob = await gerarBlobPdfCicloProfissional(ciclo, aoProgredir);
       } catch (erro) {
         console.warn('Layout profissional do PDF falhou; usando o layout anterior:', erro);
-        return await gerarBlobPdfCicloLegado(ciclo);
+        blob = await gerarBlobPdfCicloLegado(ciclo);
       }
+      if (blob) PDF_CACHE.set(chave, blob);
+      return blob;
+    }
+
+    // ===== Leitura dos dados salvos do ciclo (estatísticas, receitas e organogramas) =====
+    function pdfLerCartoes(html) {
+      const t = document.createElement('div');
+      t.innerHTML = html || '';
+      return Array.from(t.querySelectorAll('[class*="grid-cols-"] > div')).map(c => {
+        const spans = Array.from(c.querySelectorAll('span')).filter(x => x.textContent.trim());
+        const rotulo = (spans[0] || {}).textContent || '';
+        const valorEl = c.querySelector('[id]') || spans[1];
+        const detalhe = spans.filter(x => x !== spans[0] && x !== valorEl).map(x => x.textContent.replace(/\s+/g, ' ').trim()).join(' • ');
+        const cls = valorEl ? String(valorEl.className) : '';
+        const tom = /emerald/.test(cls) ? 'pos' : /red/.test(cls) ? 'neg' : /amber/.test(cls) ? 'amb' : '';
+        return { rotulo: rotulo.trim(), valor: valorEl ? valorEl.textContent.trim() : '', detalhe, tom };
+      }).filter(x => x.rotulo);
+    }
+
+    function pdfLerOrganograma(html) {
+      const t = document.createElement('div');
+      t.innerHTML = desabilitarCamposEditaveis(normalizarHTML(html));
+      const tabelas = Array.from(t.querySelectorAll('table')).map(tb => {
+        const cab = Array.from(tb.querySelectorAll('thead th'));
+        const linhas = Array.from(tb.querySelectorAll('tbody tr'))
+          .filter(tr => !tr.querySelector('td[colspan]'))
+          .map(tr => Array.from(tr.children).map(td => td.textContent.replace(/\s+/g, ' ').trim()));
+        const alinhamentos = cab.map(th => /text-right/.test(th.className) ? 'dir' : /text-center/.test(th.className) ? 'cen' : '');
+        return { colunas: cab.map(th => th.textContent.trim()), alinhamentos, linhas };
+      });
+      const spans = Array.from(t.querySelectorAll('.justify-end span'));
+      const totais = [];
+      for (let i = 0; i + 1 < spans.length; i += 2) totais.push({ rotulo: spans[i].textContent.replace(/:$/, '').trim(), valor: spans[i + 1].textContent.trim() });
+      return { tabelas, totais };
+    }
+
+    function montarPayloadPdf(ciclo) {
+      const t = document.createElement('div');
+      t.innerHTML = (ciclo.estatisticas || '') + (ciclo.receitas || '');
+      const q = id => { const e = t.querySelector('#' + id); return e ? e.textContent.trim() : '-'; };
+      const r = receitasResumoCiclo(ciclo);
+      return {
+        ciclo: { nome: nomeDoCiclo(ciclo, ciclo.numero || ''), dataAbertura: ciclo.dataAbertura, dataFechamento: ciclo.dataFechamento, recebimentoEm: ciclo.recebimentoEm, fechadoEm: ciclo.fechadoEm },
+        resumo: { bruta: r.bruta, desconto: r.desconto, liquida: r.liquida, totalEscalas: q('statTotalEscalas'), horas: q('statTotalHoras'), mediaHora: q('recValorMedioHora') },
+        estatisticas: pdfLerCartoes(ciclo.estatisticas),
+        receitas: pdfLerCartoes(ciclo.receitas),
+        diarias: pdfLerOrganograma(removerQuadroInformativoLocais(organogramasDoCiclo(ciclo).diarias)),
+        auxilios: pdfLerOrganograma(removerQuadroInformativoLocais(organogramasDoCiclo(ciclo).auxilios))
+      };
     }
 
     async function gerarBlobPdfCicloLegado(ciclo) {

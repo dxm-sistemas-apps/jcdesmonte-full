@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -26,7 +27,8 @@
   <!-- Fontes Google -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -47,42 +49,56 @@
   </script>
 
   <style>
-    body { text-transform: uppercase; font-family: 'Inter', sans-serif; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    body {
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   </style>
 
   <!-- Oculta o aviso "sincronizando... N pendente" (gerado por jetcontrol-sync.js) -->
-  <style id="jet-oculta-sync">.jet-sync-oculto{display:none !important;}</style>
+  <style id="jet-oculta-sync">
+    .jet-sync-oculto {
+      display: none !important;
+    }
+  </style>
   <script>
-  (function () {
-    var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
-    var agendado = false;
-    function varrer() {
-      agendado = false;
-      if (!document.body) return;
-      var els = document.body.querySelectorAll('*');
-      for (var i = 0; i < els.length; i++) {
-        var el = els[i];
-        if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
-        if (el.children.length > 3) continue;
-        var t = el.textContent || '';
-        if (t.length > 100 || !RE.test(t)) continue;
-        var alvo = el;
-        while (alvo.parentElement && alvo.parentElement !== document.body) {
-          var pt = alvo.parentElement.textContent || '';
-          if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+      (function () {
+        var RE = /sincroniz[^\n]{0,40}pendente|pendente[^\n]{0,40}sincroniz/i;
+        var agendado = false;
+        function varrer() {
+          agendado = false;
+          if (!document.body) return;
+          var els = document.body.querySelectorAll('*');
+          for (var i = 0; i < els.length; i++) {
+            var el = els[i];
+            if (el.classList.contains('jet-sync-oculto') || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+            if (el.children.length > 3) continue;
+            var t = el.textContent || '';
+            if (t.length > 100 || !RE.test(t)) continue;
+            var alvo = el;
+            while (alvo.parentElement && alvo.parentElement !== document.body) {
+              var pt = alvo.parentElement.textContent || '';
+              if (pt.length < 100 && RE.test(pt)) alvo = alvo.parentElement; else break;
+            }
+            alvo.classList.add('jet-sync-oculto');
+          }
         }
-        alvo.classList.add('jet-sync-oculto');
-      }
-    }
-    function agendar() { if (!agendado) { agendado = true; (window.requestAnimationFrame || setTimeout)(varrer); } }
-    function iniciar() {
-      varrer();
-      new MutationObserver(agendar).observe(document.body, { childList: true, subtree: true, characterData: true });
-    }
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
-  })();
+        function agendar() {if (!agendado) {agendado = true; (window.requestAnimationFrame || setTimeout)(varrer);} }
+        function iniciar() {
+          varrer();
+          new MutationObserver(agendar).observe(document.body, {childList: true, subtree: true, characterData: true});
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
+      })();
   </script>
 </head>
 
@@ -94,24 +110,37 @@
       <div class="flex items-center justify-between h-16">
         <div class="flex items-center space-x-3">
           <i class="fa-solid fa-sack-dollar text-brand-500 text-2xl"></i>
-          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span class="text-brand-500">2026®™</span></span>
+          <span class="font-bold text-lg tracking-wider text-white">JETCONTROL <span
+              class="text-brand-500">2026®™</span></span>
         </div>
 
         <!-- Navigation Desktop -->
         <nav class="hidden md:flex space-x-1">
-          <a href="index.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA INICIAL</a>
-          <a href="cotas-extras.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS EXTRAS</a>
-          <a href="escalas.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
-          <a href="ciclos.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
-          <a href="jeton-valores.html" class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">VALORES JETON</a>
-          <a href="dashboard.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
-          <a href="backups.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
-          <a href="resetar-dados.html" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR DADOS</a>
+          <a href="index.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">PÁGINA
+            INICIAL</a>
+          <a href="cotas-extras.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">COTAS
+            EXTRAS</a>
+          <a href="escalas.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">ESCALAS</a>
+          <a href="ciclos.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">CICLOS</a>
+          <a href="jeton-valores.html"
+            class="px-3 py-2 rounded-md text-sm font-semibold bg-brand-600 text-white shadow-sm">VALORES JETON</a>
+          <a href="dashboard.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">DASHBOARD</a>
+          <a href="backups.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">BACKUPS</a>
+          <a href="resetar-dados.html"
+            class="nav-link px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">RESETAR
+            DADOS</a>
         </nav>
 
         <!-- Mobile Menu Button -->
         <div class="md:hidden">
-          <button id="mobile-menu-btn" class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
+          <button id="mobile-menu-btn"
+            class="p-2 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none">
             <i class="fa-solid fa-bars text-xl"></i>
           </button>
         </div>
@@ -120,22 +149,34 @@
 
     <!-- Mobile Dropdown Navigation -->
     <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
-      <a href="index.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA INICIAL</a>
-      <a href="cotas-extras.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS EXTRAS</a>
-      <a href="escalas.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
-      <a href="ciclos.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
-      <a href="jeton-valores.html" class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">VALORES JETON</a>
-      <a href="dashboard.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
-      <a href="backups.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
-      <a href="resetar-dados.html" class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR DADOS</a>
+      <a href="index.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">PÁGINA
+        INICIAL</a>
+      <a href="cotas-extras.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">COTAS
+        EXTRAS</a>
+      <a href="escalas.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">ESCALAS</a>
+      <a href="ciclos.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">CICLOS</a>
+      <a href="jeton-valores.html"
+        class="block px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">VALORES JETON</a>
+      <a href="dashboard.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">DASHBOARD</a>
+      <a href="backups.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">BACKUPS</a>
+      <a href="resetar-dados.html"
+        class="nav-link block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">RESETAR
+        DADOS</a>
     </div>
   </header>
 
   <!-- CONTEÚDO PRINCIPAL -->
   <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8 flex-grow">
-    
+
     <!-- BANNER DA PÁGINA -->
-    <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
+    <section
+      class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div class="flex items-center space-x-3 mb-2">
@@ -145,71 +186,50 @@
             </h1>
           </div>
           <p class="text-sm sm:text-base text-slate-400 font-medium">
-            REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
+            REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE
+            FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
           </p>
         </div>
         <div class="flex items-center gap-2">
           <label for="inputAnoFiltro" class="text-xs font-bold text-slate-400 uppercase">ANO:</label>
-          <input 
-            type="number" 
-            id="inputAnoFiltro"
-            readonly 
-            disabled 
-            class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-brand-500"
-          />
+          <input type="number" id="inputAnoFiltro" readonly disabled
+            class="w-24 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-center text-sm font-bold text-white focus:outline-none focus:border-brand-500" />
         </div>
       </div>
     </section>
 
     <!-- NAVEGAÇÃO DE ABAS INTERNAS -->
     <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
-      <button 
-        type="button"
-        id="tab-btn-lancamentos"
-        onclick="mudarAba('lancamentos')" 
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-600 text-white shadow-lg"
-      >
+      <button type="button" id="tab-btn-lancamentos" onclick="mudarAba('lancamentos')"
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-600 text-white shadow-lg">
         <i class="fa-solid fa-pen-to-square"></i> Lançamento de Ciclo
       </button>
-      <button 
-        type="button"
-        id="tab-btn-tabela"
-        onclick="mudarAba('tabela')" 
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
-      >
+      <button type="button" id="tab-btn-tabela" onclick="mudarAba('tabela')"
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-table-list"></i> Tabela de Lançamentos
       </button>
-      <button 
-        type="button"
-        id="tab-btn-dashboard"
-        onclick="mudarAba('dashboard')" 
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
-      >
+      <button type="button" id="tab-btn-dashboard" onclick="mudarAba('dashboard')"
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-chart-pie"></i> Estatísticas
       </button>
-      <button 
-        type="button"
-        id="tab-btn-ciclos"
-        onclick="mudarAba('ciclos')" 
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white"
-      >
+      <button type="button" id="tab-btn-ciclos" onclick="mudarAba('ciclos')"
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-box-archive"></i> Ciclos Lançados
       </button>
     </div>
 
     <!-- ABA 1: FORMULÁRIO DE LANÇAMENTO -->
-    <section id="aba-lancamentos" class="aba-conteudo bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
+    <section id="aba-lancamentos"
+      class="aba-conteudo bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-calculator text-brand-500 text-xl"></i>
-          <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo</h2>
+          <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo
+          </h2>
         </div>
-        <button 
-          type="button" 
-          onclick="abrirMenuPuxarCiclo()" 
+        <button type="button" onclick="abrirMenuPuxarCiclo()"
           title="Puxar dados do ciclo vigente ou de um ciclo já fechado"
-          class="text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
-        >
+          class="text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
           <i class="fa-solid fa-arrows-rotate"></i> Puxar do Sistema
         </button>
       </div>
@@ -217,14 +237,10 @@
       <form id="formLancamentoJeton" class="space-y-4" onsubmit="event.preventDefault(); salvarLancamento();">
         <div>
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Ciclo *</label>
-          <input 
-            type="text" readonly disabled 
-            id="formCiclo" 
-            list="lista-ciclos-opcoes"
+          <input type="text" readonly disabled id="formCiclo" list="lista-ciclos-opcoes"
             placeholder="SELECIONE OU DIGITE O CICLO"
             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none cursor-not-allowed focus:border-brand-500 uppercase"
-            required
-          />
+            required />
           <datalist id="lista-ciclos-opcoes">
             <option value="26/01 A 25/02"></option>
             <option value="26/02 A 25/03"></option>
@@ -244,79 +260,109 @@
 
         <div>
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Mês de Recebimento</label>
-          <input 
-            type="text" 
-            id="formMesRecebimento"
-            readonly 
-            placeholder="MÊS DE RECEBIMENTO AUTOMÁTICO"
-            class="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none cursor-not-allowed uppercase font-semibold"
-          />
+          <input type="text" id="formMesRecebimento" readonly placeholder="MÊS DE RECEBIMENTO AUTOMÁTICO"
+            class="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-300 text-sm focus:outline-none cursor-not-allowed uppercase font-semibold" />
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton JETCONTROL (Bruto)</label>
-            <input 
-              type="text" readonly disabled
-              id="formJetonJetcontrol"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500"
-            />
+            <input type="text" readonly disabled id="formJetonJetcontrol"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
           </div>
 
+          <!-- CONTAINER: Ajustado para w-fit (encolhe até o tamanho do texto) e justify-start -->
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota de IRPF (%)</label>
-            <input 
-              type="text" 
-              id="formIrpf"
-              value="22"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 text-left"
-              required
-            />
+
+            <!-- CONTAINER: Agora gerencia os cliques simples e duplos em toda a sua área -->
+            <div id="containerIrpf"
+              class="flex items-center justify-start w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 focus-within:border-brand-500 cursor-text select-none">
+              <!-- CAMPO EDITÁVEL -->
+              <div contenteditable="true" id="formIrpf" role="textbox" inputmode="numeric"
+                class="bg-transparent border-none p-0 text-red-400 font-bold text-sm focus:outline-none min-w-[5px] empty:before:content-['0'] empty:before:text-red-400/40 select-text">
+                22</div>
+
+              <!-- SÍMBOLO FIXO -->
+              <span class="text-red-400 font-bold text-sm select-none">%</span>
+            </div>
+
             <span class="text-[10px] text-slate-500 mt-1 block">Padrão: 22% sobre o Jeton</span>
           </div>
+
+          <script>
+            const container = document.getElementById('containerIrpf');
+            const inputEditable = document.getElementById('formIrpf');
+
+            // Função centralizada para forçar o cursor sempre para o final do texto
+            function moverCursorParaOFinal(elemento) {
+              elemento.focus();
+              const range = document.createRange();
+              const sel = window.getSelection();
+              range.selectNodeContents(elemento);
+              range.collapse(false); // false força o colapso do cursor no fim do conteúdo
+              sel.removeAllRanges();
+              sel.addRange(range);
+            }
+
+            // 1. Bloqueia letras e aceita apenas números
+            inputEditable.addEventListener('keypress', function (e) {
+              if (isNaN(String.fromCharCode(e.keyCode || e.which)) || e.keyCode === 13) {
+                e.preventDefault();
+              }
+            });
+
+            // 2. Clique simples em QUALQUER lugar do container joga o cursor no fim
+            container.addEventListener('click', function (e) {
+              // Evita loop infinito se o clique foi direto no input editável
+              if (e.target !== inputEditable) {
+                moverCursorParaOFinal(inputEditable);
+              }
+            });
+
+            // Garante que mesmo clicando direto na letra/número o cursor vá para o fim
+            inputEditable.addEventListener('focus', function () {
+              setTimeout(() => moverCursorParaOFinal(inputEditable), 0);
+            });
+
+            // 3. Clique duplo em QUALQUER lugar do container limpa o valor imediatamente
+            container.addEventListener('dblclick', function () {
+              inputEditable.innerText = '';
+              moverCursorParaOFinal(inputEditable);
+            });
+          </script>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton Contracheque (Bruto) *</label>
-            <input 
-              type="text" 
-              id="formJetonContracheque"
-              placeholder="R$ 0,00" 
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500"
-            />
+            <input type="number" id="formJetonContracheque" placeholder="R$ 0,00"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
           </div>
 
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton DGAD (Bruto) *</label>
-            <input 
-              type="text" 
-              id="formJetonDgad"
-              placeholder="R$ 0,00" 
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500"
-            />
+            <input type="number" id="formJetonDgad" placeholder="R$ 0,00"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
           </div>
         </div>
 
         <div class="pt-4 flex justify-end">
           <!-- SUBSTITUA O BOTÃO ATUAL POR ESTE: -->
-<button 
-  type="submit" 
-  id="btnSalvarLancamento"
-  disabled
-  class="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-600 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wide"
->
-  <i class="fa-solid fa-floppy-disk"></i> Salvar Lançamento
-</button>
+          <button type="submit" id="btnSalvarLancamento" disabled
+            class="w-full bg-brand-600 hover:bg-brand-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-brand-600 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 uppercase tracking-wide">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar Lançamento
+          </button>
         </div>
       </form>
     </section>
 
     <!-- ABA 2: TABELA DE LANÇAMENTOS -->
-    <section id="aba-tabela" class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+    <section id="aba-tabela"
+      class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
       <div id="containerTabelaAno"></div>
     </section>
 
@@ -326,7 +372,8 @@
     </section>
 
     <!-- ABA 4: CICLOS LANÇADOS (CONSOLIDADO) -->
-    <section id="aba-ciclos" class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
+    <section id="aba-ciclos"
+      class="aba-conteudo hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-layer-group text-brand-500 text-xl"></i>
@@ -337,11 +384,8 @@
       <div id="containerConsolidadoResumo"></div>
 
       <div class="pt-2">
-        <button 
-          type="button" 
-          onclick="exportarRelatorioCompletoPDF()" 
-          class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition"
-        >
+        <button type="button" onclick="exportarRelatorioCompletoPDF()"
+          class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
           <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO CONSOLIDADO (TODOS OS ANOS)
         </button>
       </div>
@@ -352,37 +396,46 @@
   </main>
 
   <!-- MENU INFERIOR FIXO / BOTTOM NAVIGATION BAR -->
-  <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
+  <nav id="bottom-nav-container"
+    class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
     <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
-      <a href="index.html" data-page="index.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="index.html" data-page="index.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-house text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">INICIAL</span>
       </a>
-      <a href="cotas-extras.html" data-page="cotas-extras.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="cotas-extras.html" data-page="cotas-extras.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-money-bill-trend-up text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">COTAS EXTRAS</span>
       </a>
-      <a href="escalas.html" data-page="escalas.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="escalas.html" data-page="escalas.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-calendar-check text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">ESCALAS</span>
       </a>
-      <a href="ciclos.html" data-page="ciclos.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="ciclos.html" data-page="ciclos.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-recycle text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">CICLOS</span>
       </a>
-      <a href="jeton-valores.html" data-page="jeton-valores.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="jeton-valores.html" data-page="jeton-valores.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-file-invoice-dollar text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">VALORES</span>
       </a>
-      <a href="dashboard.html" data-page="dashboard.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="dashboard.html" data-page="dashboard.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-chart-line text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">DASHBOARD</span>
       </a>
-      <a href="backups.html" data-page="backups.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="backups.html" data-page="backups.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-cloud-arrow-up text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">BACKUPS</span>
       </a>
-      <a href="resetar-dados.html" data-page="resetar-dados.html" class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
+      <a href="resetar-dados.html" data-page="resetar-dados.html"
+        class="bottom-nav-item flex flex-col items-center justify-center px-3.5 py-1.5 rounded-xl text-slate-400 hover:text-white transition group min-w-[76px]">
         <i class="fa-solid fa-trash-can text-base mb-1 transition-transform group-hover:scale-110"></i>
         <span class="text-[10px] font-bold tracking-tight whitespace-nowrap">RESETAR</span>
       </a>
@@ -397,12 +450,12 @@
     const STORAGE_KEY_LEGACY = 'jetonData';
 
     const LISTA_CICLOS_PADRAO = [
-      { label: '26/01 A 25/02', rec: 'ABRIL' }, { label: '26/02 A 25/03', rec: 'MAIO' },
-      { label: '26/03 A 25/04', rec: 'JUNHO' }, { label: '26/04 A 25/05', rec: 'JULHO' },
-      { label: '26/05 A 25/06', rec: 'AGOSTO' }, { label: '26/06 A 25/07', rec: 'SETEMBRO' },
-      { label: '26/07 A 25/08', rec: 'OUTUBRO' }, { label: '26/08 A 25/09', rec: 'NOVEMBRO' },
-      { label: '26/09 A 25/10', rec: 'DEZEMBRO' }, { label: '26/10 A 25/11', rec: 'JANEIRO' },
-      { label: '26/11 A 25/12', rec: 'FEVEREIRO' }, { label: '26/12 A 25/01', rec: 'MARÇO' }
+      {label: '26/01 A 25/02', rec: 'ABRIL'}, {label: '26/02 A 25/03', rec: 'MAIO'},
+      {label: '26/03 A 25/04', rec: 'JUNHO'}, {label: '26/04 A 25/05', rec: 'JULHO'},
+      {label: '26/05 A 25/06', rec: 'AGOSTO'}, {label: '26/06 A 25/07', rec: 'SETEMBRO'},
+      {label: '26/07 A 25/08', rec: 'OUTUBRO'}, {label: '26/08 A 25/09', rec: 'NOVEMBRO'},
+      {label: '26/09 A 25/10', rec: 'DEZEMBRO'}, {label: '26/10 A 25/11', rec: 'JANEIRO'},
+      {label: '26/11 A 25/12', rec: 'FEVEREIRO'}, {label: '26/12 A 25/01', rec: 'MARÇO'}
     ];
 
     let anoAtual = new Date().getFullYear().toString();
@@ -426,7 +479,7 @@
     function formatMoeda(val) {
       const num = parseFloat(val);
       if (isNaN(num)) return 'R$ 0,00';
-      return num.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      return num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
     }
 
     function formatNumeroFloat(val) {
@@ -447,85 +500,85 @@
     function getStatus(jc, cc) {
       const valJC = formatNumeroFloat(jc);
       const valCC = formatNumeroFloat(cc);
-      if (valJC === 0 && valCC === 0) return { texto: 'SEM JETON', cor: 'text-slate-400 bg-slate-800' };
+      if (valJC === 0 && valCC === 0) return {texto: 'SEM JETON', cor: 'text-slate-400 bg-slate-800'};
       const diff = getDiff(jc, cc);
-      if (diff < 0) return { texto: 'JETON EM DÉFICIT', cor: 'text-red-400 bg-red-950/60 border border-red-800' };
-      if (diff === 0) return { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
-      return { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
+      if (diff < 0) return {texto: 'JETON EM DÉFICIT', cor: 'text-red-400 bg-red-950/60 border border-red-800'};
+      if (diff === 0) return {texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800'};
+      return {texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800'};
     }
 
     // Leitura dos dados do sistema JETCONTROL
     function obterDadosSistema() {
-        try {
-          const cicloObj = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO) || '{}');
-          const escalasArr = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_ESCALAS) || '[]');
+      try {
+        const cicloObj = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO) || '{}');
+        const escalasArr = JSON.parse(localStorage.getItem(STORAGE_KEY_SISTEMA_ESCALAS) || '[]');
 
-          let cicloLabel = '';
-          let mesRec = '';
-          let anoRec = '';
+        let cicloLabel = '';
+        let mesRec = '';
+        let anoRec = '';
 
-          if (cicloObj.dataAbertura && cicloObj.dataFechamento) {
-            const pA = cicloObj.dataAbertura.split('-');
-            const pF = cicloObj.dataFechamento.split('-');
-            if (pA.length === 3 && pF.length === 3) {
-              cicloLabel = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
-            }
+        if (cicloObj.dataAbertura && cicloObj.dataFechamento) {
+          const pA = cicloObj.dataAbertura.split('-');
+          const pF = cicloObj.dataFechamento.split('-');
+          if (pA.length === 3 && pF.length === 3) {
+            cicloLabel = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
           }
-
-          if (cicloObj.recebimentoEm) {
-            const partesRec = cicloObj.recebimentoEm.split('/');
-            mesRec = partesRec[0].trim().toUpperCase();
-            if (partesRec.length > 1) {
-              anoRec = partesRec[1].trim(); // Extrai o ano do mês de recebimento
-            }
-          }
-
-          let totalJeton = 0;
-          escalasArr.forEach(esc => {
-            const jM = parseFloat(esc.jetonManha) || 0;
-            const jT = parseFloat(esc.jetonTarde) || 0;
-            const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
-            totalJeton += (jM + jT + jN);
-          });
-
-          return {
-            ciclo: cicloLabel || '',
-            mesRecebimento: mesRec || '',
-            anoRecebimento: anoRec || new Date().getFullYear().toString(),
-            totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
-            irpf: '22'
-          };
-        } catch (_) {
-          return { 
-            ciclo: '', 
-            mesRecebimento: '', 
-            anoRecebimento: new Date().getFullYear().toString(), 
-            totalJeton: '0.00', 
-            irpf: '22' 
-          };
         }
+
+        if (cicloObj.recebimentoEm) {
+          const partesRec = cicloObj.recebimentoEm.split('/');
+          mesRec = partesRec[0].trim().toUpperCase();
+          if (partesRec.length > 1) {
+            anoRec = partesRec[1].trim(); // Extrai o ano do mês de recebimento
+          }
+        }
+
+        let totalJeton = 0;
+        escalasArr.forEach(esc => {
+          const jM = parseFloat(esc.jetonManha) || 0;
+          const jT = parseFloat(esc.jetonTarde) || 0;
+          const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+          totalJeton += (jM + jT + jN);
+        });
+
+        return {
+          ciclo: cicloLabel || '',
+          mesRecebimento: mesRec || '',
+          anoRecebimento: anoRec || new Date().getFullYear().toString(),
+          totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
+          irpf: '22'
+        };
+      } catch (_) {
+        return {
+          ciclo: '',
+          mesRecebimento: '',
+          anoRecebimento: new Date().getFullYear().toString(),
+          totalJeton: '0.00',
+          irpf: '22'
+        };
       }
+    }
 
     // FUNÇÃO QUE VERIFICA SE OS 5 CAMPOS ESTÃO PREENCHIDOS
-function validarCamposFormulario() {
-  const ciclo = (document.getElementById('formCiclo')?.value || '').trim();
-  const jetcontrol = (document.getElementById('formJetonJetcontrol')?.value || '').trim();
-  const irpf = (document.getElementById('formIrpf')?.value || '').trim();
-  const contracheque = (document.getElementById('formJetonContracheque')?.value || '').trim();
-  const dgad = (document.getElementById('formJetonDgad')?.value || '').trim();
-  const btn = document.getElementById('btnSalvarLancamento');
+    function validarCamposFormulario() {
+      const ciclo = (document.getElementById('formCiclo')?.value || '').trim();
+      const jetcontrol = (document.getElementById('formJetonJetcontrol')?.value || '').trim();
+      const irpf = (document.getElementById('formIrpf')?.value || '').trim();
+      const contracheque = (document.getElementById('formJetonContracheque')?.value || '').trim();
+      const dgad = (document.getElementById('formJetonDgad')?.value || '').trim();
+      const btn = document.getElementById('btnSalvarLancamento');
 
-  const todosPreenchidos = ciclo !== '' && 
-                           jetcontrol !== '' && 
-                           irpf !== '' && 
-                           contracheque !== '' && 
-                           dgad !== '';
+      const todosPreenchidos = ciclo !== '' &&
+        jetcontrol !== '' &&
+        irpf !== '' &&
+        contracheque !== '' &&
+        dgad !== '';
 
-  if (btn) {
-    btn.disabled = !todosPreenchidos;
-  }
-}
-      
+      if (btn) {
+        btn.disabled = !todosPreenchidos;
+      }
+    }
+
     // ===== Puxar dados de ciclos já fechados =====
     const STORAGE_KEY_CICLOS_FECHADOS_JV = 'jetcontrol_ciclos_fechados';
 
@@ -576,7 +629,7 @@ function validarCamposFormulario() {
     function abrirMenuPuxarCiclo() {
       fecharMenuPuxarCiclo();
       let ciclos = [];
-      try { ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV) || '[]'); } catch (_) {}
+      try {ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV) || '[]');} catch (_) { }
       const banco = obterBancoDados();
       const jaLancado = (d) => d.ciclo && Object.values(banco).some(lista => (lista || []).some(i => i.ciclo === d.ciclo && (!d.mesRecebimento || i.mesRecebimento === d.mesRecebimento)));
       const vigente = obterDadosSistema();
@@ -612,9 +665,9 @@ function validarCamposFormulario() {
       </div>`;
       document.body.appendChild(fundo);
 
-      fundo.addEventListener('click', (ev) => { if (ev.target === fundo) fecharMenuPuxarCiclo(); });
+      fundo.addEventListener('click', (ev) => {if (ev.target === fundo) fecharMenuPuxarCiclo();});
       fundo.querySelector('#btnFecharMenuPuxar').onclick = fecharMenuPuxarCiclo;
-      fundo.querySelector('#itemCicloVigente').onclick = () => { puxarDadosDoSistema(true); fecharMenuPuxarCiclo(); };
+      fundo.querySelector('#itemCicloVigente').onclick = () => {puxarDadosDoSistema(true); fecharMenuPuxarCiclo();};
       fundo.querySelectorAll('.item-ciclo-fechado').forEach(btn => {
         btn.onclick = () => {
           const c = ciclos.find(x => String(x.id) === btn.dataset.id);
@@ -626,55 +679,55 @@ function validarCamposFormulario() {
     }
 
     function puxarDadosDoSistema(forcar) {
-        const sis = obterDadosSistema();
-        const campoCiclo = document.getElementById('formCiclo');
-        const campoMes = document.getElementById('formMesRecebimento');
-        const campoJeton = document.getElementById('formJetonJetcontrol');
-        const campoIrpf = document.getElementById('formIrpf');
-        const hint = document.getElementById('hintCicloSistema');
+      const sis = obterDadosSistema();
+      const campoCiclo = document.getElementById('formCiclo');
+      const campoMes = document.getElementById('formMesRecebimento');
+      const campoJeton = document.getElementById('formJetonJetcontrol');
+      const campoIrpf = document.getElementById('formIrpf');
+      const hint = document.getElementById('hintCicloSistema');
 
-        // Atualiza o ano com o ano do recebimento do ciclo
-        if (sis.anoRecebimento) {
-          anoAtual = sis.anoRecebimento;
-          const inputAno = document.getElementById('inputAnoFiltro');
-          if (inputAno) inputAno.value = anoAtual;
-          const tituloForm = document.getElementById('tituloFormularioAno');
-          if (tituloForm) tituloForm.textContent = `Lançamento de Ciclo (${anoAtual})`;
-        }
-
-        if (forcar || !campoCiclo.value) {
-          campoCiclo.value = sis.ciclo;
-        }
-        if (forcar || !campoMes.value) {
-          campoMes.value = sis.mesRecebimento;
-        }
-        if (forcar || !campoJeton.value || campoJeton.value === 'R$ 0,00') {
-          campoJeton.value = formatMoeda(sis.totalJeton);
-        }
-        if (forcar || !campoIrpf.value) {
-          campoIrpf.value = sis.irpf;
-        }
-
-        if (hint && sis.ciclo) {
-          hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> CICLO ATUAL NO SISTEMA: <strong>${sis.ciclo}</strong>`;
-        }
-        validarCamposFormulario();
+      // Atualiza o ano com o ano do recebimento do ciclo
+      if (sis.anoRecebimento) {
+        anoAtual = sis.anoRecebimento;
+        const inputAno = document.getElementById('inputAnoFiltro');
+        if (inputAno) inputAno.value = anoAtual;
+        const tituloForm = document.getElementById('tituloFormularioAno');
+        if (tituloForm) tituloForm.textContent = `Lançamento de Ciclo (${anoAtual})`;
       }
 
-    function configurarMascaraMoeda(input) {
-  if (!input) return;
-  input.addEventListener('input', function (e) {
-    let limpo = e.target.value.replace(/\D/g, "");
-    if (!limpo) {
-      e.target.value = "";
-      validarCamposFormulario(); // <-- ADICIONE ESTA LINHA
-      return;
+      if (forcar || !campoCiclo.value) {
+        campoCiclo.value = sis.ciclo;
+      }
+      if (forcar || !campoMes.value) {
+        campoMes.value = sis.mesRecebimento;
+      }
+      if (forcar || !campoJeton.value || campoJeton.value === 'R$ 0,00') {
+        campoJeton.value = formatMoeda(sis.totalJeton);
+      }
+      if (forcar || !campoIrpf.value) {
+        campoIrpf.value = sis.irpf;
+      }
+
+      if (hint && sis.ciclo) {
+        hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> CICLO ATUAL NO SISTEMA: <strong>${sis.ciclo}</strong>`;
+      }
+      validarCamposFormulario();
     }
-    let num = (parseFloat(limpo) / 100);
-    e.target.value = formatMoeda(num);
-    validarCamposFormulario();   // <-- ADICIONE ESTA LINHA
-  });
-}
+
+    function configurarMascaraMoeda(input) {
+      if (!input) return;
+      input.addEventListener('input', function (e) {
+        let limpo = e.target.value.replace(/\D/g, "");
+        if (!limpo) {
+          e.target.value = "";
+          validarCamposFormulario(); // <-- ADICIONE ESTA LINHA
+          return;
+        }
+        let num = (parseFloat(limpo) / 100);
+        e.target.value = formatMoeda(num);
+        validarCamposFormulario();   // <-- ADICIONE ESTA LINHA
+      });
+    }
 
     function desformatarMoeda(valStr) {
       if (!valStr) return '0.00';
@@ -722,7 +775,7 @@ function validarCamposFormulario() {
       const listaAno = banco[anoAtual] || [];
       const indexExistente = listaAno.findIndex(item => item.ciclo === ciclo);
 
-      const novoItem = { ciclo, mesRecebimento, jetcontrol, contracheque, dgad, irpf };
+      const novoItem = {ciclo, mesRecebimento, jetcontrol, contracheque, dgad, irpf};
 
       if (indexExistente !== -1) {
         listaAno[indexExistente] = novoItem;
@@ -751,7 +804,7 @@ function validarCamposFormulario() {
       const banco = obterBancoDados();
       const lista = banco[anoAtual] || [];
 
-      let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+      let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
       lista.forEach(d => {
         const jc = formatNumeroFloat(d.jetcontrol);
         const cc = formatNumeroFloat(d.contracheque);
@@ -930,7 +983,7 @@ function validarCamposFormulario() {
 
       const stats = anos.map(year => {
         const sum = banco[year].reduce((a, b) => a + formatNumeroFloat(b.jetcontrol), 0);
-        return { year, sum };
+        return {year, sum};
       });
       const max = stats.reduce((prev, curr) => (curr.sum > prev.sum ? curr : prev), stats[0]);
       const min = stats.reduce((prev, curr) => (curr.sum < prev.sum ? curr : prev), stats[0]);
@@ -955,7 +1008,7 @@ function validarCamposFormulario() {
 
       containerTabelas.innerHTML = anos.map(ano => {
         const lista = banco[ano] || [];
-        let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+        let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
         lista.forEach(d => {
           const jc = formatNumeroFloat(d.jetcontrol);
           const cc = formatNumeroFloat(d.contracheque);
@@ -989,10 +1042,10 @@ function validarCamposFormulario() {
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 bg-slate-900/20">
                   ${lista.map(d => {
-                    const st = getStatus(d.jetcontrol, d.contracheque);
-                    const diff = getDiff(d.jetcontrol, d.contracheque);
-                    const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
-                    return `
+          const st = getStatus(d.jetcontrol, d.contracheque);
+          const diff = getDiff(d.jetcontrol, d.contracheque);
+          const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
+          return `
                       <tr>
                         <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
                         <td class="p-2 text-slate-400">${d.mesRecebimento || '-'}</td>
@@ -1004,7 +1057,7 @@ function validarCamposFormulario() {
                         <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${st.cor}">${st.texto}</span></td>
                       </tr>
                     `;
-                  }).join('')}
+        }).join('')}
                   <tr class="bg-slate-950 font-black border-t border-slate-700">
                     <td class="p-2 text-white">TOTAL</td>
                     <td class="p-2"></td>
@@ -1037,7 +1090,7 @@ function validarCamposFormulario() {
         alert("Biblioteca de PDF indisponível no momento.");
         return;
       }
-      const { jsPDF } = window.jspdf;
+      const {jsPDF} = window.jspdf;
       const doc = new jsPDF('l', 'mm', 'a4');
       doc.setFontSize(14);
       doc.text(`JETCONTROL 2026 - RELATÓRIO DE VALORES DO JETON (${ano})`, 14, 15);
@@ -1045,7 +1098,7 @@ function validarCamposFormulario() {
       const banco = obterBancoDados();
       const lista = banco[ano] || [];
 
-      let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+      let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
       const body = lista.map(d => {
         const jc = formatNumeroFloat(d.jetcontrol);
         const cc = formatNumeroFloat(d.contracheque);
@@ -1076,10 +1129,10 @@ function validarCamposFormulario() {
         body: body,
         startY: 22,
         theme: 'grid',
-        styles: { halign: 'center', valign: 'middle', fontSize: 8, font: 'helvetica' },
-        headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [245, 245, 245] },
-        didParseCell: function(dCell) {
+        styles: {halign: 'center', valign: 'middle', fontSize: 8, font: 'helvetica'},
+        headStyles: {fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold'},
+        alternateRowStyles: {fillColor: [245, 245, 245]},
+        didParseCell: function (dCell) {
           if (dCell.section === 'body' && dCell.row.index === body.length - 1) {
             dCell.cell.styles.fontStyle = 'bold';
             dCell.cell.styles.fillColor = [30, 41, 59];
@@ -1096,7 +1149,7 @@ function validarCamposFormulario() {
         alert("Biblioteca de PDF indisponível no momento.");
         return;
       }
-      const { jsPDF } = window.jspdf;
+      const {jsPDF} = window.jspdf;
       const doc = new jsPDF('l', 'mm', 'a4');
       doc.setFontSize(14);
       doc.text("JETCONTROL 2026 - RELATÓRIO CONSOLIDADO DE TODOS OS ANOS", 14, 15);
@@ -1117,7 +1170,7 @@ function validarCamposFormulario() {
         doc.text(`ANO FISCAL: ${ano}`, 14, startY);
         startY += 5;
 
-        let totais = { jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0 };
+        let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
         const body = lista.map(d => {
           const jc = formatNumeroFloat(d.jetcontrol);
           const cc = formatNumeroFloat(d.contracheque);
@@ -1148,9 +1201,9 @@ function validarCamposFormulario() {
           body: body,
           startY: startY,
           theme: 'grid',
-          styles: { halign: 'center', fontSize: 7, font: 'helvetica' },
-          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
-          didParseCell: function(dCell) {
+          styles: {halign: 'center', fontSize: 7, font: 'helvetica'},
+          headStyles: {fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold'},
+          didParseCell: function (dCell) {
             if (dCell.section === 'body' && dCell.row.index === body.length - 1) {
               dCell.cell.styles.fontStyle = 'bold';
               dCell.cell.styles.fillColor = [30, 41, 59];
@@ -1178,7 +1231,7 @@ function validarCamposFormulario() {
       itens.forEach(item => {
         const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
         const icone = item.querySelector('i');
-        
+
         if (paginaItem === paginaAtual || (paginaAtual === '' && paginaItem === 'index.html')) {
           itemAtivo = item;
           item.classList.remove('text-slate-400');
@@ -1209,44 +1262,44 @@ function validarCamposFormulario() {
     }
 
     window.addEventListener('DOMContentLoaded', function () {
-        inicializarMenuRodape();
+      inicializarMenuRodape();
 
-        const sis = obterDadosSistema();
-        if (sis.anoRecebimento) {
-          anoAtual = sis.anoRecebimento;
+      const sis = obterDadosSistema();
+      if (sis.anoRecebimento) {
+        anoAtual = sis.anoRecebimento;
+      }
+
+      const inputAno = document.getElementById('inputAnoFiltro');
+      if (inputAno) inputAno.value = anoAtual;
+
+      const campoCiclo = document.getElementById('formCiclo');
+      campoCiclo.addEventListener('change', function (e) {
+        const v = e.target.value.trim().toUpperCase();
+        const achou = LISTA_CICLOS_PADRAO.find(c => c.label === v);
+        if (achou) {
+          document.getElementById('formMesRecebimento').value = achou.rec;
         }
-
-        const inputAno = document.getElementById('inputAnoFiltro');
-        if (inputAno) inputAno.value = anoAtual;
-
-        const campoCiclo = document.getElementById('formCiclo');
-        campoCiclo.addEventListener('change', function (e) {
-          const v = e.target.value.trim().toUpperCase();
-          const achou = LISTA_CICLOS_PADRAO.find(c => c.label === v);
-          if (achou) {
-            document.getElementById('formMesRecebimento').value = achou.rec;
-          }
-        });
-
-        configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
-        configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
-        configurarMascaraMoeda(document.getElementById('formJetonDgad'));
-
-        const mobileBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        if (mobileBtn && mobileMenu) {
-          mobileBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-          });
-        }
-
-        document.getElementById('formCiclo').addEventListener('input', validarCamposFormulario);
-        document.getElementById('formIrpf').addEventListener('input', validarCamposFormulario);
-        document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
-        puxarDadosDoSistema(false);
-        mudarAba(abaAtiva);
-        validarCamposFormulario();
       });
+
+      configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
+      configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
+      configurarMascaraMoeda(document.getElementById('formJetonDgad'));
+
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+      }
+
+      document.getElementById('formCiclo').addEventListener('input', validarCamposFormulario);
+      document.getElementById('formIrpf').addEventListener('input', validarCamposFormulario);
+      document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
+      puxarDadosDoSistema(false);
+      mudarAba(abaAtiva);
+      validarCamposFormulario();
+    });
 
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {
@@ -1258,4 +1311,5 @@ function validarCamposFormulario() {
     }
   </script>
 </body>
+
 </html>

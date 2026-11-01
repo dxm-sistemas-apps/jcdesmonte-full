@@ -144,7 +144,7 @@
               GESTÃO DE <span class="text-brand-500">VALORES DO JETON</span>
             </h1>
           </div>
-          <p class="text-sm sm:text-base text-justify text-slate-400 font-medium">
+          <p class="text-sm sm:text-base text-slate-400 font-medium">
             REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
           </p>
         </div>
@@ -204,13 +204,10 @@
           <i class="fa-solid fa-calculator text-brand-500 text-xl"></i>
           <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo</h2>
         </div>
-        <p>
-
-        </p>
         <button 
           type="button" 
-          onclick="puxarDadosDoSistema(true)" 
-          title="Recarregar dados com base no ciclo vigente"
+          onclick="abrirMenuPuxarCiclo()" 
+          title="Puxar dados do ciclo vigente ou de um ciclo já fechado"
           class="text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5"
         >
           <i class="fa-solid fa-arrows-rotate"></i> Puxar do Sistema
@@ -258,7 +255,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do JETCONTROL (Bruto)</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton JETCONTROL (Bruto)</label>
             <input 
               type="text" readonly disabled
               id="formJetonJetcontrol"
@@ -273,7 +270,7 @@
               type="text" 
               id="formIrpf"
               value="22"
-              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 text-center"
               required
             />
             <span class="text-[10px] text-slate-500 mt-1 block">Padrão: 22% sobre o Jeton</span>
@@ -282,7 +279,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do Contracheque (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton Contracheque (Bruto) *</label>
             <input 
               type="text" 
               id="formJetonContracheque"
@@ -293,7 +290,7 @@
           </div>
 
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton da DGAD (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton DGAD (Bruto) *</label>
             <input 
               type="text" 
               id="formJetonDgad"
@@ -529,6 +526,105 @@ function validarCamposFormulario() {
   }
 }
       
+    // ===== Puxar dados de ciclos já fechados =====
+    const STORAGE_KEY_CICLOS_FECHADOS_JV = 'jetcontrol_ciclos_fechados';
+
+    function dadosDeCicloFechado(c) {
+      const escalas = Array.isArray(c.escalasData) ? c.escalasData : [];
+      let total = 0;
+      escalas.forEach(esc => {
+        total += (parseFloat(esc.jetonManha) || 0) + (parseFloat(esc.jetonTarde) || 0)
+          + (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
+      });
+      let label = '';
+      if (c.dataAbertura && c.dataFechamento) {
+        const pA = c.dataAbertura.split('-'), pF = c.dataFechamento.split('-');
+        if (pA.length === 3 && pF.length === 3) label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+      }
+      const partes = String(c.recebimentoEm || '').split('/');
+      return {
+        ciclo: label,
+        mesRecebimento: (partes[0] || '').trim().toUpperCase(),
+        anoRecebimento: (partes[1] || '').trim() || (c.dataFechamento || '').slice(0, 4) || new Date().getFullYear().toString(),
+        totalJeton: total.toFixed(2),
+        irpf: '22'
+      };
+    }
+
+    function preencherFormularioLancamento(d, rotuloOrigem) {
+      if (d.anoRecebimento) {
+        anoAtual = d.anoRecebimento;
+        const inputAno = document.getElementById('inputAnoFiltro');
+        if (inputAno) inputAno.value = anoAtual;
+        const titulo = document.getElementById('tituloFormularioAno');
+        if (titulo) titulo.textContent = `Lançamento de Ciclo (${anoAtual})`;
+      }
+      document.getElementById('formCiclo').value = d.ciclo;
+      document.getElementById('formMesRecebimento').value = d.mesRecebimento;
+      document.getElementById('formJetonJetcontrol').value = formatMoeda(d.totalJeton);
+      document.getElementById('formIrpf').value = d.irpf;
+      const hint = document.getElementById('hintCicloSistema');
+      if (hint && d.ciclo) hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> ${rotuloOrigem}: <strong>${d.ciclo}</strong>`;
+      validarCamposFormulario();
+    }
+
+    function fecharMenuPuxarCiclo() {
+      const m = document.getElementById('menuPuxarCiclo');
+      if (m) m.remove();
+    }
+
+    function abrirMenuPuxarCiclo() {
+      fecharMenuPuxarCiclo();
+      let ciclos = [];
+      try { ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV) || '[]'); } catch (_) {}
+      const banco = obterBancoDados();
+      const jaLancado = (d) => d.ciclo && Object.values(banco).some(lista => (lista || []).some(i => i.ciclo === d.ciclo && (!d.mesRecebimento || i.mesRecebimento === d.mesRecebimento)));
+      const vigente = obterDadosSistema();
+
+      const linhas = ciclos.slice().reverse().map(c => {
+        const d = dadosDeCicloFechado(c);
+        const nome = c.nome || `CICLO ${d.ciclo}`;
+        return `<button type="button" data-id="${String(c.id).replace(/"/g, '&quot;')}" class="item-ciclo-fechado w-full text-left bg-slate-900 hover:bg-slate-800 border border-slate-700 rounded-xl p-3 transition">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-black text-blue-400 uppercase">${nome}</span>
+            ${jaLancado(d) ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-400">Já lançado</span>' : ''}
+          </div>
+          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: ${c.recebimentoEm || '-'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(d.totalJeton)}</span></div>
+        </button>`;
+      }).join('') || '<div class="text-center text-slate-500 italic uppercase text-xs py-6">Nenhum ciclo fechado registrado.</div>';
+
+      const fundo = document.createElement('div');
+      fundo.id = 'menuPuxarCiclo';
+      fundo.className = 'fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4';
+      fundo.innerHTML = `<div class="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800">
+          <h3 class="text-sm font-black uppercase text-white"><i class="fa-solid fa-arrows-rotate text-brand-500 mr-2"></i>Puxar dados do sistema</h3>
+          <button type="button" id="btnFecharMenuPuxar" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 space-y-2 overflow-y-auto">
+          <button type="button" id="itemCicloVigente" class="w-full text-left bg-brand-600/20 hover:bg-brand-600/30 border border-brand-500/40 rounded-xl p-3 transition">
+            <div class="text-sm font-black text-white uppercase">Ciclo vigente (em andamento)</div>
+            <div class="text-[11px] text-slate-300 uppercase mt-1">${vigente.ciclo || 'Sem ciclo aberto'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(vigente.totalJeton)}</span></div>
+          </button>
+          <div class="text-[10px] font-bold uppercase text-slate-500 pt-2">Ciclos já fechados</div>
+          ${linhas}
+        </div>
+      </div>`;
+      document.body.appendChild(fundo);
+
+      fundo.addEventListener('click', (ev) => { if (ev.target === fundo) fecharMenuPuxarCiclo(); });
+      fundo.querySelector('#btnFecharMenuPuxar').onclick = fecharMenuPuxarCiclo;
+      fundo.querySelector('#itemCicloVigente').onclick = () => { puxarDadosDoSistema(true); fecharMenuPuxarCiclo(); };
+      fundo.querySelectorAll('.item-ciclo-fechado').forEach(btn => {
+        btn.onclick = () => {
+          const c = ciclos.find(x => String(x.id) === btn.dataset.id);
+          if (!c) return;
+          preencherFormularioLancamento(dadosDeCicloFechado(c), 'CICLO FECHADO CARREGADO');
+          fecharMenuPuxarCiclo();
+        };
+      });
+    }
+
     function puxarDadosDoSistema(forcar) {
         const sis = obterDadosSistema();
         const campoCiclo = document.getElementById('formCiclo');

@@ -786,6 +786,9 @@
       equilibrada: { escalaCelular: 2.4, escalaPc: 3,   jpeg: 0.93 },
       alta:        { escalaCelular: 3,   escalaPc: 4,   jpeg: 0.96 }
     };
+    // ===== TEMA DO PDF — escolha: 'claro' (papel branco) | 'escuro' (fundo escuro, igual ao sistema) =====
+    const PDF_TEMA = 'escuro';
+    const PDF_ESCURO = PDF_TEMA === 'escuro';
     const PDF_CACHE = new Map(); // PDFs já gerados nesta sessão (ciclo fechado não muda): reabrir é instantâneo
 
     // Fontes do Google Fonts (carregadas só durante a geração; sem internet, usa fontes do sistema)
@@ -847,6 +850,26 @@
       .tag{display:inline-block;font-size:5.8pt;font-weight:800;padding:.3mm 1.4mm;border-radius:1mm;margin-left:1.4mm;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
       .tag.pen{background:#e2e8f0;color:#475569}
     `;
+    const PDF_CSS_ESCURO = `
+      .kpi{background:#0f172a;border-color:#1e293b}.kpi .r{color:#94a3b8}.kpi .v{color:#fff}
+      .kpi.destaque{background:rgba(5,150,105,.16);border-color:#059669}
+      .pos{color:#34d399 !important}.neg{color:#f87171 !important}.amb{color:#fbbf24 !important}
+      .sec .t{color:#fff}.sec .s{color:#94a3b8}
+      .card{background:#0f172a;border-color:#1e293b}.card .r{color:#94a3b8}.card .v{color:#fff}.card .d{color:#94a3b8}
+      th{background:#111c33;color:#94a3b8}
+      td{border-bottom-color:#1e293b;color:#cbd5e1}
+      tbody tr:nth-child(even) td{background:#0b1426}
+      .vazio{color:#94a3b8;border-color:#334155}
+      .total{background:#0f172a;border-color:#1e293b}.total .r{color:#94a3b8}.total .v{color:#fbbf24}
+      .escala{border-color:#1e293b;background:#0b1224}
+      .escala .cab{background:#0f172a;border-bottom-color:#1e293b}
+      .escala .dt{color:#fff}.escala .hr{color:#94a3b8}
+      .box{background:#0f172a;border-color:#1e293b}
+      .box.jornada h4{border-bottom-color:#1e293b}
+      .ho{background:rgba(147,51,234,.16);border-color:#6b21a8;color:#e2e8f0}.ho b.t{color:#c084fc}
+      .ln.sep{border-top-color:#1e293b}.ln .l{color:#cbd5e1}
+      .tag.pen{background:#1e293b;color:#94a3b8}
+    `;
     function pdfPrefixarCss(css, pref) {
       return css.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, corpo) =>
         sel.split(',').map(s => `${pref} ${s.trim()}`).join(',') + '{' + corpo + '}');
@@ -865,7 +888,11 @@
       .jcpdf-corpo>*{flex:none}
       .jcpdf-rodape{position:absolute;left:${PDF_PAG.MX}px;right:${PDF_PAG.MX}px;bottom:9mm;display:flex;justify-content:space-between;padding-top:2.4mm;border-top:.3mm solid #e2e8f0;font-size:6.8pt;letter-spacing:.06em;color:#94a3b8;text-transform:uppercase}
       .jcpdf-rodape strong{color:#475569}
-    ` + pdfPrefixarCss(PDF_CSS_REGRAS, '.jcp');
+      .jcpdf-page.escuro{background:#020617;color:#cbd5e1}
+      .jcpdf-page.escuro .jcpdf-topo,.jcpdf-page.escuro .jcpdf-rodape{border-color:#1e293b}
+      .jcpdf-page.escuro .jcpdf-marca{color:#fff}.jcpdf-page.escuro .jcpdf-marca b{color:#60a5fa}
+      .jcpdf-page.escuro .jcpdf-nome{color:#94a3b8}.jcpdf-page.escuro .jcpdf-rodape{color:#64748b}.jcpdf-page.escuro .jcpdf-rodape strong{color:#cbd5e1}
+    ` + pdfPrefixarCss(PDF_CSS_REGRAS, '.jcp') + (PDF_ESCURO ? pdfPrefixarCss(PDF_CSS_ESCURO, '.jcp') : '');
 
     function pdfEl(html) {
       const d = document.createElement('div');
@@ -985,17 +1012,17 @@
 
     // Cores dos dados (tons 400 do Tailwind, conforme definido). Para trocar, altere aqui.
     // >>> Para mudar a intensidade de uma cor, altere SÓ o número (300, 400, 500, 600, 700, 800 ou 900). <<<
-    const PDF_TONS = { emerald: 500, red: 500, amber: 500, preto: 500 };
+    const PDF_TONS = { emerald: 400, red: 400, amber: 400, preto: 400 };
     const PDF_PALETA = {
       emerald: { 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
       red:     { 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
       amber:   { 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
       preto:   { 300: '#374151', 400: '#111827', 500: '#0b0f19', 600: '#060912', 700: '#000000', 800: '#000000', 900: '#000000' }
     };
-    const pdfTom = (nome) => PDF_PALETA[nome][PDF_TONS[nome]] || PDF_PALETA[nome][400];
+    const pdfTom = (nome) => (PDF_ESCURO && nome === 'preto') ? '#e2e8f0' : (PDF_PALETA[nome][PDF_TONS[nome]] || PDF_PALETA[nome][400]);
     const PDF_CORES = {
       get emerald() { return pdfTom('emerald'); }, get red() { return pdfTom('red'); },
-      get amber() { return pdfTom('amber'); }, get preto() { return pdfTom('preto'); }, padrao: '#0f172a'
+      get amber() { return pdfTom('amber'); }, get preto() { return pdfTom('preto'); }, get padrao() { return PDF_ESCURO ? '#f1f5f9' : '#0f172a'; }
     };
     function pdfRgba(hex, a) {
       const n = parseInt(hex.slice(1), 16);
@@ -1038,7 +1065,7 @@
           const tit = bloco.querySelector('strong');
           if (!tit) return;
           const classe = String(tit.className);
-          const cor = /amber/.test(classe) ? '#b45309' : /indigo/.test(classe) ? '#4338ca' : '#1d4ed8';
+          const cor = /amber/.test(classe) ? (PDF_ESCURO ? '#fbbf24' : '#b45309') : /indigo/.test(classe) ? (PDF_ESCURO ? '#818cf8' : '#4338ca') : (PDF_ESCURO ? '#60a5fa' : '#1d4ed8');
           const linhas = [];
           bloco.querySelectorAll('p').forEach(pEl => { const l = pdfLinhaCard(pEl); if (l) linhas.push(l); });
           // blocos de atividades extras: a linha com borda separa a atividade anterior
@@ -1113,8 +1140,8 @@
       let jornadaDados = e.jornada;
       if (e.ho && jornadaDados) {
         const reuniao = /REUNI/i.test(e.ho.titulo);
-        const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
         const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
+        const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
         jornadaDados = { titulo: jornadaDados.titulo, linhas: perda.concat(horas) };
         if (!jornadaDados.linhas.length) jornadaDados = null;
       }
@@ -1212,7 +1239,7 @@
       const geradoEm = new Date().toLocaleString('pt-BR');
       return paginas.map((blocos, i) => {
         const pg = pdfEl(`
-          <div class="jcpdf-page jcp">
+          <div class="jcpdf-page jcp${PDF_ESCURO ? ' escuro' : ''}">
             <div class="jcpdf-barra"></div>
             <div class="jcpdf-topo"><div class="jcpdf-marca">JET<b>CONTROL</b> 2026<sup>®™</sup></div><div class="jcpdf-nome">${esc(c.nome)}</div></div>
             <div class="jcpdf-corpo"></div>
@@ -1265,7 +1292,7 @@
         const celular = /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
         const opcoes = {
           margin: 0,
-          html2canvas: { scale: celular ? preset.escalaCelular : preset.escalaPc, backgroundColor: '#ffffff', useCORS: true, logging: false },
+          html2canvas: { scale: celular ? preset.escalaCelular : preset.escalaPc, backgroundColor: PDF_ESCURO ? '#020617' : '#ffffff', useCORS: true, logging: false },
           jsPDF: { unit: 'px', format: [PDF_PAG.W, PDF_PAG.H], orientation: 'portrait', hotfixes: ['px_scaling'] }
         };
         const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
@@ -1294,7 +1321,7 @@
     }
 
     async function gerarBlobPdfCiclo(ciclo, aoProgredir) {
-      const chave = (ciclo.id || '') + '|' + (ciclo.fechadoEm || '') + '|' + PDF_QUALIDADE;
+      const chave = (ciclo.id || '') + '|' + (ciclo.fechadoEm || '') + '|' + PDF_QUALIDADE + '|' + PDF_TEMA;
       if (PDF_CACHE.has(chave)) return PDF_CACHE.get(chave);
       let blob;
       try {

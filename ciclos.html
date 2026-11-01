@@ -832,7 +832,7 @@
       .escala .dt{font-family:${PDF_FONTE_TITULO};font-weight:800;color:#0f172a;font-size:9.5pt}
       .escala .hr{margin-left:auto;color:#64748b;font-size:7.8pt;font-weight:600}
       .escala .conteudo{padding:3mm;display:flex;flex-direction:column;gap:2.6mm}
-      .escala .corpo{display:grid;grid-template-columns:1.25fr 1fr;gap:2.6mm;align-items:stretch}
+      .escala .corpo{display:grid;grid-template-columns:4fr 6fr;gap:2.6mm;align-items:stretch}
       .escala .periodos{display:flex;flex-direction:column;gap:2.6mm}
       .box{border:.3mm solid #cbd5e1;border-radius:2.2mm;background:#f8fafc;padding:2.4mm 3mm}
       .box h4{margin:0 0 1.6mm;font-size:7.2pt;letter-spacing:.1em;text-transform:uppercase;font-weight:800;color:var(--ct,#1d4ed8)}
@@ -845,8 +845,7 @@
       .ln .w{font-weight:700;margin-left:1mm}
       .ln.forte .w{font-weight:800;font-size:8.6pt}
       .tag{display:inline-block;font-size:5.8pt;font-weight:800;padding:.3mm 1.4mm;border-radius:1mm;margin-left:1.4mm;letter-spacing:.04em;text-transform:uppercase;vertical-align:middle}
-      .tag.rec{background:rgba(52,211,153,.18);color:#34d399}.tag.nao{background:rgba(248,113,113,.18);color:#f87171}
-      .tag.nperc{background:rgba(17,24,39,.08);color:#111827}.tag.pen{background:#e2e8f0;color:#475569}
+      .tag.pen{background:#e2e8f0;color:#475569}
     `;
     function pdfPrefixarCss(css, pref) {
       return css.replace(/([^{}]+)\{([^{}]*)\}/g, (m, sel, corpo) =>
@@ -985,7 +984,23 @@
     }
 
     // Cores dos dados (tons 400 do Tailwind, conforme definido). Para trocar, altere aqui.
-    const PDF_CORES = { emerald: '#34d399', red: '#f87171', amber: '#fbbf24', preto: '#111827', padrao: '#0f172a' };
+    // >>> Para mudar a intensidade de uma cor, altere SÓ o número (300, 400, 500, 600, 700, 800 ou 900). <<<
+    const PDF_TONS = { emerald: 500, red: 500, amber: 500, preto: 500 };
+    const PDF_PALETA = {
+      emerald: { 300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b' },
+      red:     { 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
+      amber:   { 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
+      preto:   { 300: '#374151', 400: '#111827', 500: '#0b0f19', 600: '#060912', 700: '#000000', 800: '#000000', 900: '#000000' }
+    };
+    const pdfTom = (nome) => PDF_PALETA[nome][PDF_TONS[nome]] || PDF_PALETA[nome][400];
+    const PDF_CORES = {
+      get emerald() { return pdfTom('emerald'); }, get red() { return pdfTom('red'); },
+      get amber() { return pdfTom('amber'); }, get preto() { return pdfTom('preto'); }, padrao: '#0f172a'
+    };
+    function pdfRgba(hex, a) {
+      const n = parseInt(hex.slice(1), 16);
+      return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+    }
 
     function pdfTxtCard(el) { return (el ? el.textContent : '').replace(/ /g, ' ').replace(/\s+/g, ' ').trim(); }
 
@@ -1073,7 +1088,7 @@
       const valor = pdfNumeroDe(l.v);
       const st = pdfStatusTag(l.tag);
       if (/^VALOR DI[ÁA]RIO (DO JETON|TOTAL|REAL)/.test(rot)) return PDF_CORES.emerald;
-      if (/DESCONTO DE IR/.test(rot)) return PDF_CORES.red;
+      if (/DESCONTO DE IR|PERDA DE RENDIMENTO/.test(rot)) return PDF_CORES.red;
       if (/^QTD\. DE (ATIVIDADES|HORAS)|^VALOR POR HORA/.test(rot)) return PDF_CORES.preto;
       if (/PERCEPT[ÍI]VEL|TOTAL DI[ÁA]RIO (DAS DI|DOS AUX)/.test(rot)) return valor > 0 ? PDF_CORES.amber : PDF_CORES.preto;
       if (/DI[ÁA]RIA|AUX[ÍI]LIO/.test(rot)) {
@@ -1087,13 +1102,23 @@
 
     function pdfHtmlEscala(e) {
       const linha = (l) => {
-        const tag = l.tag ? `<span class="tag ${pdfStatusTag(l.tag)}">${esc(l.tag)}</span>` : '';
+        const st = pdfStatusTag(l.tag);
+        const corTag = st === 'nao' ? PDF_CORES.red : st === 'rec' ? PDF_CORES.emerald : st === 'nperc' ? PDF_CORES.preto : '';
+        const tag = l.tag ? `<span class="tag ${st}"${corTag ? ` style="color:${corTag};background:${pdfRgba(corTag, .16)}"` : ''}>${esc(l.tag)}</span>` : '';
         const forte = /^VALOR DI[ÁA]RIO (TOTAL|REAL|DO DESCONTO)/i.test(l.r) ? ' forte' : '';
         return `<div class="ln${l.sep ? ' sep' : ''}${forte}"><span class="l">${esc(l.r)}:</span><span class="w" style="color:${pdfCorValor(l)}">${esc(l.v || '-')}</span>${tag}</div>`;
       };
       const ho = e.ho ? `<div class="ho"><b class="t">${esc(e.ho.titulo)}</b>${e.ho.itens.map(i => `<span>${i.r ? `<b>${esc(i.r)}:</b> ` : ''}<b>${esc(i.v)}</b></span>`).join('')}</div>` : '';
       const periodos = e.periodos.map(p => `<div class="box" style="--ct:${p.cor}"><h4>${esc(p.titulo)}</h4>${p.linhas.map(linha).join('')}</div>`).join('');
-      const jornada = e.jornada ? `<div class="box jornada"><h4>${esc(e.jornada.titulo)}</h4>${e.jornada.linhas.map(linha).join('')}</div>` : '';
+      let jornadaDados = e.jornada;
+      if (e.ho && jornadaDados) {
+        const reuniao = /REUNI/i.test(e.ho.titulo);
+        const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
+        const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
+        jornadaDados = { titulo: jornadaDados.titulo, linhas: perda.concat(horas) };
+        if (!jornadaDados.linhas.length) jornadaDados = null;
+      }
+      const jornada = jornadaDados ? `<div class="box jornada"><h4>${esc(jornadaDados.titulo)}</h4>${jornadaDados.linhas.map(linha).join('')}</div>` : '';
       const corpo = (periodos || jornada) ? `<div class="corpo" ${periodos ? '' : 'style="grid-template-columns:1fr"'}>${periodos ? `<div class="periodos">${periodos}</div>` : ''}${jornada}</div>` : '';
       const notas = e.notas ? `<div class="box"><h4>${esc(e.notas.titulo)}:</h4>${e.notas.linhas.map(linha).join('')}</div>` : '';
       return `<article class="escala">

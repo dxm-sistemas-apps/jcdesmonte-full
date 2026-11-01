@@ -304,7 +304,36 @@
       });
     }
 
-    function sanitizarSnapshotEscalas(html) {
+    // Home office: o card JORNADA mostra só (reunião sede: QTD. DE HORAS) + PERDA DE RENDIMENTO (HOME OFFICE) em vermelho.
+    // Corrige também os cards de ciclos que foram salvos antes dessa regra.
+    function ajustarJornadaHomeOffice(raiz, escalasData) {
+      const container = raiz.querySelector('#containerCardsEscalas') || raiz;
+      Array.from(container.children).forEach((card, idx) => {
+        const ho = card.querySelector('[class*="bg-purple"]');
+        if (!ho) return;
+        const lista = card.querySelector('[class*="col-span-4"] [class*="space-y"]');
+        if (!lista) return;
+        const reuniao = /REUNI/i.test(ho.textContent);
+        const achar = (re) => Array.from(lista.children).find(d => d.querySelector('strong') && re.test(d.querySelector('strong').textContent.trim().toUpperCase()));
+        let perda = achar(/^PERDA DE RENDIMENTO/);
+        const horas = reuniao ? achar(/^QTD\. DE HORAS/) : null;
+        if (!perda) {
+          const e = (Array.isArray(escalasData) ? escalasData[idx] : null) || {};
+          const valor = e.valorMediaPerdaRendimento != null ? Number(e.valorMediaPerdaRendimento) : (e.haveraAtividade === true ? 160 : 257.40);
+          perda = document.createElement('div');
+          perda.innerHTML = `<strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoedaBR(valor)}</span>`;
+        }
+        if (horas) { const sp = horas.querySelector('span'); if (sp) sp.className = 'text-white font-bold'; }
+        const perdaSpan = perda.querySelector('span');
+        if (perdaSpan) perdaSpan.className = 'text-red-400 font-black text-sm';
+        [horas, perda].forEach(d => { if (d) d.className = ''; });
+        lista.innerHTML = '';
+        if (horas) lista.appendChild(horas);
+        lista.appendChild(perda);
+      });
+    }
+
+    function sanitizarSnapshotEscalas(html, escalasData) {
       if (!html) return html;
       const temp = document.createElement('div');
       temp.innerHTML = html;
@@ -318,6 +347,7 @@
           campo.setAttribute('readonly', 'readonly');
         });
         reordenarPernoiteAposFuncao(secao);
+        ajustarJornadaHomeOffice(secao, escalasData);
         const containerCards = secao.querySelector('#containerCardsEscalas');
         if (containerCards) {
           Array.from(containerCards.children).forEach(card => {
@@ -463,10 +493,10 @@
       return {
         temDiarias: linhasD !== '', temAuxilios: linhasA !== '',
         diarias: secao('secao-organograma-diarias', '<i class="fa-solid fa-hotel text-amber-400 text-xl"></i>', 'ORGANOGRAMA DAS DIÁRIAS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-center') + th('DIÁRIA DE PERNOITE', 'text-center') + th('DIÁRIA DE TRASLADO', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('DIÁRIA DE ALIMENTAÇÃO', 'text-right') + th('DIÁRIA DE PERNOITE', 'text-right') + th('DIÁRIA DE TRASLADO', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
           linhasD, 'NENHUMA ESCALA COM LOCAL ELEGÍVEL A DIÁRIAS CADASTRADA NESTE CICLO.', 7, 'totalDiarias', totD),
         auxilios: secao('secao-organograma-auxilios', '<i class="fa-solid fa-utensils text-amber-400 text-xl"></i><i class="fa-solid fa-car text-amber-400 text-xl"></i>', 'ORGANOGRAMA DOS AUXÍLIOS',
-          th('Nº DA ESCALA', 'text-center') + th('LOCAL', 'text-center') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-center') + th('AUXÍLIO TRANSPORTE', 'text-center') + th('TOTAL DIÁRIO', 'text-center'),
+          th('Nº DA ESCALA', 'text-center') + th('LOCAL') + th('DATA', 'text-center') + th('AUXÍLIO ALIMENTAÇÃO', 'text-right') + th('AUXÍLIO TRANSPORTE', 'text-right') + th('TOTAL DIÁRIO', 'text-right'),
           linhasA, 'NENHUMA ESCALA COM DATA ELEGÍVEL AOS AUXÍLIOS CADASTRADA NESTE CICLO.', 6, 'totalAuxilios', totA)
       };
     }
@@ -596,7 +626,7 @@
                 <tr><td class="px-4 py-4 align-top font-black text-emerald-400 uppercase">2. Organograma dos Auxílios</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlAuxilios)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. Receitas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-indigo-400 uppercase">4. Estatísticas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.estatisticas))}</td></tr>
-                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas))}</td></tr>
+                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -1167,7 +1197,7 @@
         const reuniao = /REUNI/i.test(e.ho.titulo);
         const perda = jornadaDados.linhas.filter(l => /PERDA DE RENDIMENTO/i.test(l.r)).map(l => Object.assign({}, l, { sep: false }));
         const horas = reuniao ? jornadaDados.linhas.filter(l => /^QTD\. DE HORAS/i.test(l.r)).map(l => Object.assign({}, l, { sep: false })) : [];
-        jornadaDados = { titulo: jornadaDados.titulo, linhas: perda.concat(horas) };
+        jornadaDados = { titulo: jornadaDados.titulo, linhas: horas.concat(perda) };
         if (!jornadaDados.linhas.length) jornadaDados = null;
       }
       const jornada = jornadaDados ? `<div class="box jornada"><h4>${esc(jornadaDados.titulo)}</h4>${jornadaDados.linhas.map(linha).join('')}</div>` : '';
@@ -1180,7 +1210,7 @@
 
     function pdfItensEscalas(ciclo, medidor) {
       const t = document.createElement('div');
-      t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas));
+      t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData);
       const cards = Array.from((t.querySelector('#containerCardsEscalas') || { children: [] }).children);
       const sub = cards.length ? `${cards.length} ${cards.length === 1 ? 'escala' : 'escalas'}` : '';
       const itens = [pdfMedirItem(pdfTituloSecao(5, 'Escalas Cadastradas', '#475569', sub), medidor, { keepNext: true })];

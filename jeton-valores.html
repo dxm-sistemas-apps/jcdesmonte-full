@@ -221,7 +221,7 @@
     <!-- ABA 1: FORMULÁRIO DE LANÇAMENTO -->
     <section id="aba-lancamentos"
       class="aba-conteudo bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl max-w-2xl mx-auto space-y-6">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-calculator text-brand-500 text-xl"></i>
           <h2 id="tituloFormularioAno" class="text-lg font-bold uppercase tracking-wide text-white">Lançamento de Ciclo
@@ -229,7 +229,7 @@
         </div>
         <button type="button" onclick="abrirMenuPuxarCiclo()"
           title="Puxar dados do ciclo vigente ou de um ciclo já fechado"
-          class="text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
+          class="self-start sm:self-auto text-[11px] font-bold uppercase bg-slate-900 hover:bg-slate-800 text-brand-400 border border-brand-500/30 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5">
           <i class="fa-solid fa-arrows-rotate"></i> Puxar do Sistema
         </button>
       </div>
@@ -266,7 +266,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton JETCONTROL (Bruto)</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do JETCONTROL (Bruto)</label>
             <input type="text" readonly disabled id="formJetonJetcontrol"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
@@ -336,14 +336,14 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton Contracheque (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do Contracheque (Bruto) *</label>
             <input type="number" id="formJetonContracheque" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
           </div>
 
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton DGAD (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton da DGAD (Bruto) *</label>
             <input type="number" id="formJetonDgad" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>

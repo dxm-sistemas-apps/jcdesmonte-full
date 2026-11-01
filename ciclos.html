@@ -569,6 +569,22 @@
       return t.innerHTML;
     }
 
+    // CENTRALIZA OS TÍTULOS E TODAS AS CÉLULAS DOS ORGANOGRAMAS
+function centralizarCelulasOrganograma(html) {
+  if (!html) return html;
+
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+
+  // Centraliza todos os cabeçalhos e conteúdos das tabelas
+  temp.querySelectorAll('table th, table td').forEach(celula => {
+    celula.classList.add('text-center');
+    celula.style.setProperty('text-align', 'center', 'important');
+  });
+
+  return temp.innerHTML;
+}
+
     // Devolve o organograma salvo; se ele não tiver linhas, usa o recalculado com as escalas do ciclo.
     function organogramasDoCiclo(ciclo) {
       let diarias = ciclo.organogramaDiarias || ciclo.organogramaDiariasHTML || '';
@@ -580,9 +596,14 @@
         if (faltaA && rec.temAuxilios) auxilios = rec.auxilios;
       }
       return {
-        diarias: recolorirValoresOrganograma(diarias) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>',
-        auxilios: recolorirValoresOrganograma(auxilios) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>'
-      };
+  diarias: centralizarCelulasOrganograma(
+    recolorirValoresOrganograma(diarias)
+  ) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE DIÁRIAS NÃO REGISTRADOS.</div>',
+
+  auxilios: centralizarCelulasOrganograma(
+    recolorirValoresOrganograma(auxilios)
+  ) || '<div class="p-4 text-slate-500 italic">DADOS DO ORGANOGRAMA DE AUXÍLIOS NÃO REGISTRADOS.</div>'
+};
     }
 
     // Grava de volta, uma única vez, os organogramas recuperados (evita recalcular e mantém o histórico completo)

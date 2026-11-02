@@ -863,14 +863,14 @@
               <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[11px]">
                 <tr>
                   <th class="px-3 py-3">CICLO</th>
-                  <th class="px-3 py-3">MÊS REC.</th>
-                  <th class="px-3 py-3">ALÍQ. IR</th>
-                  <th class="px-3 py-3">JETCONTROL</th>
-                  <th class="px-3 py-3">JETCONTROL LÍQ.</th>
-                  <th class="px-3 py-3">CONTRACHEQUE</th>
-                  <th class="px-3 py-3">CONTRACHEQUE LÍQ.</th>
+                  <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
+                  <th class="px-3 py-3">ALÍQUOTA DE IR</th>
+                  <th class="px-3 py-3">JETCONTROL <br>BRUTO</th>
+                  <th class="px-3 py-3">JETCONTROL <br>LÍQUIDO</th>
+                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE BRUTO</th>
+                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE LÍQUIDO</th>
                   <th class="px-3 py-3">JETON DGAD</th>
-                  <th class="px-3 py-3">DIFERENÇA</th>
+                  <th class="px-3 py-3">BALANÇO</th>
                   <th class="px-3 py-3">STATUS</th>
                 </tr>
               </thead>
@@ -1040,14 +1040,16 @@
               <table class="w-full text-center text-xs divide-y divide-slate-800">
                 <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
                   <tr>
-                    <th class="p-2">CICLO</th>
-                    <th class="p-2">MÊS REC.</th>
-                    <th class="p-2">ALÍQ.</th>
-                    <th class="p-2">JETCONTROL</th>
-                    <th class="p-2">CONTRACHEQUE</th>
-                    <th class="p-2">JETON DGAD</th>
-                    <th class="p-2">DIFERENÇA</th>
-                    <th class="p-2">STATUS</th>
+                  <th class="px-3 py-3">CICLO</th>
+                  <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
+                  <th class="px-3 py-3">ALÍQUOTA DE IR</th>
+                  <th class="px-3 py-3">JETCONTROL <br>BRUTO</th>
+                  <th class="px-3 py-3">JETCONTROL <br>LÍQUIDO</th>
+                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE BRUTO</th>
+                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE LÍQUIDO</th>
+                  <th class="px-3 py-3">JETON DGAD</th>
+                  <th class="px-3 py-3">BALANÇO</th>
+                  <th class="px-3 py-3">STATUS</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 bg-slate-900/20">
@@ -1135,7 +1137,7 @@
       ]);
 
       doc.autoTable({
-        head: [['CICLO', 'MÊS REC.', 'ALÍQ. IR', 'JETCONTROL BRUTO', 'JETCONTROL LÍQ.', 'CONTRACHEQUE BRUTO', 'CONTRACHEQUE LÍQ.', 'JETON DGAD', 'DIFERENÇA', 'STATUS']],
+        head: [['CICLO', 'MÊS <br>RECEBIMENTO', 'ALÍQUOTA DE IR', 'JETCONTROL <br> BRUTO', 'JETCONTROL <br>LÍQUIDO', 'JETON <br>CONTRACHEQUE BRUTO', 'JETON <br>CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
         body: body,
         startY: 22,
         theme: 'grid',
@@ -1207,7 +1209,7 @@
         ]);
 
         doc.autoTable({
-          head: [['CICLO', 'MÊS REC.', 'ALÍQ. IR', 'JETCONTROL', 'JETCONTROL LÍQ.', 'CONTRACHEQUE', 'CONTRACHEQUE LÍQ.', 'JETON DGAD', 'DIFERENÇA', 'STATUS']],
+          head: [['CICLO', 'MÊS <br>RECEBIMENTO', 'ALÍQUOTA DE IR', 'JETCONTROL <br> BRUTO', 'JETCONTROL <br>LÍQUIDO', 'JETON <br>CONTRACHEQUE BRUTO', 'JETON <br>CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
           body: body,
           startY: startY,
           theme: 'grid',

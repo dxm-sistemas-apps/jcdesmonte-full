@@ -3394,12 +3394,15 @@
             </div>` : '';
 
       const botoesHTML = modo === 'fechado'
-        ? `<button type="button" onclick="editarEscalaCicloFechado('${cicloId}', ${index})" title="Editar Escala do Ciclo Fechado" class="text-slate-300 hover:text-white p-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 transition"><i class="fa-solid fa-pen-to-square"></i></button>`
-        : `<button type="button" onclick="editarEscala(${index})" title="Editar Escala" class="text-slate-300 hover:text-white p-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 transition"><i class="fa-solid fa-pen-to-square"></i></button>
+        ? `<button type="button" onclick="editarEscalaCicloFechado('${cicloId}', ${index})" title="Editar Escala do Ciclo Fechado" class="text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 transition flex items-center gap-1.5 text-xs font-bold"><i class="fa-solid fa-pen-to-square"></i> EDITAR</button>`
+        : `<button type="button" onclick="editarEscala(${index})" title="Editar Escala" class="text-slate-300 hover:text-white px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 transition flex items-center gap-1.5 text-xs font-bold"><i class="fa-solid fa-pen-to-square"></i> EDITAR</button>
            <button type="button" onclick="excluirEscala(${index})" title="Excluir Escala" class="text-slate-500 hover:text-red-400 p-1.5 rounded-lg bg-slate-900 border border-slate-800"><i class="fa-solid fa-trash-can"></i></button>`;
 
+      // Ciclos fechados (lista em Escalas): sem quebra de linha — o card se expande ao tamanho do conteúdo
+      // (a rolagem horizontal fica no corpo do ciclo). As ANOTAÇÕES continuam quebrando linha.
+      const semQuebra = modo === 'fechado' && !!cicloId;
       return `
-          <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase">
+          <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
               <div class="flex items-center space-x-3">
                 <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg">ESCALA ${esc.numero || `#${index + 1}`}</span>
@@ -3485,7 +3488,7 @@
 
             </div>
 
-            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs text-slate-300">
+            <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-1 text-xs text-slate-300${semQuebra ? ' whitespace-normal break-words w-0 min-w-full' : ''}">
               <div class="font-bold text-brand-500 uppercase mb-1.5 border-b-4 border-slate-600 pb-1.5"><i class="fa-solid fa-note-sticky mr-1"></i> ANOTAÇÕES:</div>
               <div class="border-b-4 border-slate-600 pb-1.5"><strong>VTR:</strong> ${esc.anotacoes?.notaVtr || '-'}</div>
               <div class="border-b-4 border-slate-600 pb-1.5"><strong>LOCAL - MANHÃ:</strong> ${esc.anotacoes?.notaLocalManha || '-'}</div>
@@ -3514,9 +3517,37 @@
       const desconto = lerEl('recValorDescontoIR');
       return { bruta: liquida + desconto, desconto, liquida };
     }
+    // Separa escalas de atividade de home office (e os 3 modos de home office) e soma a perda de rendimento
+    function resumoEscalasHomeOffice(escalasArr) {
+      const r = { escalas: 0, ho: 0, compulsorio: 0, reuniao: 0, solicitado: 0, perda: 0 };
+      (escalasArr || []).forEach(e => {
+        if (e && e.homeOffice === true) {
+          r.ho++;
+          if (r.hasOwnProperty(e.homeOfficeCondicao)) r[e.homeOfficeCondicao]++;
+          r.perda += e.valorMediaPerdaRendimento != null ? (parseFloat(e.valorMediaPerdaRendimento) || 0) : VALOR_MEDIA_PERDA_RENDIMENTO;
+        } else r.escalas++;
+      });
+      return r;
+    }
+    function textoEscalasHomeOffice(r) {
+      const partes = [];
+      if (r.escalas > 0 || r.ho === 0) partes.push(`${r.escalas} ESCALA(S)`);
+      if (r.ho > 0) {
+        const modos = [];
+        if (r.compulsorio) modos.push(`${r.compulsorio} COMPULSÓRIO`);
+        if (r.reuniao) modos.push(`${r.reuniao} REUNIÃO (SEDE)`);
+        if (r.solicitado) modos.push(`${r.solicitado} SOLICITADO (FOLGA)`);
+        partes.push(`${r.ho} HOME OFFICE${modos.length ? ' (' + modos.join(' • ') + ')' : ''}`);
+      }
+      return partes.join(' E ') + ' REGISTRADO(S)';
+    }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
+      const ho = resumoEscalasHomeOffice(ciclo.escalasData);
+      const linhaPerda = ho.ho > 0
+        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + linhaPerda
         + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
@@ -3565,13 +3596,13 @@
                 <div>
                   <h3 class="text-lg font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h3>
                   <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || '-'}</p>
-                  <p class="text-xs text-slate-400 mt-1 uppercase">${escalasArr.length} ESCALA(S) REGISTRADA(S) &nbsp;&nbsp; <br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</p>
+                  <p class="text-xs text-slate-400 mt-1 uppercase">${textoEscalasHomeOffice(resumoEscalasHomeOffice(escalasArr))} &nbsp;&nbsp; <br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</p>
                   ${htmlResumoReceitasCiclo(ciclo)}
                 </div>
               </div>
             </div>
-            <div id="corpoEsc-${idCiclo}" class="${estaAberto ? '' : 'hidden'} p-5 space-y-6 bg-slate-950/60">
-              ${cardsHTML}
+            <div id="corpoEsc-${idCiclo}" class="${estaAberto ? '' : 'hidden'} p-5 bg-slate-950/60 overflow-x-auto">
+              <div class="w-max min-w-full space-y-6">${cardsHTML}</div>
             </div>
           </article>
         `;

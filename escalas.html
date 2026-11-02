@@ -988,19 +988,6 @@
           <input type="text" id="modalNotaOutros" placeholder="Outros Assuntos" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs sm:col-span-2">
         </div>
 
-        <div id="modalSecaoFechamento" class="hidden bg-red-950/30 rounded-xl border border-red-800/60 p-4 space-y-3">
-          <div class="flex items-center gap-3">
-            <i class="fa-solid fa-lock text-red-400 text-xl"></i>
-            <div>
-              <h3 class="text-sm font-bold uppercase tracking-wide text-white">Fechamento de Ciclo</h3>
-              <p class="text-xs text-slate-400 mt-1">A data escolhida é o dia 25 do mês seguinte à abertura. Ao fechar, este ciclo fechado será substituído (escalas, estatísticas, receitas e organogramas) aqui e na página Ciclos.</p>
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button type="button" onclick="salvarEdicaoCicloFechado(true)" class="bg-red-700 hover:bg-red-600 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2 uppercase text-sm"><i class="fa-solid fa-lock"></i><span>FECHAR CICLO</span></button>
-          </div>
-        </div>
-
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="fecharModalEdicaoCicloFechado()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">CANCELAR</button>
           <button type="button" id="modalBtnSalvar" onclick="salvarEdicaoCicloFechado()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-brand-600 text-white hover:bg-brand-700 transition shadow-lg shadow-brand-600/20">
@@ -1019,7 +1006,7 @@
           <p class="text-xs text-slate-400 mt-1">A data limite do ciclo foi atingida. Revise as informações antes de fechar.</p>
         </div>
       </div>
-      <div class="flex justify-end">
+      <div class="flex justify-center">
         <button type="button" id="btnFecharCiclo" class="bg-red-700 hover:bg-red-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition flex items-center gap-2 uppercase">
           <i class="fa-solid fa-lock"></i>
           <span>FECHAR CICLO</span>
@@ -3568,6 +3555,10 @@
 
         return `
           <article class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            ${ciclo.aguardandoFechamento ? `<div class="bg-red-950/30 border-b border-red-800/60 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div class="flex items-center gap-3"><i class="fa-solid fa-lock text-red-400 text-xl"></i><div><h3 class="text-sm font-bold uppercase tracking-wide text-white">Fechamento de Ciclo</h3><p class="text-xs text-slate-400 mt-1">Há uma escala no dia 25. Clique para fechar e substituir este ciclo em Escalas e Ciclos.</p></div></div>
+              <button type="button" onclick="fecharCicloEditado('${idCiclo}')" class="bg-red-700 hover:bg-red-600 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2 uppercase text-sm"><i class="fa-solid fa-lock"></i><span>FECHAR CICLO</span></button>
+            </div>` : ''}
             <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 cursor-pointer hover:bg-slate-900/40 transition" onclick="alternarCicloFechadoEscalas('${idCiclo}')">
               <div class="flex items-center gap-3">
                 <i id="chevronEsc-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200 ${estaAberto ? 'rotate-90' : ''}"></i>
@@ -3793,19 +3784,7 @@
       const ano = m === 12 ? a + 1 : a, mes = m === 12 ? 1 : m + 1;
       return `${ano}-${String(mes).padStart(2, '0')}-25`;
     }
-    function atualizarSecaoFechamentoModal() {
-      const sec = document.getElementById('modalSecaoFechamento');
-      const btn = document.getElementById('modalBtnSalvar');
-      if (!sec || !btn) return;
-      let ehFech = false;
-      if (edicaoCicloFechadoAtual) {
-        const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
-        const c = ciclos.find(x => x.id === edicaoCicloFechadoAtual.cicloId);
-        ehFech = !!c && document.getElementById('modalDataAtividade').value === dataFechamentoDoCiclo(c);
-      }
-      sec.classList.toggle('hidden', !ehFech);
-      btn.classList.toggle('hidden', ehFech);
-    }
+    function atualizarSecaoFechamentoModal() {}
 
     window.editarEscalaCicloFechado = function(cicloId, index) {
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
@@ -3884,6 +3863,27 @@
       if (conteudoModal) conteudoModal.scrollTop = 0;
     };
 
+    window.fecharCicloEditado = async function(cicloId) {
+      const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
+      const ciclo = ciclos.find(c => c.id === cicloId);
+      if (!ciclo) return;
+      const ok = await mostrarAlertaEstilizado('O CICLO FECHADO CORRESPONDENTE SERÁ SUBSTITUÍDO E ARQUIVADO NOVAMENTE COM OS DADOS ATUALIZADOS (ESCALAS, ESTATÍSTICAS, RECEITAS E ORGANOGRAMAS) EM ESCALAS E CICLOS. DESEJA CONTINUAR?', 'CONFIRMAR FECHAMENTO', true);
+      if (ok === false) return;
+      try { if (window.JetBackup) await JetBackup.criar('Automático — antes de refechar o ciclo', 'auto-ciclo'); } catch (e) { console.warn('[BACKUP]', e); }
+      const fresh = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
+      const c = fresh.find(x => x.id === cicloId);
+      if (!c) return;
+      const dia25 = dataFechamentoDoCiclo(c);
+      if (dia25) c.dataFechamento = dia25;
+      c.fechadoEm = new Date().toISOString();
+      c.organogramaDiarias = '';
+      c.organogramaAuxilios = '';
+      delete c.aguardandoFechamento;
+      localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(fresh));
+      renderizarCiclosFechados();
+      await mostrarAlertaEstilizado('CICLO FECHADO NOVAMENTE: O CICLO CORRESPONDENTE FOI SUBSTITUÍDO EM ESCALAS E NA PÁGINA CICLOS.', 'FECHAMENTO DE CICLO');
+    };
+
     window.fecharModalEdicaoCicloFechado = function() {
       const modal = document.getElementById('modalEdicaoCicloFechado');
       modal.classList.add('hidden');
@@ -3891,7 +3891,7 @@
       edicaoCicloFechadoAtual = null;
     };
 
-    window.salvarEdicaoCicloFechado = async function(fecharCicloFlag) {
+    window.salvarEdicaoCicloFechado = async function() {
       if (!edicaoCicloFechadoAtual) return;
       const { cicloId, index } = edicaoCicloFechadoAtual;
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
@@ -3932,15 +3932,6 @@
         return;
       }
       const ehFechamento = data === dia25Ciclo;
-      if (ehFechamento && fecharCicloFlag !== true) {
-        await mostrarAlertaEstilizado('A DATA ESCOLHIDA CORRESPONDE AO DIA 25 (FECHAMENTO DO CICLO). USE O BOTÃO "FECHAR CICLO".', 'FECHAMENTO DE CICLO');
-        return;
-      }
-      if (ehFechamento) {
-        const ok = await mostrarAlertaEstilizado('A DATA DA ATIVIDADE CORRESPONDE AO DIA 25 DO MÊS SEGUINTE À ABERTURA DO CICLO. O CICLO FECHADO CORRESPONDENTE SERÁ SUBSTITUÍDO E ARQUIVADO NOVAMENTE COM OS DADOS ATUALIZADOS (ESCALAS, ESTATÍSTICAS, RECEITAS E ORGANOGRAMAS) EM ESCALAS E CICLOS. DESEJA CONTINUAR?', 'CONFIRMAR FECHAMENTO', true);
-        if (ok === false) return;
-        try { if (window.JetBackup) await JetBackup.criar('Automático — antes de refechar o ciclo', 'auto-ciclo'); } catch (e) { console.warn('[BACKUP]', e); }
-      }
       const localManha = document.getElementById('modalLocalManha').value.trim();
       const localTarde = document.getElementById('modalLocalTarde').value.trim();
       const localNoite = document.getElementById('modalLocalNoite').value.trim();
@@ -4066,16 +4057,15 @@
       // Organogramas antigos ficariam desatualizados: limpa para que a página Ciclos os recalcule das escalas atuais
       ciclo.organogramaDiarias = '';
       ciclo.organogramaAuxilios = '';
-      if (ehFechamento) {
-        ciclo.dataFechamento = data;
-        ciclo.fechadoEm = new Date().toISOString();
-      }
+      // Data = dia 25: o botão FECHAR CICLO só aparece depois de atualizar (fica no card do ciclo)
+      if (ehFechamento) ciclo.aguardandoFechamento = true;
+      else delete ciclo.aguardandoFechamento;
 
       localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(ciclos));
 
       fecharModalEdicaoCicloFechado();
       renderizarCiclosFechados();
-      await mostrarAlertaEstilizado(ehFechamento ? 'CICLO FECHADO NOVAMENTE: O CICLO CORRESPONDENTE FOI SUBSTITUÍDO EM ESCALAS E NA PÁGINA CICLOS.' : 'ESCALA DO CICLO FECHADO ATUALIZADA COM SUCESSO! O CICLO FOI SINCRONIZADO NA PÁGINA CICLOS.', ehFechamento ? 'FECHAMENTO DE CICLO' : 'SUCESSO');
+      await mostrarAlertaEstilizado(ehFechamento ? 'ESCALA ATUALIZADA PARA O DIA 25 (FECHAMENTO). O CICLO ESTÁ PRONTO PARA FECHAMENTO: CLIQUE EM "FECHAR CICLO" NO CARD DO CICLO PARA SUBSTITUÍ-LO EM ESCALAS E NA PÁGINA CICLOS.' : 'ESCALA DO CICLO FECHADO ATUALIZADA COM SUCESSO! O CICLO FOI SINCRONIZADO NA PÁGINA CICLOS.', ehFechamento ? 'FECHAMENTO DE CICLO' : 'SUCESSO');
     };
 
     document.getElementById('filtroBuscaUnico').addEventListener('input', renderizarCardsEscalas);

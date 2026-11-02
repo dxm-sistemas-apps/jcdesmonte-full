@@ -54,6 +54,14 @@
       font-family: 'Inter', sans-serif;
     }
 
+    /* Tabelas de lançamento: colunas (exceto CICLO) centralizadas, sem quebra de linha, largura automática */
+    #containerTabelaAno table, #containerConsolidadoTabelas table { table-layout: auto; }
+    #containerTabelaAno table th:not(:first-child), #containerTabelaAno table td:not(:first-child),
+    #containerConsolidadoTabelas table th:not(:first-child), #containerConsolidadoTabelas table td:not(:first-child) {
+      text-align: center;
+      white-space: nowrap;
+    }
+
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -830,7 +838,7 @@
             <tr class="hover:bg-slate-800/40 transition">
               <td class="px-3 py-2.5 font-bold text-slate-200">${d.ciclo}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
-              <td class="px-3 py-2.5 text-slate-400">${d.irpf}%</td>
+              <td class="px-3 py-2.5 text-red-400 font-bold">${d.irpf}%</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
               <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
@@ -1051,7 +1059,7 @@
                       <tr>
                         <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
                         <td class="p-2 text-slate-400">${d.mesRecebimento || '-'}</td>
-                        <td class="p-2 text-slate-400">${d.irpf}%</td>
+                        <td class="p-2 text-red-400 font-bold">${d.irpf}%</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
                         <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
                         <td class="p-2 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
@@ -1301,10 +1309,69 @@
       puxarDadosDoSistema(false);
       mudarAba(abaAtiva);
       validarCamposFormulario();
+      assinaturaJV = assinaturaDadosJV();
+      restaurarRolagemSessao();
     });
+
+    // ===== Mantém a tela exatamente onde está (atualização automática e F5) =====
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const CHAVE_ROLAGEM_JV = 'jetcontrol_jv_rolagem';
+
+    function capturarRolagem() {
+      return {
+        aba: abaAtiva, y: window.scrollY, x: window.scrollX,
+        t: Array.from(document.querySelectorAll('.overflow-x-auto')).map(e => e.scrollLeft)
+      };
+    }
+    function restaurarRolagem(r) {
+      if (!r) return;
+      document.querySelectorAll('.overflow-x-auto').forEach((e, i) => { if (r.t && r.t[i]) e.scrollLeft = r.t[i]; });
+      window.scrollTo({ top: r.y || 0, left: r.x || 0, behavior: 'instant' });
+    }
+    ['renderizarTabelaAno', 'renderizarEstatisticasAno', 'renderizarConsolidado'].forEach(nome => {
+      const original = window[nome];
+      if (typeof original !== 'function') return;
+      window[nome] = function () {
+        const r = capturarRolagem();
+        const ret = original.apply(this, arguments);
+        restaurarRolagem(r);
+        return ret;
+      };
+    });
+
+    let agendaSalvarRolagem = false;
+    function salvarRolagemSessao() {
+      if (agendaSalvarRolagem) return;
+      agendaSalvarRolagem = true;
+      requestAnimationFrame(() => {
+        agendaSalvarRolagem = false;
+        try { sessionStorage.setItem(CHAVE_ROLAGEM_JV, JSON.stringify(capturarRolagem())); } catch (_) {}
+      });
+    }
+    window.addEventListener('scroll', salvarRolagemSessao, { passive: true });
+    document.addEventListener('scroll', salvarRolagemSessao, { passive: true, capture: true });
+    window.addEventListener('pagehide', () => { try { sessionStorage.setItem(CHAVE_ROLAGEM_JV, JSON.stringify(capturarRolagem())); } catch (_) {} });
+
+    function restaurarRolagemSessao() {
+      let r = null;
+      try { r = JSON.parse(sessionStorage.getItem(CHAVE_ROLAGEM_JV) || 'null'); } catch (_) {}
+      if (!r || r.aba !== abaAtiva) return;
+      restaurarRolagem(r);
+      setTimeout(() => restaurarRolagem(r), 120);
+      setTimeout(() => restaurarRolagem(r), 500);
+    }
+
+    let assinaturaJV = null;
+    function assinaturaDadosJV() {
+      return [localStorage.getItem(STORAGE_KEY_JETON_VALORES), localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO), anoAtual, abaAtiva].join('|');
+    }
 
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {
+        // A sincronização avisa a cada poucos segundos: só redesenha se algo realmente mudou
+        const atual = assinaturaDadosJV();
+        if (atual === assinaturaJV) return;
+        assinaturaJV = atual;
         puxarDadosDoSistema(false);
         if (abaAtiva === 'tabela') renderizarTabelaAno();
         if (abaAtiva === 'dashboard') renderizarEstatisticasAno();

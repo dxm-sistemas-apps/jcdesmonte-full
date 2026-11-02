@@ -502,6 +502,33 @@
       </div>
     </section>
 
+    <!-- HISTÓRICO CONSOLIDADO DE JETON (vem de jeton-valores.html) -->
+    <section class="chart-card" id="card-jeton-historico">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-card-title" id="title-jeton-historico">Histórico Consolidado de Jeton (Todos os Ciclos Lançados)</div>
+          <div class="kpi-subtext" id="jh-subtitulo" style="margin-top:2px;">Dados lançados na página Valores (jeton do JETCONTROL somado por ano).</div>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card success">
+          <div class="kpi-label">Maior Jeton Anual</div>
+          <div class="kpi-value text-emerald-400" id="jh-maior">R$ 0,00</div>
+          <div class="kpi-subtext" id="jh-maior-sub">-</div>
+        </div>
+        <div class="kpi-card negativo">
+          <div class="kpi-label">Menor Jeton Anual</div>
+          <div class="kpi-value text-red-400" id="jh-menor">R$ 0,00</div>
+          <div class="kpi-subtext" id="jh-menor-sub">-</div>
+        </div>
+        <div class="kpi-card cyan">
+          <div class="kpi-label">Média Geral Anual</div>
+          <div class="kpi-value" id="jh-media">R$ 0,00</div>
+          <div class="kpi-subtext" id="jh-media-sub">-</div>
+        </div>
+      </div>
+    </section>
+
     <!-- PAINEL DE GRÁFICOS - LINHA 1 -->
     <section class="dashboard-grid">
       <div class="chart-card col-12">
@@ -1403,8 +1430,31 @@
       if (instSunburst) instSunburst.resize();
     });
 
+    // Histórico consolidado de jeton: lê o que foi lançado em jeton-valores.html (soma do JETCONTROL por ano)
+    function renderizarHistoricoJetonValores() {
+      const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+      const moeda = (v) => (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      let banco = {};
+      try { banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {}; } catch (_) {}
+      const anos = Object.keys(banco).filter(a => Array.isArray(banco[a]) && banco[a].length > 0).sort();
+      if (!anos.length) {
+        set('jh-maior', moeda(0)); set('jh-menor', moeda(0)); set('jh-media', moeda(0));
+        set('jh-maior-sub', 'Nenhum ciclo lançado'); set('jh-menor-sub', 'Nenhum ciclo lançado'); set('jh-media-sub', 'Nenhum ciclo lançado');
+        return;
+      }
+      const totais = anos.map(a => ({ ano: a, soma: banco[a].reduce((t, d) => t + (parseFloat(d.jetcontrol) || 0), 0), ciclos: banco[a].length }));
+      const maior = totais.reduce((p, c) => (c.soma > p.soma ? c : p), totais[0]);
+      const menor = totais.reduce((p, c) => (c.soma < p.soma ? c : p), totais[0]);
+      const media = totais.reduce((t, c) => t + c.soma, 0) / totais.length;
+      const totalCiclos = totais.reduce((t, c) => t + c.ciclos, 0);
+      set('jh-maior', moeda(maior.soma)); set('jh-maior-sub', `Ano ${maior.ano} • ${maior.ciclos} ciclo(s) lançado(s)`);
+      set('jh-menor', moeda(menor.soma)); set('jh-menor-sub', `Ano ${menor.ano} • ${menor.ciclos} ciclo(s) lançado(s)`);
+      set('jh-media', moeda(media)); set('jh-media-sub', `${totais.length} ano(s) • ${totalCiclos} ciclo(s) lançado(s)`);
+    }
+
     function carregarEProcessarDados() {
       limparConversoesGraficos();
+      try { renderizarHistoricoJetonValores(); } catch (e) { console.warn('Histórico de jeton:', e); }
 
       const valoresSalvos = JSON.parse(
         localStorage.getItem('jetcontrol_valores_custom') || 

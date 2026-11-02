@@ -296,10 +296,10 @@
           </div>
         </div>
 
-        <!-- TOTAL DE HORAS DE HOME OFFICE (CONDIÇÃO - REUNIÃO (SEDE)) -->
+        <!-- TOTAL DE HORAS DE HOME OFFICE (CONDIÇÃO - REUNIÃO) -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
-            <span class="block text-sm uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span>
+            <span class="block text-sm uppercase font-bold text-slate-400">Horas de Home Office (Reunião)</span>
             <span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-white">0H</span>
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
@@ -447,9 +447,9 @@
         <div id="wrapperHomeOfficeCondicao" class="hidden">
           <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Condição do Home Office</label>
           <div class="flex flex-wrap gap-2">
-            <button type="button" data-condicao="compulsorio" onclick="selecionarCondicaoHomeOffice('', 'compulsorio')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Compulsório (Contingência)</button>
-            <button type="button" data-condicao="reuniao" onclick="selecionarCondicaoHomeOffice('', 'reuniao')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Reunião (Sede)</button>
-            <button type="button" data-condicao="solicitado" onclick="selecionarCondicaoHomeOffice('', 'solicitado')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Solicitado (Folga)</button>
+            <button type="button" data-condicao="compulsorio" onclick="selecionarCondicaoHomeOffice('', 'compulsorio')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Compulsório</button>
+            <button type="button" data-condicao="reuniao" onclick="selecionarCondicaoHomeOffice('', 'reuniao')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Reunião</button>
+            <button type="button" data-condicao="solicitado" onclick="selecionarCondicaoHomeOffice('', 'solicitado')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Solicitado</button>
           </div>
           <input type="hidden" id="homeOfficeCondicao">
 
@@ -844,9 +844,9 @@
         <div id="modalWrapperHomeOfficeCondicao" class="hidden">
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Condição do Home Office</label>
           <div class="flex flex-wrap gap-2">
-            <button type="button" data-condicao="compulsorio" onclick="selecionarCondicaoHomeOffice('modal', 'compulsorio')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Compulsório (Contingência)</button>
-            <button type="button" data-condicao="reuniao" onclick="selecionarCondicaoHomeOffice('modal', 'reuniao')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Reunião (Sede)</button>
-            <button type="button" data-condicao="solicitado" onclick="selecionarCondicaoHomeOffice('modal', 'solicitado')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Solicitado (Folga)</button>
+            <button type="button" data-condicao="compulsorio" onclick="selecionarCondicaoHomeOffice('modal', 'compulsorio')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Compulsório</button>
+            <button type="button" data-condicao="reuniao" onclick="selecionarCondicaoHomeOffice('modal', 'reuniao')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Reunião</button>
+            <button type="button" data-condicao="solicitado" onclick="selecionarCondicaoHomeOffice('modal', 'solicitado')" class="text-xs font-bold uppercase px-4 py-2 rounded-xl border border-slate-700 text-slate-400 hover:border-brand-600 transition">Solicitado</button>
           </div>
           <input type="hidden" id="modalHomeOfficeCondicao">
 
@@ -1853,9 +1853,9 @@
       ((JETON_MEDIO_DOBRADA + JETON_MEDIO_QUADRUPLA) / 2) * (1 - ALIQUOTA_IR_HOME_OFFICE);
 
     const LABELS_CONDICAO_HOME_OFFICE = {
-      compulsorio: 'Compulsório (Contingência)',
-      reuniao: 'Reunião (Sede)',
-      solicitado: 'Solicitado (Folga)'
+      compulsorio: 'Compulsório',
+      reuniao: 'Reunião',
+      solicitado: 'Solicitado'
     };
 
     function idsHomeOffice(prefixo) {
@@ -1874,7 +1874,7 @@
       };
     }
 
-    // ===== "HAVERÁ ATIVIDADE NESTE DIA" (só no Home Office Reunião/Sede) =====
+    // ===== "HAVERÁ ATIVIDADE NESTE DIA" (só no Home Office Reunião) =====
     function definirEstadoHaveraAtividade(prefixo, valor) {
       const { haveraChkId } = idsHomeOffice(prefixo);
       const chk = document.getElementById(haveraChkId);
@@ -2038,7 +2038,7 @@
       return texto || null;
     }
 
-    // Perda de rendimento: R$ 160,00 quando haverá atividade no dia (Reunião/Sede); caso contrário, a média padrão
+    // Perda de rendimento: R$ 160,00 quando haverá atividade no dia (Reunião); caso contrário, a média padrão
     function perdaRendimentoHomeOffice(prefixo) {
       return haveraAtividadeParaSalvar(prefixo) === true ? VALOR_PERDA_RENDIMENTO_COM_ATIVIDADE : VALOR_MEDIA_PERDA_RENDIMENTO;
     }
@@ -3403,7 +3403,7 @@
       const semQuebra = modo === 'fechado' && !!cicloId;
       // Cards internos (manhã/tarde/noite/jornada) mais largos nos ciclos fechados: folga lateral para as linhas
       // (para mais/menos folga, altere o px-8 abaixo: px-6, px-10, px-12...)
-      const folgaInterna = semQuebra ? 'py-3 px-8' : 'p-3';
+      const folgaInterna = semQuebra ? 'py-3 px-2' : 'p-3';
       return `
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
@@ -3538,11 +3538,11 @@
       if (r.ho > 0) {
         const modos = [];
         if (r.compulsorio) modos.push(`${r.compulsorio} COMPULSÓRIO`);
-        if (r.reuniao) modos.push(`${r.reuniao} REUNIÃO (SEDE)`);
-        if (r.solicitado) modos.push(`${r.solicitado} SOLICITADO (FOLGA)`);
-        partes.push(`${r.ho} HOME OFFICE${modos.length ? ' (' + modos.join(' • ') + ')' : ''}`);
+        if (r.reuniao) modos.push(`${r.reuniao} REUNIÃO`);
+        if (r.solicitado) modos.push(`${r.solicitado} SOLICITADO`);
+        partes.push(`${r.ho} HOME OFFICE(S) -${modos.length ? ' (' + modos.join(' • ') + ')' : ''}`);
       }
-      return partes.join(' E ') + ' REGISTRADO(S)';
+      return partes.join(' <br> ');
     }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
@@ -3753,7 +3753,7 @@
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Total de Escalas</span><span id="statTotalEscalas" class="text-xl font-black text-white">${v.totalEscalas}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas Trabalhadas</span><span id="statTotalHoras" class="text-xl font-black text-cyan-400">${formatarMinutosComoHoras(v.horasTotais * 60 + v.minutosTotais)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Home Offices</span><span id="statHomeOffices" class="text-xl font-black text-purple-400">${v.totalHomeOffices}</span><span id="statHomeOfficesDetalhe" class="block text-[10px] text-slate-500 uppercase mt-0.5">${textoHomeOfficesDetalhe(v.totalHomeOfficesCompulsorio, v.totalHomeOfficesReuniao, v.totalHomeOfficesSolicitado)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas de Home Office (Reunião - Sede)</span><span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-indigo-400">${formatarMinutosComoHoras(v.horasHomeOfficeReuniao * 60 + v.minutosHomeOfficeReuniao)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas de Home Office (Reunião)</span><span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-indigo-400">${formatarMinutosComoHoras(v.horasHomeOfficeReuniao * 60 + v.minutosHomeOfficeReuniao)}</span></div>
           </div>
         </section>
       `;

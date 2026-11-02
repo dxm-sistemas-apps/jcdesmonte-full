@@ -3401,6 +3401,9 @@
       // Ciclos fechados (lista em Escalas): sem quebra de linha — o card se expande ao tamanho do conteúdo
       // (a rolagem horizontal fica no corpo do ciclo). As ANOTAÇÕES continuam quebrando linha.
       const semQuebra = modo === 'fechado' && !!cicloId;
+      // Cards internos (manhã/tarde/noite/jornada) mais largos nos ciclos fechados: folga lateral para as linhas
+      // (para mais/menos folga, altere o px-8 abaixo: px-6, px-10, px-12...)
+      const folgaInterna = semQuebra ? 'py-3 px-8' : 'p-3';
       return `
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
@@ -3420,7 +3423,7 @@
               
               <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-xs">
                 ${esc.localManha ? `
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-600 space-y-1 flex flex-col justify-between">
+                <div class="bg-slate-900/50 ${folgaInterna} rounded-xl border border-slate-600 space-y-1 flex flex-col justify-between">
                   <div>
                     <strong class="text-brand-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-sun"></i> MANHÃ</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localManha}</p>
@@ -3433,7 +3436,7 @@
                 ` : ''}
                 
                 ${esc.localTarde ? `
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800 space-y-1 flex flex-col justify-between">
+                <div class="bg-slate-900/50 ${folgaInterna} rounded-xl border border-slate-800 space-y-1 flex flex-col justify-between">
                   <div>
                     <strong class="text-amber-500 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-cloud-sun"></i> TARDE</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localTarde}</p>
@@ -3446,7 +3449,7 @@
                 ` : ''}
 
                 ${esc.localNoite ? `
-                <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800 space-y-1 flex flex-col justify-between">
+                <div class="bg-slate-900/50 ${folgaInterna} rounded-xl border border-slate-800 space-y-1 flex flex-col justify-between">
                   <div>
                     <strong class="text-indigo-400 uppercase flex items-center gap-1 mb-1"><i class="fa-solid fa-moon"></i> NOITE</strong>
                     <p class="text-slate-300"><strong>LOCAL:</strong> ${esc.localNoite}</p>
@@ -3459,7 +3462,7 @@
                 ` : ''}
               </div>
 
-              <div class="lg:col-span-4 bg-slate-900/70 p-3 rounded-xl border border-slate-800 flex flex-col justify-between text-xs text-slate-300">
+              <div class="lg:col-span-4 bg-slate-900/70 ${folgaInterna} rounded-xl border border-slate-800 flex flex-col justify-between text-xs text-slate-300">
                 <div class="font-bold text-brand-500 uppercase mb-2 flex items-center gap-1.5 border-b-4 border-slate-600 pb-1.5">
                   <i class="fa-solid fa-business-time"></i> JORNADA
                 </div>
@@ -3601,13 +3604,31 @@
                 </div>
               </div>
             </div>
-            <div id="corpoEsc-${idCiclo}" class="${estaAberto ? '' : 'hidden'} p-5 bg-slate-950/60 overflow-x-auto">
-              <div class="w-max min-w-full space-y-6">${cardsHTML}</div>
+            <div id="corpoEsc-${idCiclo}" class="${estaAberto ? '' : 'hidden'} p-5 bg-slate-950/60 overflow-x-hidden">
+              <div class="cards-ciclo-fechado w-max mx-auto space-y-6">${cardsHTML}</div>
             </div>
           </article>
         `;
       }).join('');
+      ajustarTodosCardsCiclosFechados();
     }
+
+    // Cards fixos e centralizados: se o conteúdo (sem quebra de linha) for mais largo que a tela,
+    // reduz o conjunto proporcionalmente (zoom) para caber, em vez de rolar para os lados.
+    function ajustarCardsCicloFechado(corpo) {
+      if (!corpo || corpo.classList.contains('hidden')) return;
+      const interno = corpo.querySelector('.cards-ciclo-fechado');
+      if (!interno) return;
+      interno.style.zoom = 1;
+      const cs = getComputedStyle(corpo);
+      const disponivel = corpo.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const necessario = interno.scrollWidth;
+      if (disponivel > 0 && necessario > disponivel) interno.style.zoom = (disponivel / necessario).toFixed(4);
+    }
+    function ajustarTodosCardsCiclosFechados() {
+      document.querySelectorAll('[id^="corpoEsc-"]').forEach(ajustarCardsCicloFechado);
+    }
+    window.addEventListener('resize', ajustarTodosCardsCiclosFechados);
 
     function alternarCicloFechadoEscalas(id) {
       const corpo = document.getElementById('corpoEsc-' + id);
@@ -3615,6 +3636,7 @@
       if (!corpo) return;
       const vaiExibir = corpo.classList.contains('hidden');
       corpo.classList.toggle('hidden');
+      if (vaiExibir) ajustarCardsCicloFechado(corpo);
       if (chevron) chevron.classList.toggle('rotate-90', vaiExibir);
     }
 

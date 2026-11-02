@@ -506,8 +506,8 @@
     <section class="chart-card" id="card-jeton-historico">
       <div class="chart-card-header">
         <div>
-          <div class="chart-card-title" id="title-jeton-historico">Histórico Consolidado de Jeton <br>(Todos os Ciclos Lançados)</div>
-          <div class="kpi-subtext" id="jh-subtitulo" style="margin-top:2px;">Dados lançados na página Valores <br>(jeton do JETCONTROL somado por ano).</div>
+          <div class="chart-card-title" id="title-jeton-historico">Histórico Consolidado de Jeton (Todos os Ciclos Lançados)</div>
+          <div class="kpi-subtext" id="jh-subtitulo" style="margin-top:2px;">Dados lançados na página Valores (jeton do JETCONTROL somado por ano).</div>
         </div>
       </div>
       <div class="kpi-grid">
@@ -2223,6 +2223,79 @@
         // charttop3Horas: false,   // (exemplo) tire as barras e use false para exibir o valor só ao clicar
       }
     };
+    // ============================================================
+    // VALOR EM DIAGONAL, NO TOPO DO INDICADOR (inclinado para a direita)
+    //   true  = o valor é escrito inclinado, acima do indicador (sem o quadrinho)
+    //   false = mantém o estilo atual (quadrinho horizontal na base do indicador)
+    // Para mudar TODOS: altere "padrao". Para mudar UM gráfico: use "porGrafico" (id do <canvas>).
+    // Para ativar em outro gráfico (monetário ou não), basta descomentar a linha dele abaixo.
+    // ANGULO: graus de inclinação (45 = sobe para a direita; 30 = mais deitado; 60 = mais em pé).
+    // ESPACO_TOPO / ESPACO_DIREITA: folga (px) reservada no gráfico para o texto inclinado não ser cortado.
+    // ============================================================
+    const VALOR_DIAGONAL = {
+      padrao: false,
+      angulo: 45,
+      espacoTopo: 64,
+      espacoDireita: 56,
+      porGrafico: {
+        chartComposicaoReceita: true,          // Composição da Receita Bruta
+        chartComposicaoReceitaLiquida: true,   // Composição da Receita Líquida
+        chartGanhoCiclos: true,                // 3 Ciclos com Maior Ganho
+        charttop3ValorRealJetonCiclo: true,    // 3 Ciclos com Maior Valor Real de Jeton
+        charttop3DescontoIR: true              // 3 Ciclos com Maior Desconto de IR
+        // ---- demais gráficos (descomente para ativar) ----
+        // chartEvolucaoCiclos: true,
+        // chartTipologiaCarga: true,
+        // chartTurnos: true,
+        // chartFuncoes: true,
+        // chartLocaisFiscalizados: true,
+        // chartAtividadeSimples: true,
+        // chartAtividadeDobradas: true,
+        // chartAtividadeTriplas: true,
+        // chartAtividadeQuadruplas: true,
+        // charttop3HomeOffices: true,
+        // charttop3Horas: true,
+        // charttop3ValorHora: true,
+        // charttop3ValorRealJetonEscala: true,
+        // charttop3Atividades: true,
+        // charttop3ValorMedioEscala: true,
+        // charttop3ValorMedioAtividade: true,
+        // charttop3ValorMedioHora: true
+      }
+    };
+    function valorDiagonalAtivo(chart) {
+      const id = chart.canvas && chart.canvas.id;
+      const v = id && Object.prototype.hasOwnProperty.call(VALOR_DIAGONAL.porGrafico, id)
+        ? VALOR_DIAGONAL.porGrafico[id] : VALOR_DIAGONAL.padrao;
+      return v === true;
+    }
+    // Escreve o texto inclinado a partir do topo do indicador (contorno escuro para ler sobre qualquer fundo)
+    function desenharValorDiagonal(chart, el, txt, tamanhoFonte) {
+      const c = chart.ctx, a = chart.chartArea;
+      const y0 = Math.max(el.y, a.top);
+      c.save();
+      c.font = `bold ${tamanhoFonte || 11}px sans-serif`;
+      c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.translate(el.x, y0 - 6);
+      c.rotate(-VALOR_DIAGONAL.angulo * Math.PI / 180);
+      c.lineWidth = 3; c.lineJoin = 'round'; c.strokeStyle = '#0f172a';
+      c.strokeText(txt, 0, 0);
+      c.fillStyle = '#f8fafc';
+      c.fillText(txt, 0, 0);
+      c.restore();
+    }
+    // Reserva folga no topo/direita dos gráficos com valor em diagonal
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'folgaValorDiagonal',
+        beforeInit(chart) {
+          if (!valorDiagonalAtivo(chart)) return;
+          const o = chart.config.options = chart.config.options || {};
+          const base = (o.layout && o.layout.padding) || {};
+          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: 4, right: 8, bottom: 0, left: 0 }, base, { top: VALOR_DIAGONAL.espacoTopo, right: VALOR_DIAGONAL.espacoDireita }) });
+        }
+      });
+    }
     function valoresFixosAtivos(chart) {
       const id = chart.canvas && chart.canvas.id;
       const v = id && Object.prototype.hasOwnProperty.call(VALORES_SEMPRE_VISIVEIS.porGrafico, id)
@@ -2375,6 +2448,7 @@
               (m0.data || []).forEach((el0, i0) => {
                 if (!el0 || ds0.data[i0] === undefined || ds0.data[i0] === null) return;
                 const txt0 = textoValorIndicador(chart, { d: d0, i: i0 });
+                if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el0, txt0, 11); return; }
                 const w0 = c0.measureText(txt0).width + 10, h0 = 18;
                 const x0 = Math.min(Math.max(el0.x - w0 / 2, a0.left + 1), a0.right - w0 - 1);
                 // na BASE do indicador (encostado no eixo), sempre dentro da área do gráfico
@@ -2398,6 +2472,7 @@
           const el = meta && meta.data && meta.data[sel.i];
           if (!el) return;
           const txt = textoValorIndicador(chart, sel);
+          if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el, txt, 12); return; }
           const c = chart.ctx, area = chart.chartArea;
           c.save();
           c.font = 'bold 12px sans-serif';

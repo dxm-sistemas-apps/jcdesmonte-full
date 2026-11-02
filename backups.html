@@ -132,7 +132,7 @@
           <i class="fa-solid fa-file-import mr-2"></i>Importar arquivo (.json)
           <input id="arquivoImportar" type="file" accept=".json,application/json" class="hidden">
         </label>
-        <span class="text-[11px] text-slate-500 normal-case">Use para trazer um backup baixado antes (ele entra na lista abaixo).</span>
+        <span class="text-[11px] text-slate-500 uppercase">Use para trazer um backup baixado antes (ele entra na lista abaixo).</span>
       </div>
       <div id="avisoNuvem" class="hidden text-xs normal-case rounded-xl p-4 border"></div>
       <div id="status" class="text-xs space-y-1.5 normal-case"></div>
@@ -344,7 +344,7 @@
     const jetonVal = ler('jetcontrol_jeton_valores', ler('jetonData', {}));
 
     let h = '<div class="font-bold text-white uppercase">Ciclos fechados</div>';
-    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${(c.escalasData || []).length} escala(s)</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
+    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${(c.escalasData || []).length} escala(s)</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
     h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${abertas.length} escala(s) cadastrada(s)</div>`;
 
     // Detalhamento dos lançamentos de Valores de Jeton
@@ -353,13 +353,13 @@
     anosJeton.forEach(ano => { if (Array.isArray(jetonVal[ano])) totalJetonLanc += jetonVal[ano].length; });
     h += `<div class="font-bold text-white uppercase pt-1">Valores de Jeton (Conciliação)</div>`;
     if (totalJetonLanc > 0) {
-      h += '<ul class="list-disc pl-5 space-y-0.5">' + anosJeton.map(ano => `<li>Ano ${esc(ano)}: ${(jetonVal[ano] || []).length} lançamento(s) registrado(s)</li>`).join('') + '</ul>';
+      h += '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + anosJeton.map(ano => `<li>Ano ${esc(ano)}: ${(jetonVal[ano] || []).length} lançamento(s) registrado(s)</li>`).join('') + '</ul>';
     } else {
-      h += '<div class="text-slate-500">Nenhum lançamento registrado.</div>';
+      h += '<div class="text-slate-500 uppercase">Nenhum lançamento registrado.</div>';
     }
 
     h += '<div class="font-bold text-white uppercase pt-1">Dados guardados</div><div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-0.5 font-mono text-[11px]">' +
-      Object.keys(dados).sort().map(k => `<div class="flex justify-between gap-2"><span class="truncate">${esc(k)}</span><span class="text-slate-500">${tamanho((dados[k] || '').length)}</span></div>`).join('') + '</div>';
+      Object.keys(dados).sort().map(k => `<div class="flex justify-between gap-2 uppercase"><span class="truncate">${esc(k)}</span><span class="text-slate-500">${tamanho((dados[k] || '').length)}</span></div>`).join('') + '</div>';
     return h;
   }
 
@@ -405,9 +405,9 @@
     try {
       const b = await JetBackup.criar($('nomeBackup').value, 'manual');
       $('nomeBackup').value = '';
-      msg('Backup criado' + (b.nuvem ? ' e enviado para a nuvem.' : ' neste aparelho' + (b.erroNuvem ? ' (nuvem indisponível agora; será reenviado depois).' : '.')), 'ok');
+      msg('BACKUP CRIADO' + (b.nuvem ? ' E ENVIADO PARA A NUVEM.' : ' NESTE APARELHO' + (b.erroNuvem ? ' (NUVEM INDISPONÍVEL AGORA; SERÁ ENVIADO DEPOIS).' : '.')), 'OK');
       await renderizar();
-    } catch (e) { msg('Erro ao criar o backup: ' + (e && e.message || e), 'erro'); }
+    } catch (e) { msg('ERRO AO CRIAR BACKUP: ' + (e && e.message || e), 'ERRO'); }
     $('btnCriar').disabled = false;
   });
 

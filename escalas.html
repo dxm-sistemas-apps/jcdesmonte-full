@@ -3477,7 +3477,7 @@
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
-                  <div><strong>VALOR DIÁRIO DO DESCONTO DE IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
+                  <div><strong>VALOR DIÁRIO DO DESCONTO IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
                 `}
                 </div>
@@ -3498,7 +3498,7 @@
     }
 
 
-    // ===== Receita bruta / desconto de IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
+    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
     function moedaParaNumero(txt) {
       const n = parseFloat(String(txt || '').replace(/[^\d,\-]/g, '').replace(/\./g, '').replace(',', '.'));
       return isFinite(n) ? n : 0;
@@ -3517,7 +3517,7 @@
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
       return `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
-        + `<span class="block text-xs text-slate-300">DESCONTO DE IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
@@ -3724,7 +3724,7 @@
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido dos Auxílios</span><span id="recValorRecebivelAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxiliosRecebivel)}">${formatarMoeda(v.valorAuxiliosRecebivel)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto de IR (22%)</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR (22%)</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorRealJeton)}</span></div>
           </div>
         </section>

@@ -193,7 +193,7 @@
               GESTÃO DE <span class="text-brand-500">VALORES DO JETON</span>
             </h1>
           </div>
-          <p class="text-sm sm:text-base text-slate-400 font-medium">
+          <p class="text-justify text-sm sm:text-base text-slate-400 font-medium">
             REGISTRO DOS VALORES DE JETON DO JETCONTROL (REGISTRO PESSOAL), DA DGAD (REGISTRO DA DIVISÃO DE
             FISCALIZAÇÃO) E DO CONTRACHEQUE (O QUE RECEBEREI NA CONTA) COM CÁLCULO DE DIFERENÇAS E IRPF.
           </p>
@@ -207,21 +207,21 @@
     </section>
 
     <!-- NAVEGAÇÃO DE ABAS INTERNAS -->
-    <div class="flex flex-wrap gap-2 border-b border-slate-800 pb-2">
+    <div class="flex flex-wrap justify-center gap-2 border-b border-slate-800 pb-2">
       <button type="button" id="tab-btn-lancamentos" onclick="mudarAba('lancamentos')"
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-600 text-white shadow-lg">
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-pen-to-square"></i> Lançamento de Ciclo
       </button>
       <button type="button" id="tab-btn-tabela" onclick="mudarAba('tabela')"
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-table-list"></i> Tabela de Lançamentos
       </button>
       <button type="button" id="tab-btn-dashboard" onclick="mudarAba('dashboard')"
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-chart-pie"></i> Estatísticas
       </button>
       <button type="button" id="tab-btn-ciclos" onclick="mudarAba('ciclos')"
-        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-slate-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
+        class="aba-btn px-4 py-2 rounded-xl text-xs font-black uppercase transition flex items-center gap-2 bg-brand-900/60 text-slate-400 hover:bg-slate-800 hover:text-white">
         <i class="fa-solid fa-box-archive"></i> Ciclos Lançados
       </button>
     </div>
@@ -860,7 +860,7 @@
 
           <div class="overflow-x-auto rounded-xl border border-slate-800">
             <table class="w-full text-center text-xs divide-y divide-slate-800">
-              <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[11px]">
+              <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
                 <tr>
                   <th class="px-3 py-3">CICLO</th>
                   <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
@@ -1185,7 +1185,7 @@
         body: body,
         startY: 22,
         theme: 'grid',
-        styles: {halign: 'center', valign: 'middle', fontSize: 8, font: 'helvetica'},
+        styles: {halign: 'center', valign: 'middle', fontSize: 7, font: 'helvetica'},
         headStyles: {fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold'},
         alternateRowStyles: {fillColor: [245, 245, 245]},
         didParseCell: function (dCell) {

@@ -393,7 +393,7 @@
 
       <div id="containerConsolidadoResumo"></div>
 
-      <div class="pt-2">
+      <div class="flex justify-center">
         <button type="button" onclick="exportarRelatorioCompletoPDF()"
           class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
           <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO CONSOLIDADO <br>(TODOS OS ANOS)
@@ -895,7 +895,7 @@
           </div>
 
           ${lista.length > 0 ? `
-            <div class="flex flex-wrap gap-3 pt-2">
+            <div class="flex flex-wrap gap-3 pt-2 justify-center">
               <button onclick="exportarRelatorioAnoPDF('${anoAtual}')" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
                 <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO
               </button>

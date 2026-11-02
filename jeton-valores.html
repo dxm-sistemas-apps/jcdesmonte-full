@@ -274,7 +274,7 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do JETCONTROL (Bruto)</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton BRUTO (JETCONTROL)</label>
             <input type="text" readonly disabled id="formJetonJetcontrol"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
@@ -282,7 +282,7 @@
 
           <!-- CONTAINER: Ajustado para w-fit (encolhe até o tamanho do texto) e justify-start -->
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota de IRPF (%)</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota IR (%)</label>
 
             <!-- CONTAINER: Agora gerencia os cliques simples e duplos em toda a sua área -->
             <div id="containerIrpf"
@@ -344,14 +344,14 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-800/80">
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton da DGAD (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton AUDITADO (DGAD) *</label>
             <input type="text" inputmode="numeric" autocomplete="off" id="formJetonDgad" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
           </div>
           
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton do Contracheque (Bruto) *</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton BRUTO (Contracheque) *</label>
             <input type="text" inputmode="numeric" autocomplete="off" id="formJetonContracheque" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-300 font-black text-sm focus:outline-none focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchimento manual</span>
@@ -387,7 +387,7 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-layer-group text-brand-500 text-xl"></i>
-          <h2 class="text-lg font-bold uppercase tracking-wide text-white">Histórico Consolidado de Todos os Ciclos</h2>
+          <h2 class="text-lg font-bold uppercase tracking-wide text-white">Histórico Consolidado <br>(Todos os Ciclos)</h2>
         </div>
       </div>
 
@@ -396,7 +396,7 @@
       <div class="pt-2">
         <button type="button" onclick="exportarRelatorioCompletoPDF()"
           class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-6 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
-          <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO CONSOLIDADO (TODOS OS ANOS)
+          <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO CONSOLIDADO <br>(TODOS OS ANOS)
         </button>
       </div>
 
@@ -864,12 +864,12 @@
                 <tr>
                   <th class="px-3 py-3">CICLO</th>
                   <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
-                  <th class="px-3 py-3">ALÍQUOTA DE IR</th>
-                  <th class="px-3 py-3">JETCONTROL <br>BRUTO</th>
-                  <th class="px-3 py-3">JETCONTROL <br>LÍQUIDO</th>
-                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE BRUTO</th>
-                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE LÍQUIDO</th>
-                  <th class="px-3 py-3">JETON DGAD</th>
+                  <th class="px-3 py-3">ALÍQUOTA IR</th>
+                  <th class="px-3 py-3">JETON BRUTO <BR>(JETCONTROL)</th>
+                  <th class="px-3 py-3">JETON LÍQUIDO <BR>(JETCONTROL)</th>
+                  <th class="px-3 py-3">JETON BRUTO <BR>(CONTRACHEQUE)</th>
+                  <th class="px-3 py-3">JETON LÍQUIDO <BR>(CONTRACHEQUE)</th>
+                  <th class="px-3 py-3">JETON AUDITADO <BR>(DGAD)</th>
                   <th class="px-3 py-3">BALANÇO</th>
                   <th class="px-3 py-3">STATUS</th>
                 </tr>
@@ -897,7 +897,7 @@
           ${lista.length > 0 ? `
             <div class="flex flex-wrap gap-3 pt-2">
               <button onclick="exportarRelatorioAnoPDF('${anoAtual}')" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
-                <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO PDF
+                <i class="fa-solid fa-file-pdf"></i> GERAR RELATÓRIO
               </button>
               <button onclick="limparTabelaAno('${anoAtual}')" class="bg-red-700/80 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg transition">
                 <i class="fa-solid fa-trash-can"></i> LIMPAR TABELA
@@ -933,23 +933,23 @@
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
             <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
               <i class="fa-solid fa-chart-simple text-brand-500 text-xl"></i>
-              <h3 class="text-sm font-bold text-white uppercase tracking-wider">JETCONTROL (BRUTO) - ${anoAtual}</h3>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider"> JETON BRUTO (JETCONTROL) - ${anoAtual}</h3>
             </div>
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">MÊS DE MAIOR VALOR</span>
+                <span class="text-slate-400 font-semibold">MÊS DE MAIOR VALOR:</span>
                 <span class="text-emerald-400 font-black text-sm">
                   ${formatMoeda(maxJC)} (${lista[jc.indexOf(maxJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR</span>
+                <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR:</span>
                 <span class="text-red-400 font-black text-sm">
                   ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">VALOR MÉDIO ANUAL</span>
+                <span class="text-slate-400 font-semibold">VALOR MÉDIO ANUAL:</span>
                 <span class="text-brand-400 font-black text-sm">${formatMoeda(avgJC)}</span>
               </div>
             </div>
@@ -958,19 +958,19 @@
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
             <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
               <i class="fa-solid fa-percent text-amber-400 text-xl"></i>
-              <h3 class="text-sm font-bold text-white uppercase tracking-wider">ALÍQUOTA DE IRPF - ${anoAtual}</h3>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">ALÍQUOTA IR - ${anoAtual}</h3>
             </div>
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">MAIOR ALÍQUOTA</span>
+                <span class="text-slate-400 font-semibold">MAIOR ALÍQUOTA:</span>
                 <span class="text-emerald-400 font-black text-sm">${Math.max(...irpf)}%</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA</span>
+                <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA:</span>
                 <span class="text-red-400 font-black text-sm">${Math.min(...irpf)}%</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
-                <span class="text-slate-400 font-semibold">MÉDIA ANUAL</span>
+                <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
                 <span class="text-brand-400 font-black text-sm">${(irpf.reduce((a, b) => a + b, 0) / irpf.length).toFixed(0)}%</span>
               </div>
             </div>
@@ -1040,16 +1040,14 @@
               <table class="w-full text-center text-xs divide-y divide-slate-800">
                 <thead class="bg-slate-900 text-slate-400 font-bold uppercase text-[10px]">
                   <tr>
-                  <th class="px-3 py-3">CICLO</th>
-                  <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
-                  <th class="px-3 py-3">ALÍQUOTA DE IR</th>
-                  <th class="px-3 py-3">JETCONTROL <br>BRUTO</th>
-                  <th class="px-3 py-3">JETCONTROL <br>LÍQUIDO</th>
-                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE BRUTO</th>
-                  <th class="px-3 py-3">JETON <br>CONTRACHEQUE LÍQUIDO</th>
-                  <th class="px-3 py-3">JETON DGAD</th>
-                  <th class="px-3 py-3">BALANÇO</th>
-                  <th class="px-3 py-3">STATUS</th>
+                    <th class="px-3 py-3">CICLO</th>
+                    <th class="px-3 py-3">MÊS <br>RECEBIMENTO</th>
+                    <th class="px-3 py-3">ALÍQUOTA IR</th>
+                    <th class="px-3 py-3">JETON BRUTO <BR>(JETCONTROL)</th>
+                    <th class="px-3 py-3">JETON BRUTO <BR>(CONTRACHEQUE)</th>
+                    <th class="px-3 py-3">JETON AUDITADO <BR>(DGAD)</th>
+                    <th class="px-3 py-3">BALANÇO</th>
+                    <th class="px-3 py-3">STATUS</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 bg-slate-900/20">
@@ -1060,7 +1058,7 @@
           return `
                       <tr>
                         <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
-                        <td class="p-2 text-slate-400">${d.mesRecebimento || '-'}</td>
+                        <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
                         <td class="p-2 text-red-400 font-bold">${d.irpf}%</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
                         <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
@@ -1094,6 +1092,52 @@
         banco[ano] = [];
         salvarBancoDados(banco);
         renderizarTabelaAno();
+      }
+    }
+
+    // ============================================================
+    // CORES DO TEXTO NOS RELATÓRIOS PDF (DIFERENÇA e STATUS)
+    // Para trocar a cor, altere só o par [família, número] de cada situação.
+    //   Ex.: deficit: ['red', 400]  ->  ['red', 500]  (mais forte)  ou  ['rose', ...] se a família existir na paleta
+    // Famílias disponíveis: red, cyan, emerald, amber, slate  |  Tons: 300, 400, 500, 600
+    // (para usar outra família/tom, acrescente-o em PDF_PALETA com o hexadecimal do Tailwind)
+    // ============================================================
+    const PDF_CORES_SITUACAO = {
+      deficit:   ['red', 400],      // JETON EM DÉFICIT
+      superavit: ['cyan', 400],     // JETON EM SUPERÁVIT
+      correto:   ['emerald', 400],  // JETON CORRETO
+      semJeton:  ['slate', 400]     // SEM JETON / diferença zerada
+    };
+    const PDF_PALETA = {
+      red:     {300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626'},
+      cyan:    {300: '#67e8f9', 400: '#22d3ee', 500: '#06b6d4', 600: '#0891b2'},
+      emerald: {300: '#6ee7b7', 400: '#34d399', 500: '#10b981', 600: '#059669'},
+      amber:   {300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706'},
+      slate:   {300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569'}
+    };
+    function pdfCorRGB(par) {
+      const hex = (PDF_PALETA[par[0]] || {})[par[1]] || '#000000';
+      return [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+    }
+    // diferença < 0 = déficit | > 0 = superávit | 0 = correto (ou sem jeton, quando bruto e contracheque são zero)
+    function pdfCorDaSituacao(diff, semJeton) {
+      if (semJeton) return pdfCorRGB(PDF_CORES_SITUACAO.semJeton);
+      if (diff < 0) return pdfCorRGB(PDF_CORES_SITUACAO.deficit);
+      if (diff > 0) return pdfCorRGB(PDF_CORES_SITUACAO.superavit);
+      return pdfCorRGB(PDF_CORES_SITUACAO.correto);
+    }
+    // Pinta as colunas DIFERENÇA (8) e STATUS (9) de cada linha e a diferença da linha TOTAL
+    function pdfAplicarCoresSituacao(dCell, lista, totalDiff) {
+      if (dCell.section !== 'body') return;
+      const col = dCell.column.index;
+      if (col !== 8 && col !== 9) return;
+      const d = lista[dCell.row.index];
+      if (d) {
+        const jc = formatNumeroFloat(d.jetcontrol), cc = formatNumeroFloat(d.contracheque);
+        dCell.cell.styles.textColor = pdfCorDaSituacao(getDiff(jc, cc), jc === 0 && cc === 0);
+        dCell.cell.styles.fontStyle = 'bold';
+      } else if (col === 8) {
+        dCell.cell.styles.textColor = pdfCorDaSituacao(totalDiff, false);
       }
     }
 
@@ -1137,7 +1181,7 @@
       ]);
 
       doc.autoTable({
-        head: [['CICLO', 'MÊS <br>RECEBIMENTO', 'ALÍQUOTA DE IR', 'JETCONTROL <br> BRUTO', 'JETCONTROL <br>LÍQUIDO', 'JETON <br>CONTRACHEQUE BRUTO', 'JETON <br>CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
+        head: [['CICLO', 'MÊS RECEBIMENTO', 'ALÍQUOTA IR', 'JETCONTROL BRUTO', 'JETCONTROL LÍQUIDO', 'CONTRACHEQUE BRUTO', 'CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
         body: body,
         startY: 22,
         theme: 'grid',
@@ -1150,6 +1194,7 @@
             dCell.cell.styles.fillColor = [30, 41, 59];
             dCell.cell.styles.textColor = [52, 211, 153];
           }
+          pdfAplicarCoresSituacao(dCell, lista, totais.diff);
         }
       });
 
@@ -1209,7 +1254,7 @@
         ]);
 
         doc.autoTable({
-          head: [['CICLO', 'MÊS <br>RECEBIMENTO', 'ALÍQUOTA DE IR', 'JETCONTROL <br> BRUTO', 'JETCONTROL <br>LÍQUIDO', 'JETON <br>CONTRACHEQUE BRUTO', 'JETON <br>CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
+          head: [['CICLO', 'MÊS RECEBIMENTO', 'ALÍQUOTA IR', 'JETCONTROL BRUTO', 'JETCONTROL LÍQUIDO', 'CONTRACHEQUE BRUTO', 'CONTRACHEQUE LÍQUIDO', 'JETON DGAD', 'BALANÇO', 'STATUS']],
           body: body,
           startY: startY,
           theme: 'grid',
@@ -1221,6 +1266,7 @@
               dCell.cell.styles.fillColor = [30, 41, 59];
               dCell.cell.styles.textColor = [52, 211, 153];
             }
+            pdfAplicarCoresSituacao(dCell, lista, totais.diff);
           }
         });
 

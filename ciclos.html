@@ -294,7 +294,7 @@
     }
 
 
-    // ===== Receita bruta / desconto de IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
+    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
     function moedaParaNumero(txt) {
       const n = parseFloat(String(txt || '').replace(/[^\d,\-]/g, '').replace(/\./g, '').replace(',', '.'));
       return isFinite(n) ? n : 0;
@@ -310,10 +310,41 @@
       const desconto = lerEl('recValorDescontoIR');
       return {bruta: liquida + desconto, desconto, liquida};
     }
+    // Perda de rendimento padrão do home office (média entre jeton dobrado e quádruplo, já sem IR) — igual ao de Escalas
+    const VALOR_MEDIA_PERDA_RENDIMENTO = ((220 + 440) / 2) * (1 - 0.22);
+    // Separa escalas de atividade de home office (e os 3 modos de home office) e soma a perda de rendimento
+    function resumoEscalasHomeOffice(escalasArr) {
+      const r = {escalas: 0, ho: 0, compulsorio: 0, reuniao: 0, solicitado: 0, perda: 0};
+      (Array.isArray(escalasArr) ? escalasArr : []).forEach(e => {
+        if (e && e.homeOffice === true) {
+          r.ho++;
+          if (['compulsorio', 'reuniao', 'solicitado'].includes(e.homeOfficeCondicao)) r[e.homeOfficeCondicao]++;
+          r.perda += e.valorMediaPerdaRendimento != null ? (parseFloat(e.valorMediaPerdaRendimento) || 0) : VALOR_MEDIA_PERDA_RENDIMENTO;
+        } else r.escalas++;
+      });
+      return r;
+    }
+    function textoEscalasHomeOffice(r) {
+      const partes = [];
+      if (r.escalas > 0 || r.ho === 0) partes.push(`${r.escalas} ESCALA(S)`);
+      if (r.ho > 0) {
+        const modos = [];
+        if (r.compulsorio) modos.push(`${r.compulsorio} COMPULSÓRIO`);
+        if (r.reuniao) modos.push(`${r.reuniao} REUNIÃO`);
+        if (r.solicitado) modos.push(`${r.solicitado} SOLICITADO`);
+        partes.push(`${r.ho} HOME OFFICE(S) -${modos.length ? ' (' + modos.join(' • ') + ')' : ''}`);
+      }
+      return partes.join(' <BR> ');
+    }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
-      return `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
-        + `<span class="block text-xs text-slate-300">DESCONTO DE IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+      const ho = resumoEscalasHomeOffice(ciclo.escalasData);
+      const linhaPerda = ho.ho > 0
+        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+      return `<span class="block text-xs mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + linhaPerda
+        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
@@ -1243,7 +1274,7 @@ function centralizarCelulasOrganograma(html) {
       const valor = pdfNumeroDe(l.v);
       const st = pdfStatusTag(l.tag);
       if (/^VALOR DI[ÁA]RIO (DO JETON|TOTAL|REAL)/.test(rot)) return PDF_CORES.emerald;
-      if (/DESCONTO DE IR|PERDA DE RENDIMENTO/.test(rot)) return PDF_CORES.red;
+      if (/DESCONTO IR|PERDA DE RENDIMENTO/.test(rot)) return PDF_CORES.red;
       if (/^QTD\. DE (ATIVIDADES|HORAS)|^VALOR POR HORA/.test(rot)) return PDF_CORES.preto;
       if (/PERCEPT[ÍI]VEL|TOTAL DI[ÁA]RIO (DAS DI|DOS AUX)/.test(rot)) return valor > 0 ? PDF_CORES.amber : PDF_CORES.preto;
       if (/DI[ÁA]RIA|AUX[ÍI]LIO/.test(rot)) {
@@ -1348,7 +1379,7 @@ function centralizarCelulasOrganograma(html) {
         </div></div>`), medidor));
       itens.push(pdfMedirItem(pdfEl(`<div class="kpis">
         <div class="kpi"><div class="r">Receita bruta</div><div class="v pos">${moeda(r.bruta)}</div></div>
-        <div class="kpi"><div class="r">Desconto de IR</div><div class="v neg">${moeda(r.desconto)}</div></div>
+        <div class="kpi"><div class="r">Desconto IR</div><div class="v neg">${moeda(r.desconto)}</div></div>
         <div class="kpi destaque"><div class="r">Receita líquida</div><div class="v pos">${moeda(r.liquida)}</div></div>
         <div class="kpi"><div class="r">Total de escalas</div><div class="v">${esc(r.totalEscalas)}</div></div>
         <div class="kpi"><div class="r">Horas trabalhadas</div><div class="v">${esc(r.horas)}</div></div>

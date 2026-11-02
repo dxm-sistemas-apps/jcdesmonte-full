@@ -116,7 +116,7 @@
       </div>
       <p class="text-sm text-slate-400 font-medium text-justify">
         Guarde uma cópia de todos os dados salvos (escalas, ciclos, cotas extras, valores e conciliações de jetons) e restaure quando precisar.
-        O botão RESETAR <strong class="text-emerald-400">não apaga</strong> os backups. São mantidos os <span id="maxBackups">10</span> backups mais recentes[cite: 1, 7].
+        O botão RESETAR <strong class="text-emerald-400">não apaga</strong> os backups. São mantidos os <span id="maxBackups">10</span> backups mais recentes.
       </p>
     </section>
 
@@ -134,8 +134,8 @@
         </label>
         <span class="text-[11px] text-slate-500 uppercase">Use para trazer um backup baixado antes (ele entra na lista abaixo).</span>
       </div>
-      <div id="avisoNuvem" class="hidden text-xs normal-case rounded-xl p-4 border"></div>
-      <div id="status" class="text-xs space-y-1.5 normal-case"></div>
+      <div id="avisoNuvem" class="hidden text-xs rounded-xl p-4 border"></div>
+      <div id="status" class="text-xs space-y-1.5"></div>
     </section>
 
     <!-- LISTA -->
@@ -144,7 +144,7 @@
         <h2 class="text-sm font-black uppercase tracking-wide text-white"><i class="fa-solid fa-list mr-2 text-brand-500"></i>Backups guardados <span id="contagem" class="text-slate-400 font-semibold"></span></h2>
         <button id="btnAtualizar" class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"><i class="fa-solid fa-rotate mr-2"></i>Atualizar</button>
       </div>
-      <div id="lista" class="space-y-4"><div class="text-slate-500 text-sm normal-case">Carregando...</div></div>
+      <div id="lista" class="space-y-4"><div class="text-slate-500 text-sm">Carregando...</div></div>
     </section>
   </main>
 
@@ -152,7 +152,7 @@
   <div id="modal" class="hidden fixed inset-0 z-[60] bg-black/70 flex items-center justify-center p-4">
     <div class="bg-brand-card border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4">
       <h3 id="modalTitulo" class="text-lg font-black text-white uppercase"></h3>
-      <div id="modalTexto" class="text-sm text-slate-300 normal-case leading-relaxed"></div>
+      <div id="modalTexto" class="text-sm text-slate-300 leading-relaxed"></div>
       <div class="flex justify-end gap-3 pt-2">
         <button id="modalCancelar" class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">Cancelar</button>
         <button id="modalOk" class="bk-btn bg-brand-600 hover:bg-brand-500 text-white">Confirmar</button>
@@ -244,6 +244,7 @@
 
   function msg(texto, tipo) {
     const d = document.createElement('div');
+    tipo = String(tipo || '').toLowerCase();
     d.className = tipo === 'erro' ? 'text-red-400' : (tipo === 'ok' ? 'ok' : 'text-slate-300');
     d.textContent = texto;
     $('status').innerHTML = '';
@@ -276,6 +277,10 @@
   function itemResumo(rotulo, valor) {
     return `<div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3"><span class="block text-[10px] font-bold text-slate-400 uppercase">${rotulo}</span><span class="text-sm font-black text-white">${valor}</span></div>`;
   }
+  // Indicador com cor própria no valor e, opcionalmente, id para preenchimento posterior (dados lidos do backup)
+  function itemResumoCor(rotulo, valor, corValor, ind, larguraDupla) {
+    return `<div class="${larguraDupla ? 'col-span-2 ' : ''}bg-slate-900/60 border border-slate-800 rounded-xl p-3"><span class="block text-[10px] font-bold text-slate-400 uppercase">${rotulo}</span><span ${ind ? `data-ind="${ind}"` : ''} class="text-sm font-black ${corValor || 'text-white'}">${valor}</span></div>`;
+  }
   function itemResumoDestaque(rotulo, valor) {
     return `<div class="col-span-2 bg-slate-900/80 border-2 border-brand-500/60 rounded-xl p-3 shadow-md shadow-brand-500/10 flex flex-col justify-center"><span class="block text-[10px] font-bold text-brand-400 uppercase tracking-wide">${rotulo}</span><span class="text-sm font-black text-cyan-300">${valor}</span></div>`;
   }
@@ -286,18 +291,18 @@
     const aviso = $('avisoNuvem');
     aviso.className = 'hidden';
     if (!res.nuvemConfigurada) {
-      aviso.className = 'text-xs normal-case rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400';
+      aviso.className = 'text-xs rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400';
       aviso.textContent = 'Nuvem não configurada: os backups ficam guardados apenas neste aparelho.';
     } else if (!res.nuvemOk) {
-      aviso.className = 'text-xs normal-case rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400 space-y-2';
+      aviso.className = 'text-xs rounded-xl p-4 border border-amber-900 bg-slate-900/60 text-amber-400 space-y-2';
       const rules = "match /jetcontrol_backups/{secret}/{colecao}/{doc} {\n  allow read, write: if secret == 'SEU_SYNC_SECRET';\n}";
       aviso.innerHTML = '<div><i class="fa-solid fa-triangle-exclamation mr-1"></i>Não foi possível acessar a nuvem para os backups (erro ' + esc(res.erroNuvem) + '). Os backups estão sendo guardados neste aparelho. ' +
         (String(res.erroNuvem) === '403' ? 'O erro 403 indica que as regras do Firestore ainda não liberam a coleção de backups. Adicione esta regra (trocando SEU_SYNC_SECRET pelo mesmo código usado nas regras atuais) e publique:' : 'Verifique a internet.') + '</div>' +
-        (String(res.erroNuvem) === '403' ? '<pre class="bg-slate-950 text-slate-300 rounded-lg p-3 overflow-x-auto normal-case">' + esc(rules.replace(/\\n/g, '\n')) + '</pre>' : '');
+        (String(res.erroNuvem) === '403' ? '<pre class="bg-slate-950 text-slate-300 rounded-lg p-3 overflow-x-auto" style="text-transform:none">' + esc(rules.replace(/\\n/g, '\n')) + '</pre>' : '');
     }
     const cont = $('lista');
     if (!res.itens.length) {
-      cont.innerHTML = '<div class="bk-card p-6 text-center text-slate-400 text-sm normal-case">Nenhum backup ainda. Clique em "Criar backup agora".</div>';
+      cont.innerHTML = '<div class="bk-card p-6 text-center text-slate-400 text-sm">Nenhum backup ainda. Clique em "Criar backup agora".</div>';
       return;
     }
     cont.innerHTML = res.itens.map(b => {
@@ -318,8 +323,12 @@
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           ${itemResumo('Escalas ciclo vigente', r.escalasAbertas ?? 0)}
           ${itemResumo('Ciclos fechados', r.ciclosFechados ?? 0)}
-          ${itemResumo('Escalas arquivadas', r.escalasArquivadas ?? 0)}
-          ${itemResumo('Jeton bruto total', moeda(r.jetonTotal))}
+          ${itemResumoCor('Escalas arquivadas', (r.escalasArquivadas ?? 0) + ' ESCALA(S) ARQUIVADA(S)', 'text-white', 'arquivadas', true)}
+          ${itemResumoCor('Ciclo', '...', 'text-white', 'ciclo', true)}
+          ${itemResumoCor('Mês recebimento', '...', 'text-white', 'mesRecebimento')}
+          ${itemResumoCor('Jeton bruto total', moeda(r.jetonTotal), 'text-emerald-400')}
+          ${itemResumoCor('Desconto IR (22%)', moeda((Number(r.jetonTotal) || 0) * 0.22), 'text-red-400')}
+          ${itemResumoCor('Jeton líquido', moeda((Number(r.jetonTotal) || 0) * 0.78), 'text-emerald-400')}
           ${itemResumo('Itens de dados', r.itens ?? 0)}
           ${itemResumo('Tamanho', tamanho(r.tamanho || 0))}
           ${itemResumoDestaque('★ Conciliação de Jetons', textoJeton)}
@@ -330,9 +339,62 @@
           <button class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700" data-acao="baixar"><i class="fa-solid fa-download mr-2"></i>Baixar arquivo</button>
           <button class="bk-btn bg-slate-800 hover:bg-red-700 text-red-300 hover:text-white border border-slate-700" data-acao="excluir"><i class="fa-solid fa-trash mr-2"></i>Excluir</button>
         </div>
-        <div class="detalhes hidden text-xs normal-case text-slate-300 bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-2"></div>
+        <div class="detalhes hidden text-xs text-slate-300 bg-slate-900/60 border border-slate-800 rounded-xl p-4 space-y-2"></div>
       </div>`;
     }).join('');
+    preencherIndicadoresDosBackups(res.itens);
+  }
+
+  // Conta escalas de atividade e home office (e os 3 modos) de uma lista de escalas
+  function contarEscalasHO(lista) {
+    const r = { escalas: 0, ho: 0, compulsorio: 0, reuniao: 0, solicitado: 0 };
+    (Array.isArray(lista) ? lista : []).forEach(e => {
+      if (e && e.homeOffice === true) {
+        r.ho++;
+        if (['compulsorio', 'reuniao', 'solicitado'].includes(e.homeOfficeCondicao)) r[e.homeOfficeCondicao]++;
+      } else r.escalas++;
+    });
+    return r;
+  }
+  function textoEscalasHO(r, sufixo) {
+    const modos = [];
+    if (r.compulsorio) modos.push(r.compulsorio + ' COMPULSÓRIO');
+    if (r.reuniao) modos.push(r.reuniao + ' REUNIÃO (SEDE)');
+    if (r.solicitado) modos.push(r.solicitado + ' SOLICITADO (FOLGA)');
+    return r.escalas + ' ESCALA(S)' + (sufixo || '') + ' E ' + r.ho + ' HOME OFFICE' + (modos.length ? ' (' + modos.join(' • ') + ')' : '');
+  }
+
+  // Lê o conteúdo de cada backup (uma vez) para discriminar home office e mostrar ciclo / mês de recebimento
+  async function preencherIndicadoresDosBackups(itens) {
+    for (const b of itens) {
+      const card = document.querySelector('[data-id="' + CSS.escape(b.id) + '"]');
+      if (!card) continue;
+      try {
+        const rec = await JetBackup.obter(b.id);
+        const dados = (rec && rec.dados) || {};
+        const ler = (k, p) => { try { const v = JSON.parse(dados[k]); return v == null ? p : v; } catch (e) { return p; } };
+        const ciclos = ler('jetcontrol_ciclos_fechados', []);
+        const vigente = ler('jetcontrol_ciclo_dados', {});
+        const arquivadas = [];
+        ciclos.forEach(c => (c.escalasData || []).forEach(e => arquivadas.push(e)));
+        const set = (ind, texto) => { const el = card.querySelector('[data-ind="' + ind + '"]'); if (el) el.textContent = texto; };
+        set('arquivadas', textoEscalasHO(contarEscalasHO(arquivadas), ' ARQUIVADA(S)'));
+
+        // Ciclo em andamento no momento do backup; se não houver, o último ciclo fechado
+        const ultimoFechado = ciclos.length ? ciclos[ciclos.length - 1] : null;
+        const fmt = (iso) => iso ? iso.split('-').reverse().join('/') : '';
+        let nomeCiclo = '-', mes = '-';
+        if (vigente && vigente.dataAbertura) {
+          nomeCiclo = (vigente.nomeCiclo || ('CICLO - ' + fmt(vigente.dataAbertura) + (vigente.dataFechamento ? ' À ' + fmt(vigente.dataFechamento) : ''))) + ' (VIGENTE)';
+          mes = vigente.recebimentoEm || '-';
+        } else if (ultimoFechado) {
+          nomeCiclo = (ultimoFechado.nome || ('CICLO ' + (ultimoFechado.numero || ''))) + ' (ÚLTIMO FECHADO)';
+          mes = ultimoFechado.recebimentoEm || '-';
+        }
+        set('ciclo', nomeCiclo);
+        set('mesRecebimento', mes);
+      } catch (e) { /* mantém os valores já exibidos */ }
+    }
   }
 
   async function detalhesHtml(id) {
@@ -344,8 +406,8 @@
     const jetonVal = ler('jetcontrol_jeton_valores', ler('jetonData', {}));
 
     let h = '<div class="font-bold text-white uppercase">Ciclos fechados</div>';
-    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${(c.escalasData || []).length} escala(s)</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
-    h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${abertas.length} escala(s) cadastrada(s)</div>`;
+    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${textoEscalasHO(contarEscalasHO(c.escalasData))}</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
+    h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${textoEscalasHO(contarEscalasHO(abertas), ' CADASTRADA(S)')}</div>`;
 
     // Detalhamento dos lançamentos de Valores de Jeton
     let totalJetonLanc = 0;

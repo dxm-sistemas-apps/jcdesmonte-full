@@ -988,9 +988,22 @@
           <input type="text" id="modalNotaOutros" placeholder="Outros Assuntos" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs sm:col-span-2">
         </div>
 
+        <div id="modalSecaoFechamento" class="hidden bg-red-950/30 rounded-xl border border-red-800/60 p-4 space-y-3">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-lock text-red-400 text-xl"></i>
+            <div>
+              <h3 class="text-sm font-bold uppercase tracking-wide text-white">Fechamento de Ciclo</h3>
+              <p class="text-xs text-slate-400 mt-1">A data escolhida é o dia 25 do mês seguinte à abertura. Ao fechar, este ciclo fechado será substituído (escalas, estatísticas, receitas e organogramas) aqui e na página Ciclos.</p>
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button type="button" onclick="salvarEdicaoCicloFechado(true)" class="bg-red-700 hover:bg-red-600 text-white font-black px-6 py-2.5 rounded-xl shadow-lg transition flex items-center gap-2 uppercase text-sm"><i class="fa-solid fa-lock"></i><span>FECHAR CICLO</span></button>
+          </div>
+        </div>
+
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="fecharModalEdicaoCicloFechado()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 transition">CANCELAR</button>
-          <button type="button" onclick="salvarEdicaoCicloFechado()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-brand-600 text-white hover:bg-brand-700 transition shadow-lg shadow-brand-600/20">
+          <button type="button" id="modalBtnSalvar" onclick="salvarEdicaoCicloFechado()" class="px-5 py-2.5 rounded-lg text-sm font-bold bg-brand-600 text-white hover:bg-brand-700 transition shadow-lg shadow-brand-600/20">
             <i class="fa-solid fa-floppy-disk mr-1"></i> SALVAR ALTERAÇÃO
           </button>
         </div>
@@ -2485,6 +2498,15 @@
         }
       }
 
+      {
+        const idxOcup = parseInt(document.getElementById('editIndex').value, 10);
+        const escalasOcup = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]');
+        if (dataEstaOcupada(escalasOcup, isNaN(idxOcup) ? -1 : idxOcup, data, valorHomeOfficeParaSalvar('') === true)) {
+          await alertarCampoObrigatorio('dataAtividade', 'JÁ EXISTE ESCALA E/OU HOME OFFICE REGISTRADO NESTA DATA. ESCOLHA OUTRA DATA PARA EVITAR DUPLICIDADE OU CONFLITO.');
+          return;
+        }
+      }
+
       // Home Office: só exige data, horários (quando liberados) e condição; períodos não são exigidos
       const ehHomeOfficeSalvar = valorHomeOfficeParaSalvar('') === true;
       if (ehHomeOfficeSalvar && !condicaoHomeOfficeParaSalvar('')) {
@@ -2748,10 +2770,41 @@
       }
     }
 
+    // Datas já ocupadas por outras escalas e/ou home office (não podem ser escolhidas, evitando duplicidade/conflito).
+    // Exceção: Home Office Reunião com "haverá atividade = SIM" libera o dia para UMA escala de atividade.
+    function escalaLiberaDiaParaAtividade(e) {
+      return e && e.homeOffice === true && e.homeOfficeCondicao === 'reuniao' && e.haveraAtividade === true;
+    }
+    function datasOcupadas(escalas, indiceIgnorado) {
+      const porData = {};
+      (escalas || []).forEach((e, idx) => {
+        if (idx === indiceIgnorado || !e || !e.data) return;
+        (porData[e.data] = porData[e.data] || []).push(e);
+      });
+      const bloqueadas = new Set();
+      Object.keys(porData).forEach(d => {
+        const lista = porData[d];
+        const temAtividade = lista.some(e => e.homeOffice !== true);
+        const temHOFechado = lista.some(e => e.homeOffice === true && !escalaLiberaDiaParaAtividade(e));
+        const temHOLivre = lista.some(e => escalaLiberaDiaParaAtividade(e));
+        if (temAtividade || temHOFechado || (temHOLivre && lista.length > 1)) bloqueadas.add(d);
+      });
+      return bloqueadas;
+    }
+    function dataEstaOcupada(escalas, indiceIgnorado, data, ehHomeOffice) {
+      if (!data) return false;
+      const outras = (escalas || []).filter((e, idx) => idx !== indiceIgnorado && e && e.data === data);
+      if (!outras.length) return false;
+      if (outras.length === 1 && escalaLiberaDiaParaAtividade(outras[0]) && ehHomeOffice !== true) return false;
+      return true;
+    }
+
     function renderizarPainelCalendario(painel, hidden, display, anoExibido, mesExibido) {
       const minStr = hidden.getAttribute('min') || '';
       const maxStr = hidden.getAttribute('max') || '';
       const valorAtual = hidden.value || '';
+      let bloqueadas = new Set();
+      try { if (typeof hidden.__bloqueio === 'function') bloqueadas = hidden.__bloqueio() || new Set(); } catch (_) {}
 
       const primeiroDiaSemana = new Date(anoExibido, mesExibido, 1).getDay();
       const totalDiasNoMes = new Date(anoExibido, mesExibido + 1, 0).getDate();
@@ -2762,7 +2815,7 @@
       }
       for (let dia = 1; dia <= totalDiasNoMes; dia++) {
         const iso = paraISO(anoExibido, mesExibido, dia);
-        const desabilitado = (minStr && iso < minStr) || (maxStr && iso > maxStr);
+        const desabilitado = (minStr && iso < minStr) || (maxStr && iso > maxStr) || bloqueadas.has(iso);
         const selecionado = iso === valorAtual;
         celulas += `
           <button type="button" data-iso="${iso}" ${desabilitado ? 'disabled' : ''}
@@ -2863,6 +2916,12 @@
     }
 
     inicializarCalendarioPersonalizado('dataAtividade', 'dataAtividadeDisplay');
+    document.getElementById('dataAtividade').__bloqueio = function () {
+      const idx = parseInt((document.getElementById('editIndex') || {}).value, 10);
+      const escalas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]');
+      return datasOcupadas(escalas, isNaN(idx) ? -1 : idx);
+    };
+    if (document.getElementById('dataAtividade').__redesenharCalendarioFixo) document.getElementById('dataAtividade').__redesenharCalendarioFixo();
     inicializarCalendarioPersonalizado('modalDataAtividade', 'modalDataAtividadeDisplay');
 
 
@@ -3697,6 +3756,57 @@
 
     let edicaoCicloFechadoAtual = null;
 
+    // Recalcula as opções (recebíveis) de diárias/auxílios do modal conforme data, locais e pernoites atuais
+    function atualizarElegibilidadeModal() {
+      const g = id => (document.getElementById(id) || {}).value || '';
+      const extrasP = {
+        Manha: g('modalLocalManha').trim() ? lerExtrasModal('Manha') : [],
+        Tarde: g('modalLocalTarde').trim() ? lerExtrasModal('Tarde') : [],
+        Noite: g('modalLocalNoite').trim() ? lerExtrasModal('Noite') : []
+      };
+      const extras = obterValoresExtrasEscala(g('modalDataAtividade'), [
+        { local: g('modalLocalManha').trim(), pernoite: g('modalPernoiteManha') },
+        { local: g('modalLocalTarde').trim(), pernoite: g('modalPernoiteTarde') },
+        { local: g('modalLocalNoite').trim(), pernoite: g('modalPernoiteNoite') },
+        ...extrasComoTurnos({ atividadesExtrasManha: extrasP.Manha, atividadesExtrasTarde: extrasP.Tarde, atividadesExtrasNoite: extrasP.Noite,
+          pernoiteManha: g('modalPernoiteManha'), pernoiteTarde: g('modalPernoiteTarde'), pernoiteNoite: g('modalPernoiteNoite') })
+      ]);
+      atualizarVisibilidadeItensRecebiveis('modal', extras);
+    }
+    (function () {
+      const m = document.getElementById('modalEdicaoCicloFechado');
+      if (!m) return;
+      ['change', 'input'].forEach(ev => m.addEventListener(ev, e => {
+        const id = (e.target && e.target.id) || '';
+        if (/^modal(DataAtividade|Local|Pernoite|QtdAtividade|JetonExtra)/.test(id)) {
+          atualizarElegibilidadeModal();
+          if (id === 'modalDataAtividade') atualizarSecaoFechamentoModal();
+        }
+      }));
+    })();
+
+    // Dia 25 do mês seguinte à abertura do ciclo fechado = data de fechamento
+    function dataFechamentoDoCiclo(ciclo) {
+      if (!ciclo || !ciclo.dataAbertura) return '';
+      const [a, m] = ciclo.dataAbertura.split('-').map(Number);
+      if (!a || !m) return '';
+      const ano = m === 12 ? a + 1 : a, mes = m === 12 ? 1 : m + 1;
+      return `${ano}-${String(mes).padStart(2, '0')}-25`;
+    }
+    function atualizarSecaoFechamentoModal() {
+      const sec = document.getElementById('modalSecaoFechamento');
+      const btn = document.getElementById('modalBtnSalvar');
+      if (!sec || !btn) return;
+      let ehFech = false;
+      if (edicaoCicloFechadoAtual) {
+        const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
+        const c = ciclos.find(x => x.id === edicaoCicloFechadoAtual.cicloId);
+        ehFech = !!c && document.getElementById('modalDataAtividade').value === dataFechamentoDoCiclo(c);
+      }
+      sec.classList.toggle('hidden', !ehFech);
+      btn.classList.toggle('hidden', ehFech);
+    }
+
     window.editarEscalaCicloFechado = function(cicloId, index) {
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
       const ciclo = ciclos.find(c => c.id === cicloId);
@@ -3713,7 +3823,12 @@
       let minFechado = ciclo.dataAbertura || '';
       if (esc.data && minFechado && esc.data < minFechado) minFechado = esc.data;
       if (minFechado) document.getElementById('modalDataAtividade').setAttribute('min', minFechado);
-      if (ciclo.dataFechamento) document.getElementById('modalDataAtividade').setAttribute('max', ciclo.dataFechamento);
+      {
+        const dia25 = dataFechamentoDoCiclo(ciclo);
+        const maxF = (dia25 && (!ciclo.dataFechamento || dia25 > ciclo.dataFechamento)) ? dia25 : (ciclo.dataFechamento || '');
+        if (maxF) document.getElementById('modalDataAtividade').setAttribute('max', maxF);
+        else document.getElementById('modalDataAtividade').removeAttribute('max');
+      }
       document.getElementById('modalHorarioSaida').value = esc.horarioSaida || '';
       document.getElementById('modalHorarioChegada').value = esc.horarioChegada || '';
 
@@ -3759,6 +3874,8 @@
       document.getElementById('modalNotaOutros').value = esc.anotacoes?.notaOutros || '';
 
       edicaoCicloFechadoAtual = { cicloId, index };
+      document.getElementById('modalDataAtividade').__bloqueio = () => datasOcupadas(ciclo.escalasData, index);
+      atualizarSecaoFechamentoModal();
       const modal = document.getElementById('modalEdicaoCicloFechado');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
@@ -3774,7 +3891,7 @@
       edicaoCicloFechadoAtual = null;
     };
 
-    window.salvarEdicaoCicloFechado = async function() {
+    window.salvarEdicaoCicloFechado = async function(fecharCicloFlag) {
       if (!edicaoCicloFechadoAtual) return;
       const { cicloId, index } = edicaoCicloFechadoAtual;
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
@@ -3804,9 +3921,25 @@
         await mostrarAlertaEstilizado('A DATA DA ATIVIDADE NÃO PODE SER ANTERIOR À DATA DE ABERTURA DESTE CICLO.');
         return;
       }
-      if (ciclo.dataFechamento && data > ciclo.dataFechamento) {
+      const dia25Ciclo = dataFechamentoDoCiclo(ciclo);
+      const maxPermitido = (dia25Ciclo && (!ciclo.dataFechamento || dia25Ciclo > ciclo.dataFechamento)) ? dia25Ciclo : (ciclo.dataFechamento || '');
+      if (maxPermitido && data > maxPermitido) {
         await mostrarAlertaEstilizado('A DATA DA ATIVIDADE NÃO PODE SER POSTERIOR À DATA DE FECHAMENTO DESTE CICLO.');
         return;
+      }
+      if (dataEstaOcupada(ciclo.escalasData, index, data, modalHOSim)) {
+        await mostrarAlertaEstilizado('JÁ EXISTE ESCALA E/OU HOME OFFICE REGISTRADO NESTA DATA. ESCOLHA OUTRA DATA PARA EVITAR DUPLICIDADE OU CONFLITO.');
+        return;
+      }
+      const ehFechamento = data === dia25Ciclo;
+      if (ehFechamento && fecharCicloFlag !== true) {
+        await mostrarAlertaEstilizado('A DATA ESCOLHIDA CORRESPONDE AO DIA 25 (FECHAMENTO DO CICLO). USE O BOTÃO "FECHAR CICLO".', 'FECHAMENTO DE CICLO');
+        return;
+      }
+      if (ehFechamento) {
+        const ok = await mostrarAlertaEstilizado('A DATA DA ATIVIDADE CORRESPONDE AO DIA 25 DO MÊS SEGUINTE À ABERTURA DO CICLO. O CICLO FECHADO CORRESPONDENTE SERÁ SUBSTITUÍDO E ARQUIVADO NOVAMENTE COM OS DADOS ATUALIZADOS (ESCALAS, ESTATÍSTICAS, RECEITAS E ORGANOGRAMAS) EM ESCALAS E CICLOS. DESEJA CONTINUAR?', 'CONFIRMAR FECHAMENTO', true);
+        if (ok === false) return;
+        try { if (window.JetBackup) await JetBackup.criar('Automático — antes de refechar o ciclo', 'auto-ciclo'); } catch (e) { console.warn('[BACKUP]', e); }
       }
       const localManha = document.getElementById('modalLocalManha').value.trim();
       const localTarde = document.getElementById('modalLocalTarde').value.trim();
@@ -3930,12 +4063,19 @@
       const valoresRecalculados = calcularEstatisticasReceitasArray(ciclo.escalasData);
       ciclo.estatisticas = construirEstatisticasHTML(valoresRecalculados);
       ciclo.receitas = construirReceitasHTML(valoresRecalculados);
+      // Organogramas antigos ficariam desatualizados: limpa para que a página Ciclos os recalcule das escalas atuais
+      ciclo.organogramaDiarias = '';
+      ciclo.organogramaAuxilios = '';
+      if (ehFechamento) {
+        ciclo.dataFechamento = data;
+        ciclo.fechadoEm = new Date().toISOString();
+      }
 
       localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(ciclos));
 
       fecharModalEdicaoCicloFechado();
       renderizarCiclosFechados();
-      await mostrarAlertaEstilizado('ESCALA DO CICLO FECHADO ATUALIZADA COM SUCESSO! O CICLO FOI SINCRONIZADO NA PÁGINA CICLOS.', 'SUCESSO');
+      await mostrarAlertaEstilizado(ehFechamento ? 'CICLO FECHADO NOVAMENTE: O CICLO CORRESPONDENTE FOI SUBSTITUÍDO EM ESCALAS E NA PÁGINA CICLOS.' : 'ESCALA DO CICLO FECHADO ATUALIZADA COM SUCESSO! O CICLO FOI SINCRONIZADO NA PÁGINA CICLOS.', ehFechamento ? 'FECHAMENTO DE CICLO' : 'SUCESSO');
     };
 
     document.getElementById('filtroBuscaUnico').addEventListener('input', renderizarCardsEscalas);

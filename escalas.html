@@ -85,6 +85,7 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
   })();
   </script>
+  <script src="jetcontrol-alertas.js"></script>
 </head>
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased relative pb-20">
 
@@ -1125,6 +1126,8 @@
 
     // Sistema de Alerta Estilizado Personalizado
     function mostrarAlertaEstilizado(mensagem, titulo = "Atenção", confirmacao = false) {
+      // Alerta padronizado do sistema (jetcontrol-alertas.js); o modal antigo abaixo fica só como reserva
+      if (window.JetAlerta) return window.JetAlerta.mostrar(mensagem, titulo, confirmacao);
       return new Promise((resolve) => {
         const modal = document.getElementById('customAlertModal');
         const box = document.getElementById('customAlertBox');
@@ -4153,7 +4156,7 @@
     verificarDataDeFechamentoExistente();
 
     window.excluirEscala = async function(index) {
-      if (confirm('DESEJA REALMENTE EXCLUIR ESTA ESCALA?')) {
+      if (window.JetAlerta ? await JetAlerta.confirmar('DESEJA REALMENTE EXCLUIR ESTA ESCALA?', 'Atenção', { perigo: true, textoOk: 'Excluir' }) : confirm('DESEJA REALMENTE EXCLUIR ESTA ESCALA?')) {
         let escalasSalvas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS)) || [];
         escalasSalvas.splice(index, 1);
         escalasSalvas = escalasSalvas.map((e, idx) => ({ ...e, numero: `#${idx + 1}` }));
@@ -4197,5 +4200,26 @@
       });
     }
   </script>
+<script>
+  // MENU SUPERIOR (TELEFONE): destaca no dropdown a página atual, sempre que o menu for reaberto
+  (function () {
+    function marcarMenuMobileAtivo() {
+      var atual = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      document.querySelectorAll('#mobile-menu a').forEach(function (a) {
+        var ativo = (a.getAttribute('href') || '').toLowerCase() === atual;
+        a.classList.toggle('bg-brand-600', ativo);
+        a.classList.toggle('text-white', ativo);
+        a.classList.toggle('font-semibold', ativo);
+        a.classList.toggle('shadow-sm', ativo);
+        a.classList.toggle('text-slate-300', !ativo);
+        a.classList.toggle('font-medium', !ativo);
+        a.classList.toggle('hover:bg-slate-800', !ativo);
+        if (ativo) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+    }
+    marcarMenuMobileAtivo();
+    window.addEventListener('pageshow', marcarMenuMobileAtivo);
+  })();
+</script>
 </body>
 </html>

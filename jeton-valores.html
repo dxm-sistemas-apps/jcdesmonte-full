@@ -108,6 +108,7 @@
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar); else iniciar();
       })();
   </script>
+  <script src="jetcontrol-alertas.js"></script>
 </head>
 
 <body class="bg-brand-dark text-slate-100 font-sans min-h-screen flex flex-col antialiased pb-20">
@@ -157,36 +158,36 @@
 
     <!-- Mobile Dropdown Navigation -->
     <div id="mobile-menu" class="hidden md:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-4 space-y-1">
-      <a href="index.html" class="flex items-center gap-3 px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white">
-        <i class="fa-solid fa-house text-base transition-transform group-hover:scale-110"></i>
+      <a href="index.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-house text-base"></i>
         PÁGINA INICIAL
       </a>
-      <a href="cotas-extras.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-money-bill-trend-up text-base transition-transform group-hover:scale-110"></i>
+      <a href="cotas-extras.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-money-bill-trend-up text-base"></i>
         COTAS EXTRAS
       </a>
-      <a href="escalas.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-calendar-check text-base transition-transform group-hover:scale-110"></i>
+      <a href="escalas.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-calendar-check text-base"></i>
         ESCALAS
       </a>
-      <a href="ciclos.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-recycle text-base transition-transform group-hover:scale-110"></i>
+      <a href="ciclos.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-recycle text-base"></i>
         CICLOS
       </a>
-      <a href="jeton-valores.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-file-invoice-dollar text-base transition-transform group-hover:scale-110"></i>
+      <a href="jeton-valores.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-file-invoice-dollar text-base"></i>
         JETON
       </a>
-      <a href="dashboard.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-chart-line text-base transition-transform group-hover:scale-110"></i>
+      <a href="dashboard.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-chart-line text-base"></i>
         DASHBOARD
       </a>
-      <a href="backups.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-cloud-arrow-up text-base transition-transform group-hover:scale-110"></i>
+      <a href="backups.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-cloud-arrow-up text-base"></i>
         BACKUPS
       </a>
-      <a href="resetar-dados.html" class="nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
-        <i class="fa-solid fa-trash-can text-base transition-transform group-hover:scale-110"></i>
+      <a href="resetar-dados.html" class="mobile-nav-link flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800">
+        <i class="fa-solid fa-trash-can text-base"></i>
         RESETAR DADOS
       </a>    
     </div>
@@ -818,7 +819,7 @@
 
       validarCamposFormulario();
 
-      alert("LANÇAMENTO DE JETON SALVO COM SUCESSO!");
+      (window.JetAlerta ? JetAlerta.mostrar("LANÇAMENTO DE JETON SALVO COM SUCESSO!", "Sucesso") : alert("LANÇAMENTO DE JETON SALVO COM SUCESSO!"));
       mudarAba('tabela');
     }
 
@@ -1099,8 +1100,9 @@
       }).join('');
     }
 
-    function limparTabelaAno(ano) {
-      if (confirm(`DESEJA REALMENTE LIMPAR TODOS OS LANÇAMENTOS DO ANO ${ano}?`)) {
+    async function limparTabelaAno(ano) {
+      const msgLimpar = `DESEJA REALMENTE LIMPAR TODOS OS LANÇAMENTOS DO ANO ${ano}?`;
+      if (window.JetAlerta ? await JetAlerta.confirmar(msgLimpar, 'Atenção', { perigo: true, textoOk: 'Limpar' }) : confirm(msgLimpar)) {
         const banco = obterBancoDados();
         banco[ano] = [];
         salvarBancoDados(banco);
@@ -1413,10 +1415,30 @@
     document.addEventListener('scroll', salvarRolagemSessao, { passive: true, capture: true });
     window.addEventListener('pagehide', () => { try { sessionStorage.setItem(CHAVE_ROLAGEM_JV, JSON.stringify(capturarRolagem())); } catch (_) {} });
 
+    // Leva todas as tabelas (rolagem horizontal interna) para a posição da esquerda
+    function tabelasParaEsquerda() {
+      document.querySelectorAll('.overflow-x-auto').forEach(e => { e.scrollLeft = 0; });
+    }
+    // Ao trocar de aba, as tabelas da aba também abrem na esquerda
+    (function () {
+      const original = window.mudarAba;
+      if (typeof original !== 'function') return;
+      window.mudarAba = function () {
+        const ret = original.apply(this, arguments);
+        tabelasParaEsquerda();
+        return ret;
+      };
+    })();
+
     function restaurarRolagemSessao() {
       let r = null;
       try { r = JSON.parse(sessionStorage.getItem(CHAVE_ROLAGEM_JV) || 'null'); } catch (_) {}
       if (!r || r.aba !== abaAtiva) return;
+      // Entrando na página (menu, link, voltar): tabelas sempre começam na esquerda (CICLO, MÊS RECEBIMENTO, ALÍQUOTA...).
+      // A posição só é mantida no F5 (recarregar) e nas atualizações automáticas.
+      let tipoNavegacao = '';
+      try { tipoNavegacao = (performance.getEntriesByType('navigation')[0] || {}).type || ''; } catch (_) {}
+      if (tipoNavegacao !== 'reload') { tabelasParaEsquerda(); return; }
       restaurarRolagem(r);
       setTimeout(() => restaurarRolagem(r), 120);
       setTimeout(() => restaurarRolagem(r), 500);
@@ -1440,6 +1462,27 @@
       });
     }
   </script>
+<script>
+  // MENU SUPERIOR (TELEFONE): destaca no dropdown a página atual, sempre que o menu for reaberto
+  (function () {
+    function marcarMenuMobileAtivo() {
+      var atual = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+      document.querySelectorAll('#mobile-menu a').forEach(function (a) {
+        var ativo = (a.getAttribute('href') || '').toLowerCase() === atual;
+        a.classList.toggle('bg-brand-600', ativo);
+        a.classList.toggle('text-white', ativo);
+        a.classList.toggle('font-semibold', ativo);
+        a.classList.toggle('shadow-sm', ativo);
+        a.classList.toggle('text-slate-300', !ativo);
+        a.classList.toggle('font-medium', !ativo);
+        a.classList.toggle('hover:bg-slate-800', !ativo);
+        if (ativo) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+      });
+    }
+    marcarMenuMobileAtivo();
+    window.addEventListener('pageshow', marcarMenuMobileAtivo);
+  })();
+</script>
 </body>
 
 </html>

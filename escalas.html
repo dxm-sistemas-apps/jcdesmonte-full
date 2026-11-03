@@ -1082,54 +1082,35 @@
   <script>
     // FUNÇÃO DE ATIVAÇÃO E ROLAGEM AUTOMÁTICA DO MENU INFERIOR
     function inicializarMenuRodape() {
-  let paginaAtual = window.location.pathname.split('/').pop().toLowerCase();
-  if (!paginaAtual || paginaAtual === '') {
-    paginaAtual = 'index.html';
-  }
-
-  // 1. Atualiza a barra de navegação inferior
-  const itensRodape = document.querySelectorAll('.bottom-nav-item');
-  let itemAtivoRodape = null;
-
-  itensRodape.forEach(item => {
-    const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
-    const icone = item.querySelector('i');
-
-    if (paginaItem === paginaAtual) {
-      itemAtivoRodape = item;
-      item.classList.remove('text-slate-400');
-      item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
-      if (icone) {
-        icone.classList.remove('text-brand-500', 'text-slate-400');
-        icone.classList.add('text-white');
+      let paginaAtual = window.location.pathname.split('/').pop().toLowerCase();
+      if (!paginaAtual || paginaAtual === '') {
+        paginaAtual = 'index.html';
       }
-    } else {
-      item.classList.add('text-slate-400');
-      item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
-      if (icone) {
-        icone.classList.remove('text-white');
-        icone.classList.add('text-brand-500');
-      }
-    }
-  });
 
-  if (itemAtivoRodape) {
-    setTimeout(() => {
-      itemAtivoRodape.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    }, 150);
-  }
+      const itens = document.querySelectorAll('.bottom-nav-item');
+      let itemAtivo = null;
 
-  // 2. Atualiza também os links do menu mobile dropdown (#mobile-menu)
-  const linksMobile = document.querySelectorAll('#mobile-menu a');
-  linksMobile.forEach(link => {
-    const hrefLink = link.getAttribute('href').toLowerCase();
-    if (hrefLink === paginaAtual) {
-      link.className = "flex items-center gap-3 px-3 py-2 rounded-md text-base font-semibold bg-brand-600 text-white";
-    } else {
-      link.className = "flex items-center gap-3 px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:bg-slate-800";
-    }
-  });
-}
+      itens.forEach(item => {
+        const paginaItem = (item.getAttribute('data-page') || '').toLowerCase();
+        const icone = item.querySelector('i');
+        
+        if (paginaItem === paginaAtual || (paginaAtual === '' && paginaItem === 'index.html')) {
+          itemAtivo = item;
+          item.classList.remove('text-slate-400');
+          item.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-brand-500', 'text-slate-400');
+            icone.classList.add('text-white');
+          }
+        } else {
+          item.classList.add('text-slate-400');
+          item.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+          if (icone) {
+            icone.classList.remove('text-white');
+            icone.classList.add('text-brand-500');
+          }
+        }
+      });
 
       if (itemAtivo) {
         setTimeout(() => {

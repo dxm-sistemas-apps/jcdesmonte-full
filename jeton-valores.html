@@ -763,14 +763,17 @@
       abaAtiva = novaAba;
       sessionStorage.setItem('currentView_jeton', novaAba);
 
+      // Aba ativa fica azul NA HORA do clique. Os estilos de "hover" (que no telefone ficam presos até tocar em
+      // outro lugar e sobrescreviam o azul) só existem nas abas inativas.
       document.querySelectorAll('.aba-btn').forEach(b => {
-        b.classList.remove('bg-brand-600', 'text-white', 'shadow-lg');
-        b.classList.add('bg-slate-900/60', 'text-slate-400');
+        b.classList.remove('bg-brand-600', 'hover:bg-brand-600', 'text-white', 'shadow-lg', 'bg-brand-900/60');
+        b.classList.add('bg-slate-900/60', 'text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+        b.blur();
       });
       const btnAtivo = document.getElementById(`tab-btn-${novaAba}`);
       if (btnAtivo) {
-        btnAtivo.classList.remove('bg-slate-900/60', 'text-slate-400');
-        btnAtivo.classList.add('bg-brand-600', 'text-white', 'shadow-lg');
+        btnAtivo.classList.remove('bg-slate-900/60', 'text-slate-400', 'hover:bg-slate-800', 'hover:text-white');
+        btnAtivo.classList.add('bg-brand-600', 'hover:bg-brand-600', 'text-white', 'shadow-lg');
       }
 
       document.querySelectorAll('.aba-conteudo').forEach(c => c.classList.add('hidden'));

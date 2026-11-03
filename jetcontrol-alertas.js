@@ -7,6 +7,8 @@
      JetAlerta.mostrar('MENSAGEM', 'Atenção', true)        -> confirmação (Promise<true|false>)
      JetAlerta.confirmar('MENSAGEM', 'Atenção', {perigo:true, textoOk:'EXCLUIR'})
      JetAlerta.perguntar('MENSAGEM', 'valor inicial')      -> Promise<texto|null>
+     JetAlerta.perguntar('MENSAGEM', '10,00', 'Atenção', {teclado:'decimal'})  -> abre o teclado numérico
+     JetAlerta.perguntar('MENSAGEM', '10,00', 'Atenção', {teclado:'decimal', moeda:true})  -> "R$ 10,00" com máscara automática
    alert() nativo é substituído automaticamente por este alerta.
 
    CORES (para mudar o tom, troque só o número da classe Tailwind abaixo):
@@ -43,11 +45,11 @@
     raiz.className = 'hidden fixed inset-0 z-[200] items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm uppercase';
     raiz.innerHTML =
       '<div data-caixa class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 transition duration-150 scale-95 opacity-0">' +
-        '<div class="flex items-center gap-3 border-b border-slate-700 pb-3">' +
+        '<div class="flex items-center justify-center gap-3 border-b border-slate-700 pb-3">' +
           '<div data-icone-caixa class="p-2.5 rounded-xl text-xl w-11 h-11 flex items-center justify-center"><i data-icone class="fa-solid"></i></div>' +
           '<h3 data-titulo class="text-base font-black tracking-wide"></h3>' +
         '</div>' +
-        '<div data-msg class="text-sm text-slate-200 font-medium leading-relaxed whitespace-pre-line break-words"></div>' +
+        '<div data-msg class="text-sm text-slate-200 font-medium leading-relaxed text-justify whitespace-pre-line break-words"></div>' +
         '<input data-campo type="text" class="hidden w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400">' +
         '<div class="flex justify-end gap-3 pt-2">' +
           '<button type="button" data-cancelar class="hidden text-xs font-bold uppercase tracking-wider px-6 py-2.5 rounded-xl transition shadow-lg"></button>' +
@@ -75,6 +77,16 @@
 
       campo.classList.toggle('hidden', !cfg.campo);
       campo.value = cfg.campo ? (cfg.valorInicial == null ? '' : String(cfg.valorInicial)) : '';
+      // Teclado numérico no celular (opção "teclado: 'decimal'" ou 'numeric'); o campo continua aceitando vírgula
+      if (cfg.teclado) { campo.setAttribute('inputmode', cfg.teclado); campo.setAttribute('autocomplete', 'off'); }
+      else campo.removeAttribute('inputmode');
+
+      // Máscara de moeda (opção "moeda: true"): "R$ " no início e formatação automática enquanto digita
+      function mascara() {
+        var d = campo.value.replace(/\D/g, '');
+        campo.value = d ? 'R$ ' + (parseInt(d, 10) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '';
+      }
+      if (cfg.campo && cfg.moeda) { campo.oninput = mascara; mascara(); } else campo.oninput = null;
 
       var pergunta = !!(cfg.confirmacao || cfg.campo);
       btnCan.classList.toggle('hidden', !pergunta);

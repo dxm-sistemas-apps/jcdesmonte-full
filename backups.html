@@ -148,16 +148,16 @@
     <!-- CRIAR / IMPORTAR -->
     <section class="bk-card p-5 sm:p-6 space-y-4">
       <div class="flex flex-col sm:flex-row gap-3">
-        <input id="nomeBackup" type="text" maxlength="80" placeholder="NOME DO BACKUP (OPCIONAL) — EX.: ANTES DE FECHAR O CICLO"
+        <input id="nomeBackup" type="text" maxlength="80" placeholder="NOME DO BACKUP (OPCIONAL)"
           class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500 uppercase">
-        <button id="btnCriar" class="bk-btn bg-brand-600 hover:bg-brand-500 text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Criar backup agora</button>
+        <button id="btnCriar" class="bk-btn bg-brand-600 hover:bg-brand-500 text-white"><i class="fa-solid fa-floppy-disk mr-2"></i>Criar backup</button>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <label class="bk-btn bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer border border-slate-700">
-          <i class="fa-solid fa-file-import mr-2"></i>Importar arquivo (.json)
+          <i class="fa-solid fa-file-import mr-2"></i>Importar backup (.json)
           <input id="arquivoImportar" type="file" accept=".json,application/json" class="hidden">
         </label>
-        <span class="text-[11px] text-slate-500 uppercase">Use para trazer um backup baixado antes (ele entra na lista abaixo).</span>
+        <span class="text-[11px] text-slate-500 uppercase">clique para trazer um backup baixado antes.</span>
       </div>
       <div id="avisoNuvem" class="hidden text-xs rounded-xl p-4 border"></div>
       <div id="status" class="text-xs space-y-1.5"></div>
@@ -306,7 +306,7 @@
   }
   // Indicador com cor própria no valor e, opcionalmente, id para preenchimento posterior (dados lidos do backup)
   function itemResumoCor(rotulo, valor, corValor, ind, larguraDupla) {
-    return `<div class="${larguraDupla ? 'col-span-2 ' : ''}bg-slate-900/60 border border-slate-800 rounded-xl p-3"><span class="block text-[10px] font-bold text-slate-400 uppercase">${rotulo}</span><span ${ind ? `data-ind="${ind}"` : ''} class="text-sm font-black ${corValor || 'text-white'}">${valor}</span></div>`;
+    return `<div class="${larguraDupla ? 'col-span-2 ' : ''}bg-slate-900/60 border border-slate-800 rounded-xl p-3"><span class="block text-[10px] font-bold text-slate-400 uppercase">${rotulo}</span><span ${ind ? `data-ind="${ind}"` : ''} class="text-sm font-black whitespace-pre-line ${corValor || 'text-white'}">${valor}</span></div>`;
   }
   function itemResumoDestaque(rotulo, valor) {
     return `<div class="col-span-2 bg-slate-900/80 border-2 border-brand-500/60 rounded-xl p-3 shadow-md shadow-brand-500/10 flex flex-col justify-center"><span class="block text-[10px] font-bold text-brand-400 uppercase tracking-wide">${rotulo}</span><span class="text-sm font-black text-cyan-300">${valor}</span></div>`;
@@ -348,7 +348,7 @@
           <div class="flex flex-wrap gap-1.5">${chipTipo(b.tipo)} ${chipLocal(b)}</div>
         </div>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          ${itemResumo('Escalas ciclo vigente', r.escalasAbertas ?? 0)}
+          ${itemResumo('Escalas do ciclo vigente', r.escalasAbertas ?? 0)}
           ${itemResumo('Ciclos fechados', r.ciclosFechados ?? 0)}
           ${itemResumoCor('Escalas arquivadas', (r.escalasArquivadas ?? 0) + ' ESCALA(S) ARQUIVADA(S)', 'text-white', 'arquivadas', true)}
           ${itemResumoCor('Ciclo', '...', 'text-white', 'ciclo', true)}
@@ -386,10 +386,15 @@
   function textoEscalasHO(r, sufixo) {
     const modos = [];
     if (r.compulsorio) modos.push(r.compulsorio + ' COMPULSÓRIO');
-    if (r.reuniao) modos.push(r.reuniao + ' REUNIÃO (SEDE)');
-    if (r.solicitado) modos.push(r.solicitado + ' SOLICITADO (FOLGA)');
-    return r.escalas + ' ESCALA(S)' + (sufixo || '') + ' E ' + r.ho + ' HOME OFFICE' + (modos.length ? ' (' + modos.join(' • ') + ')' : '');
+    if (r.reuniao) modos.push(r.reuniao + ' REUNIÃO');
+    if (r.solicitado) modos.push(r.solicitado + ' SOLICITADO');
+    // Home office na linha de baixo (o campo usa whitespace-pre-line para respeitar a quebra)
+    return r.escalas + ' ESCALA(S)' + (sufixo || '') + '\n' + r.ho + ' HOME OFFICE(S)' + (modos.length ? ' (' + modos.join(' • ') + ')' : '');
   }
+
+  // Versão em HTML (uma linha para escalas e outra para home office) para a área de Detalhes
+  const semPrefixoCiclo = (t) => String(t || '').replace(/^\s*CICLO\s*-\s*/i, '');
+  const htmlEscalasHO = (r, sufixo) => textoEscalasHO(r, sufixo).split('\n').map(esc).join('<br>');
 
   // Lê o conteúdo de cada backup (uma vez) para discriminar home office e mostrar ciclo / mês de recebimento
   async function preencherIndicadoresDosBackups(itens) {
@@ -410,12 +415,14 @@
         // Ciclo em andamento no momento do backup; se não houver, o último ciclo fechado
         const ultimoFechado = ciclos.length ? ciclos[ciclos.length - 1] : null;
         const fmt = (iso) => iso ? iso.split('-').reverse().join('/') : '';
+        // Sem o prefixo "CICLO -" no card (fica só o período)
+        const semPrefixo = (t) => String(t || '').replace(/^\s*CICLO\s*-\s*/i, '');
         let nomeCiclo = '-', mes = '-';
         if (vigente && vigente.dataAbertura) {
-          nomeCiclo = (vigente.nomeCiclo || ('CICLO - ' + fmt(vigente.dataAbertura) + (vigente.dataFechamento ? ' À ' + fmt(vigente.dataFechamento) : ''))) + ' (VIGENTE)';
+          nomeCiclo = semPrefixo(vigente.nomeCiclo || (fmt(vigente.dataAbertura) + (vigente.dataFechamento ? ' À ' + fmt(vigente.dataFechamento) : ''))) + ' (VIGENTE)';
           mes = vigente.recebimentoEm || '-';
         } else if (ultimoFechado) {
-          nomeCiclo = (ultimoFechado.nome || ('CICLO ' + (ultimoFechado.numero || ''))) + ' (ÚLTIMO FECHADO)';
+          nomeCiclo = semPrefixo(ultimoFechado.nome || ('CICLO ' + (ultimoFechado.numero || ''))) + ' (ÚLTIMO FECHADO)';
           mes = ultimoFechado.recebimentoEm || '-';
         }
         set('ciclo', nomeCiclo);
@@ -433,8 +440,8 @@
     const jetonVal = ler('jetcontrol_jeton_valores', ler('jetonData', {}));
 
     let h = '<div class="font-bold text-white uppercase">Ciclos fechados</div>';
-    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + ciclos.map(c => `<li>${esc(c.nome || ('Ciclo ' + (c.numero || '')))} — ${textoEscalasHO(contarEscalasHO(c.escalasData))}</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
-    h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${textoEscalasHO(contarEscalasHO(abertas), ' CADASTRADA(S)')}</div>`;
+    h += ciclos.length ? '<ul class="list-disc pl-5 space-y-0.5 uppercase">' + ciclos.map(c => `<li>${esc(semPrefixoCiclo(c.nome || ('Ciclo ' + (c.numero || ''))))}<br>${htmlEscalasHO(contarEscalasHO(c.escalasData))}</li>`).join('') + '</ul>' : '<div class="text-slate-500">Nenhum.</div>';
+    h += `<div class="font-bold text-white uppercase pt-1">Ciclo vigente</div><div>${htmlEscalasHO(contarEscalasHO(abertas), ' CADASTRADA(S)')}</div>`;
 
     // Detalhamento dos lançamentos de Valores de Jeton
     let totalJetonLanc = 0;

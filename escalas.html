@@ -436,14 +436,13 @@
         <input type="hidden" id="editIndex" value="-1">
         
         <!-- Linha 1: Data e Horários Principais -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="relative">
-            <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Data da Atividade *</label>
-            <input type="hidden" id="dataAtividade">
-            <div id="dataAtividadeSelecionada" class="text-xs font-bold text-slate-400 uppercase mb-2">Data selecionada: <span class="text-white">—</span></div>
-            <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
-            <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
-          </div>
+        <div class="relative flex flex-col items-center text-center">
+  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Data da Atividade *</label>
+  <input type="hidden" id="dataAtividade">
+  <div id="dataAtividadeSelecionada" class="text-xs font-bold text-slate-400 uppercase mb-2">Data selecionada: <span class="text-white">—</span></div>
+  <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
+  <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
+</div>
           <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-1">
   <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
   <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
@@ -2877,7 +2876,7 @@
       fecharPainelCalendario();
 
       const painel = document.createElement('div');
-      painel.className = 'absolute z-50 mt-1 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl';
+painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-2xl';
       painel.style.width = '244px';
       display.parentElement.appendChild(painel);
       painelCalendarioAberto = painel;

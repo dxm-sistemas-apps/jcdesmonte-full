@@ -444,10 +444,10 @@
             <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
             <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
           </div>
-          <div>
-            <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
-            <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500">
-          </div>
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-1">
+  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
+  <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+</div>
           <div id="wrapperHomeOffice">
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Home Office</label>
             <div class="flex flex-wrap items-center gap-x-5 gap-y-1 min-h-[42px]">
@@ -3436,7 +3436,7 @@
       // (para mais/menos folga, altere o px-8 abaixo: px-6, px-10, px-12...)
       const folgaInterna = semQuebra ? 'py-3 px-2' : 'p-3';
       return `
-          <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
+          <div class="bg-brand-card rounded-2xl border border-slate-800 p-4 shadow-xl sm:p-6 space-y-5 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
               <div class="flex items-center space-x-3">
                 <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg">ESCALA ${esc.numero || `#${index + 1}`}</span>

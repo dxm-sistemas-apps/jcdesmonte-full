@@ -189,7 +189,7 @@
 
     <section
       class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
-      <div class="flex items-center gap-3">
+      <div class="flex flex-col items-center justify-center gap-2 text-center">
         <i class="fa-solid fa-recycle text-brand-500 text-2xl"></i>
         <div>
           <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Ciclos Fechados</h1>
@@ -199,8 +199,9 @@
       </div>
     </section>
 
-    <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-4 sm:p-6">
-      <div id="listaCiclos" class="space-y-6"></div>
+    <!-- Lista sem painel externo (sem fundo/borda/padding) para os cards terem a mesma largura e espaçamento (space-y-4) da página Escalas -->
+    <section>
+      <div id="listaCiclos" class="space-y-4"></div>
     </section>
 
     <nav id="bottom-nav-container"
@@ -353,12 +354,12 @@
       const r = receitasResumoCiclo(ciclo);
       const ho = resumoEscalasHomeOffice(ciclo.escalasData);
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
-      return `<span class="block text-xs mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
-        + `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+      return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
     function normalizarHTML(html) {
@@ -486,10 +487,11 @@
       `;
     }
 
+    // Título do ciclo: apenas o período (sem o termo "CICLO -"), mesmo para ciclos salvos com o prefixo
     function nomeDoCiclo(ciclo, numeroFallback) {
-      if (ciclo.nome) return ciclo.nome;
+      if (ciclo.nome) return String(ciclo.nome).replace(/^\s*CICLO\s*-\s*/i, '');
       if (ciclo.dataAbertura && ciclo.dataFechamento) {
-        return `CICLO - ${dataBR(ciclo.dataAbertura)} À ${dataBR(ciclo.dataFechamento)}`;
+        return `${dataBR(ciclo.dataAbertura)} À ${dataBR(ciclo.dataFechamento)}`;
       }
       return `CICLO ${numeroFallback}`;
     }

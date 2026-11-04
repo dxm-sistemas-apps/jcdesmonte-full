@@ -45,7 +45,7 @@
     raiz.className = 'hidden fixed inset-0 z-[200] items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm uppercase';
     raiz.innerHTML =
       '<div data-caixa class="bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 transition duration-150 scale-95 opacity-0">' +
-        '<div class="flex items-center justify-center gap-3 border-b border-slate-700 pb-3">' +
+        '<div class="flex flex-col items-center justify-center gap-2 border-b border-slate-700 pb-3 text-center">' +
           '<div data-icone-caixa class="p-2.5 rounded-xl text-xl w-11 h-11 flex items-center justify-center"><i data-icone class="fa-solid"></i></div>' +
           '<h3 data-titulo class="text-base font-black tracking-wide"></h3>' +
         '</div>' +

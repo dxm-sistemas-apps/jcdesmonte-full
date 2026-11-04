@@ -182,13 +182,13 @@
 
     <!-- BANNER DA PÁGINA -->
     <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
-      <div class="flex items-center space-x-3 mb-2">
+      <div class="flex flex-col items-center justify-center gap-2 text-center">
         <i class="fa-solid fa-business-time text-brand-500 text-2xl"></i>
         <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
           CONTROLE DE <span class="text-brand-500">ESCALAS</span>
         </h1>
       </div>
-      <p class="text-sm sm:text-base text-slate-400 font-medium">
+      <p class="text-sm text-justify sm:text-base text-slate-400 font-medium">
         Cadastro de escalas e suas respectivas informações.
       </p>
     </section>
@@ -511,7 +511,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalManha" class="lg:col-span-6">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Manhã <span class="rotulo-ativ-Manha"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Manha"></span></label>
               <input type="text" id="localManha" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE MANHÃ (CONDICIONAL) -->
@@ -525,19 +525,8 @@
             </div>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Manhã <span class="rotulo-ativ-Manha"></span></label>
-              <div class="flex flex-wrap gap-3 pt-1">
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Manhã <span class="rotulo-ativ-Manha"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton<span class="rotulo-ativ-Manha"></span></label>
               <select id="jetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
                 <option value="0.00">R$ 0,00</option>
@@ -546,6 +535,18 @@
               </select>
             </div>
           </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-12">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função<span class="rotulo-ativ-Manha"></span></label>
+              <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoManha" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
+              </div>
+            </div>
+          </div>
+          
           <div id="extrasAtividadesManha" class="space-y-4"></div>
         </div>
 
@@ -562,7 +563,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalTarde" class="lg:col-span-6">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Tarde <span class="rotulo-ativ-Tarde"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Tarde"></span></label>
               <input type="text" id="localTarde" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE TARDE (CONDICIONAL) -->
@@ -576,19 +577,8 @@
             </div>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Tarde <span class="rotulo-ativ-Tarde"></span></label>
-              <div class="flex flex-wrap gap-3 pt-1">
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Tarde <span class="rotulo-ativ-Tarde"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton<span class="rotulo-ativ-Tarde"></span></label>
               <select id="jetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
                 <option value="0.00">R$ 0,00</option>
@@ -597,6 +587,18 @@
               </select>
             </div>
           </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-12">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função<span class="rotulo-ativ-Tarde"></span></label>
+              <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoTarde" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
+              </div>
+            </div>
+          </div>
+          
           <div id="extrasAtividadesTarde" class="space-y-4"></div>
         </div>
 
@@ -613,7 +615,7 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalNoite" class="lg:col-span-6">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - Noite <span class="rotulo-ativ-Noite"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Noite"></span></label>
               <input type="text" id="localNoite" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE NOITE (CONDICIONAL) -->
@@ -627,19 +629,8 @@
             </div>
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            <div class="lg:col-span-12">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - Noite <span class="rotulo-ativ-Noite"></span></label>
-              <div class="flex flex-wrap gap-3 pt-1">
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
-                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
-              </div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div class="lg:col-span-4">
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton - Noite <span class="rotulo-ativ-Noite"></span></label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton<span class="rotulo-ativ-Noite"></span></label>
               <select id="jetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-xs focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()" onchange="gerenciarCamposPernoite()">
                 <option value="" disabled selected>ESCOLHA O VALOR</option>
                 <option value="0.00">R$ 0,00</option>
@@ -648,12 +639,24 @@
               </select>
             </div>
           </div>
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div class="lg:col-span-12">
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função<span class="rotulo-ativ-Noite"></span></label>
+              <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="AGENTE" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>AGENTE</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="RELATOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>RELATOR</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="MOTORISTA" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>MOTORISTA</span></label>
+                <label class="flex items-center space-x-1.5 text-xs text-slate-300 cursor-pointer"><input type="checkbox" name="funcaoNoite" value="COORDENADOR" class="rounded bg-slate-900 border-slate-700 text-brand-600"><span>COORDENADOR</span></label>
+              </div>
+            </div>
+          </div>
+          
           <div id="extrasAtividadesNoite" class="space-y-4"></div>
           
           <!-- PERCEPÇÃO DO 4º JETON (CONDICIONAL AO PERÍODO DA NOITE PREENCHIDO) -->
           <div id="wrapperQuartoJeton" class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 hidden">
             <div>
-              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Percepção do 4º Jeton *</label>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">PERCEPÇÃO DO 4º JETON *</label>
               <select id="percepcaoQuartoJeton" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-500 font-semibold">
                 <option value="" disabled selected>MARQUE A PERCEPÇÃO</option>
                 <option value="SIM">SIM</option>
@@ -797,7 +800,7 @@
           <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500">
             <i class="fa-solid fa-search"></i>
           </span>
-          <input type="text" id="filtroBuscaUnico" placeholder="Pesquise por dia, local ou função..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500">
+          <input type="text" id="filtroBuscaUnico" placeholder="Pesquise por data, local ou função..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-2.5 text-white text-sm focus:outline-none focus:border-brand-500">
         </div>
       </div>
 
@@ -900,17 +903,17 @@
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
             <input type="text" id="modalLocalManha" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
+              <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
             <select id="modalJetonManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">JETON</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
-            <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="AGENTE">AGENTE</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="COORDENADOR">COORD.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="MOTORISTA">MOTOR.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="RELATOR">RELATOR</label>
-            </div>
+            <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="AGENTE">AGENTE</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="RELATOR">RELATOR</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="MOTORISTA">MOTORISTA</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoManha" value="COORDENADOR">COORDENADOR</label>
+</div>
             <div id="modalExtrasManha" class="space-y-2"></div>
           </div>
           <!-- TARDE -->
@@ -918,17 +921,17 @@
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
             <input type="text" id="modalLocalTarde" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
+              <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
             <select id="modalJetonTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">JETON</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
-            <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="AGENTE">AGENTE</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="COORDENADOR">COORD.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="MOTORISTA">MOTOR.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="RELATOR">RELATOR</label>
-            </div>
+            <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="AGENTE">AGENTE</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="RELATOR">RELATOR</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="MOTORISTA">MOTORISTA</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoTarde" value="COORDENADOR">COORDENADOR</label>
+</div>
             <div id="modalExtrasTarde" class="space-y-2"></div>
           </div>
           <!-- NOITE -->
@@ -936,21 +939,22 @@
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
             <input type="text" id="modalLocalNoite" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Pernoite: N/A</option><option value="SIM">Pernoite: SIM</option><option value="NAO">Pernoite: NÃO</option>
+              <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
             <select id="modalJetonNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">Jeton</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
+              <option value="">JETON</option><option value="0.00">R$ 0,00</option><option value="100.00">R$ 100,00</option><option value="220.00">R$ 220,00</option>
             </select>
-            <div class="flex flex-wrap gap-2 pt-1 text-[11px] text-slate-300">
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="AGENTE">AGENTE</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="COORDENADOR">COORD.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="MOTORISTA">MOTOR.</label>
-              <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="RELATOR">RELATOR</label>
-            </div>
             <div id="modalExtrasNoite" class="space-y-2"></div>
             <select id="modalPercepcaoQuartoJeton" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
-              <option value="">4º Jeton: N/A</option><option value="SIM">4º Jeton: SIM</option><option value="NAO">4º Jeton: NÃO</option>
+              <option value="">4º JETON N/A</option><option value="SIM">4º JETON: SIM</option><option value="NAO">4º JETON: NÃO</option>
             </select>
+            <div class="flex flex-col gap-2 pt-1 text-[11px] text-slate-300">
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="AGENTE">AGENTE</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="RELATOR">RELATOR</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="MOTORISTA">MOTORISTA</label>
+  <label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoNoite" value="COORDENADOR">COORDENADOR</label>
+</div>
+            
           </div>
         </div>
 
@@ -3124,8 +3128,8 @@
       const secReceitas = document.getElementById('secaoReceitasCiclo');
 
       const escalasAtuais = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]');
-      const nomeCiclo = cicloAtual.nomeCiclo ||
-        `CICLO - ${formatarDataBRPeriodo(cicloAtual.dataAbertura)} À ${formatarDataBRPeriodo(cicloAtual.dataFechamento)}`;
+      const nomeCiclo = String(cicloAtual.nomeCiclo ||
+        `${formatarDataBRPeriodo(cicloAtual.dataAbertura)} À ${formatarDataBRPeriodo(cicloAtual.dataFechamento)}`).replace(/^\s*CICLO\s*-\s*/i, '');
 
       const registro = {
         id: 'ciclo-' + Date.now(),
@@ -3339,7 +3343,7 @@
       if (escalasFiltradas.length === 0) {
         container.innerHTML = `
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-8 text-center text-slate-500 italic uppercase">
-            Nenhuma escala encontrada com o dado informado.
+            Nenhuma escala encontrada.
           </div>
         `;
         return;
@@ -3430,7 +3434,7 @@
       const semQuebra = modo === 'fechado' && !!cicloId;
       // Cards internos (manhã/tarde/noite/jornada) mais largos nos ciclos fechados: folga lateral para as linhas
       // (para mais/menos folga, altere o px-8 abaixo: px-6, px-10, px-12...)
-      const folgaInterna = semQuebra ? 'py-3 px-8' : 'p-3';
+      const folgaInterna = semQuebra ? 'py-3 px-2' : 'p-3';
       return `
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4 uppercase${semQuebra ? ' whitespace-nowrap' : ''}">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
@@ -3575,16 +3579,18 @@
       const r = receitasResumoCiclo(ciclo);
       const ho = resumoEscalasHomeOffice(ciclo.escalasData);
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
-      return `<span class="block text-xs mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
-        + `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+      return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
+    // Título do ciclo fechado: apenas o período (sem o termo "CICLO -"), mesmo para ciclos salvos com o prefixo
     function nomeDoCicloFechado(ciclo) {
-      return ciclo.nome || `CICLO - ${formatarDataBRPeriodo(ciclo.dataAbertura)} À ${formatarDataBRPeriodo(ciclo.dataFechamento)}`;
+      const nome = ciclo.nome || `${formatarDataBRPeriodo(ciclo.dataAbertura)} À ${formatarDataBRPeriodo(ciclo.dataFechamento)}`;
+      return String(nome).replace(/^\s*CICLO\s*-\s*/i, '');
     }
 
     function renderizarCiclosFechados() {
@@ -3626,9 +3632,9 @@
                 <i id="chevronEsc-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200 ${estaAberto ? 'rotate-90' : ''}"></i>
                 <div>
                   <h2 class="text-xl font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h2>
-                  <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">
+                  <p class="text-sm text-slate-300 mt-1 uppercase font-semibold">
                     MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || ''}
-                    <span class="text-xs text-slate-500"><br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</span>
+                    <span class="text-sm text-slate-500"><br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</span>
                   </p>
                   ${htmlResumoReceitasCiclo(ciclo)}
                 </div>

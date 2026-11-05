@@ -422,6 +422,17 @@
       </div>
     </section>
 
+    <!-- ANTECIPAR FECHAMENTO DO CICLO (aparece quando há escalas e nenhuma está no dia 25, data limite do ciclo) -->
+    <section id="secaoAnteciparFechamento" class="hidden bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl">
+      <div class="flex flex-col items-center gap-3 text-center">
+        <p class="text-justify text-xs text-slate-400 uppercase leading-snug max-w-2xl">Use para encerrar o ciclo antes do dia 25, quando a última data com escala dentro do período não for o dia 25.</p>
+        <button type="button" id="btnAnteciparFechamento" class="bg-red-700 hover:bg-red-600 text-white font-black px-8 py-3 rounded-xl shadow-lg transition flex items-center gap-2 uppercase">
+          <i class="fa-solid fa-forward-fast"></i>
+          <span>ANTECIPAR FECHAMENTO DO CICLO</span>
+        </button>
+      </div>
+    </section>
+
     <!-- ORGANOGRAMA DA ESCALA (FORMULÁRIO) -->
     <section id="secaoOrganogramaEscala" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -496,7 +507,7 @@
         </div>
 
         <hr class="border-slate-800">
-
+        
         <!-- TURNO MANHÃ -->
         <div class="bg-slate-900/50 p-4 sm:p-5 rounded-xl border border-slate-800/80 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1041,7 +1052,7 @@
         </button>
       </div>
     </section>
-
+    
     <!-- MENU INFERIOR FIXO / BOTTOM NAVIGATION BAR -->
     <nav id="bottom-nav-container" class="fixed bottom-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 shadow-2xl px-2 py-1.5 overflow-x-auto no-scrollbar">
       <div class="flex items-center justify-start md:justify-center gap-2 min-w-max mx-auto px-2">
@@ -1699,7 +1710,7 @@
 
       calcularValoresEscala();
     }
-
+    
     function obterValoresExtrasEscala(data, locais) {
       const valoresSalvos = JSON.parse(localStorage.getItem(STORAGE_KEY_VALORES)) || {};
       const converterValor = (valor, padrao) => {
@@ -1838,6 +1849,29 @@
         btnNao.classList.remove('border-slate-700', 'text-slate-500');
         btnNao.classList.add('bg-red-600', 'border-red-500', 'text-white');
       }
+    }
+
+    // Joinha obrigatório: todo item de diária/auxílio exibido (elegível) precisa ter 👍 ou 👎 marcado antes de salvar.
+    const ITENS_JOINHA_OBRIGATORIO = [
+      { sufixo: 'DiariaAlimentacao', nome: 'DIÁRIA DE ALIMENTAÇÃO' },
+      { sufixo: 'DiariaPernoite', nome: 'DIÁRIA DE PERNOITE' },
+      { sufixo: 'DiariaTraslado', nome: 'DIÁRIA DE TRASLADO' },
+      { sufixo: 'AuxAlimentacao', nome: 'AUXÍLIO ALIMENTAÇÃO' },
+      { sufixo: 'AuxTransporte', nome: 'AUXÍLIO TRANSPORTE' }
+    ];
+    async function exigirJoinhasRecebiveis(prefixo) {
+      for (const item of ITENS_JOINHA_OBRIGATORIO) {
+        const { chkId, wrapperId } = idsRecebivel(prefixo, item.sufixo);
+        const chk = document.getElementById(chkId);
+        const wrapper = document.getElementById(wrapperId);
+        if (!chk || !wrapper || wrapper.classList.contains('hidden')) continue;
+        if (chk.dataset.decidido !== '1') {
+          await mostrarAlertaEstilizado(`MARQUE 👍 (RECEBIDO) OU 👎 (NÃO RECEBIDO) PARA: ${item.nome}.`, 'CAMPO OBRIGATÓRIO');
+          wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return false;
+        }
+      }
+      return true;
     }
 
     function valorRecebivelParaSalvar(prefixo, sufixo) {
@@ -2325,6 +2359,37 @@
       if (typeof gerenciarCamposPernoite === 'function' && !/^modal/.test(el.id)) gerenciarCamposPernoite();
       if (typeof salvarRascunhoForm === 'function' && !/^modal/.test(el.id)) salvarRascunhoForm();
     });
+    // Após preencher o local da MANHÃ (ou da TARDE, se digitado manualmente), pergunta se o local do período seguinte é o mesmo
+    // e, se a resposta for SIM, já preenche o campo seguinte. Só pergunta quando o campo seguinte está vazio.
+    // (O preenchimento automático da TARDE não dispara nova pergunta para a NOITE: só quando a TARDE for digitada.)
+    let perguntandoMesmoLocal = false;
+    async function perguntarMesmoLocal(idOrigem, idDestino, nomeDestino) {
+      const origem = document.getElementById(idOrigem);
+      const destino = document.getElementById(idDestino);
+      if (!origem || !destino || perguntandoMesmoLocal) return;
+      const valor = origem.value.trim();
+      if (!valor || destino.value.trim()) return;
+      perguntandoMesmoLocal = true;
+      try {
+        const msg = `O LOCAL É O MESMO DA ${nomeDestino}?`;
+        const mesmo = window.JetAlerta
+          ? await JetAlerta.confirmar(msg, 'Atenção', { textoOk: 'SIM', textoCancelar: 'NÃO' })
+          : confirm(msg);
+        if (mesmo && !destino.value.trim()) {
+          destino.value = valor;
+          aplicarJetonDoLocal(destino);
+          if (typeof gerenciarCamposPernoite === 'function') gerenciarCamposPernoite();
+          if (typeof salvarRascunhoForm === 'function') salvarRascunhoForm();
+        }
+      } finally {
+        perguntandoMesmoLocal = false;
+      }
+    }
+    document.addEventListener('change', function (ev) {
+      const id = ev.target && ev.target.id;
+      if (id === 'localManha') perguntarMesmoLocal('localManha', 'localTarde', 'TARDE');
+      else if (id === 'localTarde') perguntarMesmoLocal('localTarde', 'localNoite', 'NOITE');
+    });
     // Enter aceita a sugestão (como no Excel) sem enviar o formulário
     document.addEventListener('keydown', function (ev) {
       const el = ev.target;
@@ -2405,7 +2470,7 @@
 
       const qtdEscalas = escalasSalvas.filter(e => e.homeOffice !== true).length;
       const somaAtividades = totalSimples + totalDobradas + totalTriplas + totalQuadruplas;
-
+      
       recalcularEAtualizarCotasExtras();
       const dadosExtras = JSON.parse(localStorage.getItem(STORAGE_KEY_COTAS_EXTRAS)) || {};
 
@@ -2624,6 +2689,7 @@
         { local: localNoite, pernoite: pernoiteNoite },
         ...extrasComoTurnos({ atividadesExtrasManha: temManha ? atividadesExtrasManha : [], atividadesExtrasTarde: temTarde ? atividadesExtrasTarde : [], atividadesExtrasNoite: temNoite ? atividadesExtrasNoite : [], pernoiteManha, pernoiteTarde, pernoiteNoite })
       ]);
+      if (!(await exigirJoinhasRecebiveis(''))) return;
       const flagsSalvar = {
         diariaAlimentacaoRecebivel: valorRecebivelParaSalvar('', 'DiariaAlimentacao'),
         diariaPernoiteRecebivel: valorRecebivelParaSalvar('', 'DiariaPernoite'),
@@ -3085,6 +3151,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const escalas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]');
       const encontrou = escalas.some(e => dataEhDataFechamentoCiclo(e.data));
       document.getElementById('secaoFechamentoCiclo').classList.toggle('hidden', !encontrou);
+      const secAntecipar = document.getElementById('secaoAnteciparFechamento');
+      if (secAntecipar) secAntecipar.classList.toggle('hidden', encontrou || escalas.length === 0);
       const idxEdicao = parseInt((document.getElementById('editIndex') || {}).value, 10);
       if (!isNaN(idxEdicao) && idxEdicao >= 0) return;
       bloquearOrganogramaEscala(encontrou || !existeDescricaoPeriodoPreenchida());
@@ -3095,15 +3163,18 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const wrapper = secao ? secao.closest('section') : null;
       return wrapper ? wrapper.outerHTML : '<div>DADOS DAS ESCALAS NÃO DISPONÍVEIS.</div>';
     }
-
-    async function fecharCiclo() {
+    
+    async function fecharCiclo(antecipado) {
+      antecipado = antecipado === true; // (o listener de clique passa o evento; só true conta como antecipado)
       const dataAbertura = obterDataAberturaCiclo();
       if (!dataAbertura) {
         await mostrarAlertaEstilizado('NÃO HÁ DATA DE ABERTURA DE CICLO REGISTRADA NA PÁGINA INICIAL.');
         return;
       }
 
-      const confirmacao = await mostrarAlertaEstilizado('O CICLO SERÁ ARQUIVADO E, EM SEGUIDA, A DATA DE ABERTURA E TODAS AS ESCALAS ATUAIS SERÃO LIMPIDAS. DESEJA CONTINUAR?', 'CONFIRMAR FECHAMENTO', true);
+      const confirmacao = await mostrarAlertaEstilizado(antecipado
+        ? 'O CICLO SERÁ FECHADO ANTES DO DIA 25 (FECHAMENTO ANTECIPADO), ARQUIVADO E, EM SEGUIDA, A DATA DE ABERTURA E TODAS AS ESCALAS ATUAIS SERÃO LIMPAS. DESEJA CONTINUAR?'
+        : 'O CICLO SERÁ ARQUIVADO E, EM SEGUIDA, A DATA DE ABERTURA E TODAS AS ESCALAS ATUAIS SERÃO LIMPIDAS. DESEJA CONTINUAR?', 'CONFIRMAR FECHAMENTO', true);
       if (confirmacao === false) return;
 
       try {
@@ -3135,6 +3206,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         numero: ciclos.length + 1,
         nome: nomeCiclo,
         fechadoEm: new Date().toISOString(),
+        antecipado: antecipado,
         dataAbertura: cicloAtual.dataAbertura || '',
         dataFechamento: cicloAtual.dataFechamento || '',
         recebimentoEm: cicloAtual.recebimentoEm || '',
@@ -3159,6 +3231,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       localStorage.removeItem('jetcontrol_periodo_container_html');
 
       document.getElementById('secaoFechamentoCiclo').classList.add('hidden');
+      const _secAnt = document.getElementById('secaoAnteciparFechamento');
+      if (_secAnt) _secAnt.classList.add('hidden');
       renderizarCardsEscalas();
       atualizarDatalistLocais();
       atualizarEstatisticasEReceitasCiclo();
@@ -3832,7 +3906,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const el = document.getElementById(id);
       if (el) el.addEventListener('change', aplicarVisibilidadePernoiteModal);
     });
-
+    
     let edicaoCicloFechadoAtual = null;
 
     // Recalcula as opções (recebíveis) de diárias/auxílios do modal conforme data, locais e pernoites atuais
@@ -4064,6 +4138,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         { local: localNoite, pernoite: pernoiteNoite },
         ...extrasComoTurnos({ atividadesExtrasManha: modalExtrasP.Manha, atividadesExtrasTarde: modalExtrasP.Tarde, atividadesExtrasNoite: modalExtrasP.Noite, pernoiteManha, pernoiteTarde, pernoiteNoite })
       ]);
+      if (!(await exigirJoinhasRecebiveis('modal'))) return;
       const flagsModal = {
         diariaAlimentacaoRecebivel: valorRecebivelParaSalvar('modal', 'DiariaAlimentacao'),
         diariaPernoiteRecebivel: valorRecebivelParaSalvar('modal', 'DiariaPernoite'),
@@ -4157,7 +4232,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     };
 
     document.getElementById('filtroBuscaUnico').addEventListener('input', renderizarCardsEscalas);
-    document.getElementById('btnFecharCiclo').addEventListener('click', fecharCiclo);
+    document.getElementById('btnFecharCiclo').addEventListener('click', () => fecharCiclo());
+    document.getElementById('btnAnteciparFechamento').addEventListener('click', () => fecharCiclo(true));
     verificarDataDeFechamentoExistente();
 
     window.excluirEscala = async function(index) {

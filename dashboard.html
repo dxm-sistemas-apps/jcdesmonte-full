@@ -376,10 +376,10 @@
     <section class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="flex flex-col items-center justify-center gap-2 text-center">
+          <div class="flex items-center space-x-3 mb-2">
             <i class="fa-solid fa-chart-line text-brand-500 text-2xl"></i>
             <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-              DASHBOARD DE INTELIGÊNCIA <span class="text-brand-500"><br>OPERACIONAL & FINANCEIRA</span>
+              DASHBOARD DE <span class="text-brand-500">INTELIGÊNCIA OPERACIONAL & FINANCEIRA</span>
             </h1>
           </div>
           <p class="text-justify text-sm sm:text-base text-slate-400 font-medium">
@@ -428,7 +428,7 @@
           <div class="kpi-subtext" id="kpi-home-offices-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
-          <div class="kpi-label" id="label-kpi-horas-home-office">Tempo de Home Office (Reunião)</div>
+          <div class="kpi-label" id="label-kpi-horas-home-office">Tempo de Home Office (Reunião - Sede)</div>
           <div class="kpi-value" id="kpi-horas-home-office">0H</div>
           <div class="kpi-subtext" id="kpi-horas-home-office-sub">(calculado automaticamente)</div>
         </div>
@@ -495,7 +495,7 @@
           <div class="kpi-subtext" id="tc-kpi-home-offices-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
-          <div class="kpi-label" id="tc-label-kpi-horas-home-office">Tempo de Home Office (Reunião)</div>
+          <div class="kpi-label" id="tc-label-kpi-horas-home-office">Tempo de Home Office (Reunião - Sede)</div>
           <div class="kpi-value" id="tc-kpi-horas-home-office">0H</div>
           <div class="kpi-subtext" id="tc-kpi-horas-home-office-sub">(calculado automaticamente)</div>
         </div>
@@ -728,6 +728,27 @@
         </div>
       </div>
     </section>
+    <!-- PAINEL: top 3 ESCALAS COM SAÍDA MAIS CEDO / CHEGADA MAIS TARDE (cada uma numa coluna; informações abaixo de cada ciclo) -->
+    <section class="dashboard-grid">
+      <div class="chart-card col-6">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="title-charttop3SaidaCedo">top 3 Escalas com o Horário de Saída Mais Cedo</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="charttop3SaidaCedo"></canvas>
+        </div>
+        <div id="infotop3SaidaCedo" class="info-top-horarios"></div>
+      </div>
+      <div class="chart-card col-6">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="title-charttop3ChegadaTarde">top 3 Escalas com o Horário de Chegada Mais Tarde</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="charttop3ChegadaTarde"></canvas>
+        </div>
+        <div id="infotop3ChegadaTarde" class="info-top-horarios"></div>
+      </div>
+    </section>
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
@@ -813,7 +834,7 @@
                 <th>Ciclos</th>
                 <th>Escalas <br>Trabalhadas</th>
                 <th>Home <br>Offices</th>
-                <th>Tempo de Home Office <br>(Reunião)</th>
+                <th>Tempo de Home Office <br>(Reunião - Sede)</th>
                 <th>Perda de Rendimento <br>(Home Offices)</th>
                 <th>Horas <br>Trabalhadas</th>
                 <th>Valor <br>Médio/Hora</th>
@@ -945,6 +966,8 @@
       triplas: null,
       quadruplas: null,
       top3Horas: null,
+      top3SaidaCedo: null,
+      top3ChegadaTarde: null,
       top3ValorHora: null,
       top3ValorRealJetonEscala: null,
       top3Atividades: null,
@@ -1209,6 +1232,21 @@
           if (hp !== null) horas = hp;
         }
 
+        // Horários (ícone de relógio no topo do card: "05:30 ÀS 18:00") e locais da escala
+        let horarioSaida = '', horarioChegada = '';
+        const iconeRelogio = card.querySelector('i.fa-clock');
+        const spanRelogio = iconeRelogio && iconeRelogio.closest('span');
+        const mHor = spanRelogio ? spanRelogio.textContent.match(/(\d{1,2}:\d{2})\s*[ÀA]S\s*(\d{1,2}:\d{2})/i) : null;
+        if (mHor) { horarioSaida = mHor[1]; horarioChegada = mHor[2]; }
+        const locaisCard = [];
+        card.querySelectorAll('p').forEach(p => {
+          const forte = p.querySelector('strong');
+          if (forte && /^LOCAL(\s*\(\d+ª ATIVIDADE\))?:$/.test(forte.textContent.trim())) {
+            const t = p.textContent.replace(forte.textContent, '').trim();
+            if (t && !locaisCard.includes(t)) locaisCard.push(t);
+          }
+        });
+
         const realTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO REAL APÓS IR:');
         const valorRealAposIR = !computarDiariasEAuxilios
           ? (jetonBruto * 0.78)
@@ -1244,7 +1282,10 @@
           qtdAtividadesTotal,
           valorDiarioTotal,
           valorDescontoIR,
-          valorRealAposIR
+          valorRealAposIR,
+          horarioSaida,
+          horarioChegada,
+          locais: locaisCard
         });
       });
 
@@ -1793,7 +1834,17 @@
           qtdAtividadesTotal: ['Manha', 'Tarde', 'Noite'].reduce((t, P) => t + (escala['local' + P] ? 1 : 0) + (escala['atividadesExtras' + P] || []).filter(a => a && a.local).length, 0),
           valorDiarioTotal: jetonBrutoDetalhe + diariasDetalhe + auxiliosDetalhe,
           valorDescontoIR: jetonBrutoDetalhe * 0.22,
-          valorRealAposIR: valorRealAposIRDetalhe
+          valorRealAposIR: valorRealAposIRDetalhe,
+          horarioSaida: escala.horarioSaida || '',
+          horarioChegada: escala.horarioChegada || '',
+          locais: (() => {
+            const ls = [];
+            ['Manha', 'Tarde', 'Noite'].forEach(P => {
+              if (escala['local' + P]) ls.push(String(escala['local' + P]).trim());
+              (escala['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) ls.push(String(a.local).trim()); });
+            });
+            return ls.filter((l, i) => l && ls.indexOf(l) === i);
+          })()
         });
         }
 
@@ -2056,6 +2107,12 @@
 
       const top3Horas = [...listaEscalasDetalhadas].sort((a, b) => b.horas - a.horas).slice(0, 3);
       const top3ValorHora = [...listaEscalasDetalhadas].sort((a, b) => b.valorHora - a.valorHora).slice(0, 3);
+      // Horários: saída mais cedo (menor) e chegada mais tarde (maior; chegada após a meia-noite conta como a mais tarde)
+      const escalasComHorario = listaEscalasDetalhadas
+        .map(e => ({ ...e, saidaMin: minutosDoHorario(e.horarioSaida), chegadaMin: minutosChegadaNormalizada(e.horarioSaida, e.horarioChegada) }))
+        .filter(e => e.saidaMin !== null && e.chegadaMin !== null);
+      const top3SaidaCedo = [...escalasComHorario].sort((a, b) => a.saidaMin - b.saidaMin).slice(0, 3);
+      const top3ChegadaTarde = [...escalasComHorario].sort((a, b) => b.chegadaMin - a.chegadaMin).slice(0, 3);
       const top3ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 3);
 
       const top3Atividades = listaEscalasDetalhadas
@@ -2091,6 +2148,8 @@
       renderizarGraficoAtividadePorCiclo('charttop3HomeOffices', 'top3HomeOffices', top3HomeOffices, 'homeOffices', '#a855f7', 'Home Offices');
 
       renderizarGraficoTopEscalas('charttop3Horas', 'top3Horas', top3Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
+      renderizarGraficoTopHorarios('charttop3SaidaCedo', 'top3SaidaCedo', top3SaidaCedo, 'saidaMin', '#22c55e', 'HORÁRIO DE SAÍDA', 'infotop3SaidaCedo');
+      renderizarGraficoTopHorarios('charttop3ChegadaTarde', 'top3ChegadaTarde', top3ChegadaTarde, 'chegadaMin', '#f43f5e', 'HORÁRIO DE CHEGADA', 'infotop3ChegadaTarde');
       renderizarGraficoTopEscalas('charttop3ValorHora', 'top3ValorHora', top3ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
       renderizarGraficoTopEscalas('charttop3ValorRealJetonEscala', 'top3ValorRealJetonEscala', top3ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
 
@@ -2124,6 +2183,8 @@
         // charttop3HomeOffices: 9,
         // charttop3Horas: 9,            // (rótulos ocultos neste gráfico)
         // charttop3ValorHora: 9,        // (rótulos ocultos neste gráfico)
+        // charttop3SaidaCedo: 9,        // (rótulos ocultos neste gráfico)
+        // charttop3ChegadaTarde: 9,     // (rótulos ocultos neste gráfico)
         // charttop3ValorRealJetonEscala: 9,
         // charttop3Atividades: 9,       // (rótulos ocultos neste gráfico)
         // charttop3ValorRealJetonCiclo: 9,
@@ -2230,6 +2291,8 @@
         // Rankings: o quadro traz as informações da escala (atividades, horas, valor/hora, jeton, IR...)
         charttop3Horas: 'quadro',
         charttop3ValorHora: 'quadro',
+        charttop3SaidaCedo: 'quadro',
+        charttop3ChegadaTarde: 'quadro',
         charttop3ValorRealJetonEscala: 'quadro',
         charttop3Atividades: 'quadro'
         // chartTipologiaCarga: 'ambos',
@@ -2281,6 +2344,8 @@
         // charttop3HomeOffices: true,
         // charttop3Horas: true,
         // charttop3ValorHora: true,
+        // charttop3SaidaCedo: true,
+        // charttop3ChegadaTarde: true,
         // charttop3ValorRealJetonEscala: true,
         // charttop3Atividades: true,
         // charttop3ValorMedioEscala: true,
@@ -2887,6 +2952,92 @@
           }
         }
       });
+    }
+
+    // ===== Horários (saída mais cedo / chegada mais tarde) =====
+    function minutosDoHorario(h) {
+      const m = String(h || '').match(/^(\d{1,2}):(\d{2})$/);
+      if (!m) return null;
+      return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+    }
+    // Chegada anterior à saída = dia seguinte (soma 24h), como no cálculo das horas trabalhadas
+    function minutosChegadaNormalizada(saida, chegada) {
+      const s = minutosDoHorario(saida), c = minutosDoHorario(chegada);
+      if (s === null || c === null) return null;
+      return c < s ? c + 1440 : c;
+    }
+    function formatarMinutosHorario(min) {
+      const t = Math.round(min) % 1440;
+      return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+    }
+    function escaparHtmlDash(t) {
+      return String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function linhasDetalheHorario(e) {
+      return [
+        `HORÁRIO: ${e.horarioSaida} ÀS ${e.horarioChegada}`,
+        `LOCAIS: ${(e.locais && e.locais.length) ? e.locais.join(' / ') : '-'}`,
+        `VALOR POR HORA TRABALHADA: ${formatMoeda(e.valorHora)}`,
+        `VALOR DIÁRIO REAL APÓS IR: ${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}`
+      ];
+    }
+    function renderizarGraficoTopHorarios(canvasId, chaveInstancia, listaTop, campo, cor, labelDataset, infoId) {
+      const cv = document.getElementById(canvasId);
+      const info = document.getElementById(infoId);
+      if (graficosExtras[chaveInstancia]) graficosExtras[chaveInstancia].destroy();
+      graficosExtras[chaveInstancia] = null;
+      if (!listaTop.length) {
+        cv.parentElement.style.display = 'none';
+        info.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px;">NENHUMA ESCALA COM HORÁRIOS REGISTRADA ATÉ O MOMENTO.</div>';
+        return;
+      }
+      cv.parentElement.style.display = '';
+
+      // Informações abaixo de cada ciclo do top 3 (alinhadas com as barras)
+      const alinharInfo = (chart) => {
+        const a = chart.chartArea;
+        if (!a) return;
+        info.style.paddingLeft = a.left + 'px';
+        info.style.paddingRight = Math.max(0, chart.width - a.right) + 'px';
+      };
+      info.style.cssText = 'display:grid;grid-template-columns:repeat(' + listaTop.length + ',1fr);gap:8px;margin-top:10px;';
+      info.innerHTML = listaTop.map(e => {
+        const per = rotuloPeriodo(e.cicloNome).join(' ');
+        const locais = (e.locais && e.locais.length) ? e.locais.map(escaparHtmlDash).join(' / ') : '-';
+        return `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">
+          <div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(e.data)}</div>
+          <div style="color:#94a3b8;">${escaparHtmlDash(per)}</div>
+          <div style="margin-top:6px;color:#94a3b8;">Locais</div><div style="font-weight:700;">${locais}</div>
+          <div style="margin-top:6px;color:#94a3b8;">Valor por Hora</div><div style="font-weight:700;color:#06b6d4;">${formatMoeda(e.valorHora)}</div>
+          <div style="margin-top:6px;color:#94a3b8;">Valor Diário Real Após IR</div><div style="font-weight:700;color:#10b981;">${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}</div>
+        </div>`;
+      }).join('');
+
+      const labels = listaTop.map(e => [`${e.data} -`, ...rotuloPeriodo(e.cicloNome)]);
+      graficosExtras[chaveInstancia] = new Chart(cv.getContext('2d'), {
+        type: 'bar',
+        data: { labels, datasets: [{ label: labelDataset, data: listaTop.map(e => e[campo]), backgroundColor: cor, borderRadius: 6 }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          events: ['click', 'touchstart'],
+          formatarValorIndicador: (v) => formatarMinutosHorario(v),
+          onResize: (chart) => alinharInfo(chart),
+          animation: { onComplete: (ctx) => alinharInfo(ctx.chart) },
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: {
+              afterTitle: (items) => items && items.length ? linhasDetalheHorario(listaTop[items[0].dataIndex]) : [],
+              label: () => []
+            } }
+          },
+          scales: {
+            y: { beginAtZero: true, grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 120, callback: (v) => formatarMinutosHorario(v) } },
+            x: { grid: { display: false }, ticks: { display: false } }
+          }
+        }
+      });
+      alinharInfo(graficosExtras[chaveInstancia]);
     }
 
     function renderizarGraficotop3Atividades(lista) {

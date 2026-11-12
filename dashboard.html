@@ -660,6 +660,7 @@
         <div class="chart-container">
           <canvas id="chartGanhoCiclos"></canvas>
         </div>
+        <div id="info-chartGanhoCiclos" class="info-abaixo-grafico"></div>
       </div>
     </section>
 
@@ -726,6 +727,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorHora"></canvas>
         </div>
+        <div id="info-charttop3ValorHora" class="info-abaixo-grafico"></div>
       </div>
     </section>
     <!-- PAINEL: top 3 ESCALAS COM SAÍDA MAIS CEDO / CHEGADA MAIS TARDE (cada uma numa coluna; informações abaixo de cada ciclo) -->
@@ -757,6 +759,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorRealJetonEscala"></canvas>
         </div>
+        <div id="info-charttop3ValorRealJetonEscala" class="info-abaixo-grafico"></div>
       </div>
     </section>
 
@@ -782,6 +785,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorRealJetonCiclo"></canvas>
         </div>
+        <div id="info-charttop3ValorRealJetonCiclo" class="info-abaixo-grafico"></div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
@@ -790,6 +794,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorMedioEscala"></canvas>
         </div>
+        <div id="info-charttop3ValorMedioEscala" class="info-abaixo-grafico"></div>
       </div>
     </section>
     <section class="dashboard-grid">
@@ -808,6 +813,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorMedioHora"></canvas>
         </div>
+        <div id="info-charttop3ValorMedioHora" class="info-abaixo-grafico"></div>
       </div>
     </section>
     <section class="dashboard-grid">
@@ -818,6 +824,7 @@
         <div class="chart-container">
           <canvas id="charttop3DescontoIR"></canvas>
         </div>
+        <div id="info-charttop3DescontoIR" class="info-abaixo-grafico"></div>
       </div>
     </section>
 
@@ -2088,6 +2095,13 @@
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6);
 
+      // Qtd. de atividades de cada ciclo (soma das atividades das escalas do ciclo; Home Office não conta)
+      listaCiclosProcessados.forEach(c => {
+        c.qtdAtividades = listaEscalasDetalhadas
+          .filter(e => e.cicloNome === c.nome)
+          .reduce((t, e) => t + (e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)), 0);
+      });
+
       const top3MaiorGanho = [...listaCiclosProcessados]
         .sort((a, b) => b.receitaBruta - a.receitaBruta)
         .slice(0, 3);
@@ -2160,6 +2174,15 @@
       renderizarGraficoAtividadePorCiclo('charttop3ValorMedioAtividade', 'top3ValorMedioAtividade', top3ValorMedioAtividade, 'valorMedioAtividade', '#8b5cf6', 'VALOR MÉDIO POR ATIVIDADE (R$)');
       renderizarGraficoAtividadePorCiclo('charttop3ValorMedioHora', 'top3ValorMedioHora', top3ValorMedioHora, 'valorMedioHora', '#06b6d4', 'VALOR MÉDIO POR HORA (R$)');
       renderizarGraficoAtividadePorCiclo('charttop3DescontoIR', 'top3DescontoIR', top3DescontoIR, 'valorDescontoIR', '#ef4444', 'DESCONTO IR (R$)');
+
+      // Informações abaixo de cada indicador (configuradas em INFO_ABAIXO_GRAFICOS)
+      renderizarInfoAbaixoGrafico('chartGanhoCiclos', top3MaiorGanho);
+      renderizarInfoAbaixoGrafico('charttop3ValorRealJetonEscala', top3ValorRealJetonEscala);
+      renderizarInfoAbaixoGrafico('charttop3ValorHora', top3ValorHora);
+      renderizarInfoAbaixoGrafico('charttop3ValorRealJetonCiclo', top3ValorRealJetonCiclo);
+      renderizarInfoAbaixoGrafico('charttop3ValorMedioEscala', top3ValorMedioEscala);
+      renderizarInfoAbaixoGrafico('charttop3ValorMedioHora', top3ValorMedioHora);
+      renderizarInfoAbaixoGrafico('charttop3DescontoIR', top3DescontoIR);
 
       aplicarSeletoresGraficos();
     }
@@ -2954,6 +2977,98 @@
       });
     }
 
+    // ============================================================
+    // INFORMAÇÕES ABAIXO DE CADA INDICADOR (top 3)
+    // Para mudar o que aparece em um gráfico: edite a lista "campos" dele (a ordem da lista é a ordem na tela).
+    // Para tirar uma informação, apague o nome (ou comente a linha); para incluir, acrescente um nome do catálogo.
+    //   tipo 'ciclo'  -> catálogo CAMPOS_INFO_CICLO   (3 ciclos com...)
+    //   tipo 'escala' -> catálogo CAMPOS_INFO_ESCALA  (top 3 escalas com...)
+    // 'ciclo' na lista = mostra o título (data + período do ciclo) acima do quadro. Nos gráficos de ciclos o período
+    // já aparece embaixo de cada barra; para repeti-lo no quadro, acrescente 'ciclo' no início da lista.
+    // ============================================================
+    const AUX3 = ['auxPercebiveis', 'auxRecebidos', 'auxNaoRecebidos'];
+    const INFO_ABAIXO_GRAFICOS = {
+      chartGanhoCiclos:              { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'perda', 'descontoIR', ...AUX3] },
+      charttop3ValorRealJetonEscala: { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas', 'valorHora', 'valorDiarioTotal', 'descontoIR'] },
+      charttop3ValorHora:            { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas'] },
+      charttop3ValorRealJetonCiclo:  { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'perda', 'descontoIR', ...AUX3, 'valorMedioHora'] },
+      charttop3ValorMedioEscala:     { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
+      charttop3ValorMedioHora:       { tipo: 'ciclo',  campos: ['atividades', 'horas', 'valorMedioHora', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
+      charttop3DescontoIR:           { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] }
+    };
+    const COR_IR = '#f87171', COR_LIQ = '#34d399', COR_BRUTA = '#60a5fa', COR_HORA = '#22d3ee', COR_PERDA = '#fbbf24';
+    const CAMPOS_INFO_CICLO = {
+      escalas:          { rotulo: 'QTD. DE ESCALAS',                      valor: c => String(c.escalas || 0) },
+      homeOffices:      { rotulo: 'QTD. DE HOME OFFICES',                 valor: c => String(c.homeOffices || 0) },
+      atividades:       { rotulo: 'QTD. DE ATIVIDADES',                   valor: c => String(c.qtdAtividades || 0) },
+      horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: c => formatarHorasDecimal(c.horas || 0) },
+      valorMedioHora:   { rotulo: 'VALOR POR HORA TRABALHADA',            valor: c => formatMoeda(c.valorMedioHora || 0), cor: COR_HORA },
+      perda:            { rotulo: 'PERDA DE RENDIMENTO (HOME OFFICE)',    valor: c => formatMoeda(c.perdaRendimentoHomeOffice || 0), cor: COR_PERDA },
+      receitaBruta:     { rotulo: 'RECEITA BRUTA',                        valor: c => formatMoeda(c.receitaBruta || 0), cor: COR_BRUTA },
+      descontoIR:       { rotulo: 'DESCONTO IR',                          valor: c => formatMoeda(c.valorDescontoIR != null ? c.valorDescontoIR : (c.descontoIR || 0)), cor: COR_IR },
+      receitaLiquida:   { rotulo: 'RECEITA LÍQUIDA',                      valor: c => formatMoeda(c.receitaLiquida || 0), cor: COR_LIQ },
+      auxPercebiveis:   { rotulo: 'AUXÍLIOS E DIÁRIAS PERCEBÍVEIS',       valor: c => formatMoeda(c.diariasEAuxilios || 0) },
+      auxRecebidos:     { rotulo: 'AUXÍLIOS E DIÁRIAS RECEBIDOS',         valor: c => formatMoeda(c.diariasEAuxiliosRecebiveis || 0), cor: COR_LIQ },
+      auxNaoRecebidos:  { rotulo: 'AUXÍLIOS E DIÁRIAS NÃO RECEBIDOS',     valor: c => formatMoeda(c.diariasEAuxiliosNaoRecebiveis || 0), cor: COR_IR }
+    };
+    const CAMPOS_INFO_ESCALA = {
+      atividades:       { rotulo: 'QTD. DE ATIVIDADES',                   valor: e => String(e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)) },
+      horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: e => formatarHorasDecimal(e.horas || 0) },
+      valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_HORA },
+      valorDiarioTotal: { rotulo: 'VALOR DIÁRIO TOTAL',                   valor: e => formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto) , cor: COR_BRUTA },
+      descontoIR:       { rotulo: 'VALOR DIÁRIO DO DESCONTO IR',          valor: e => formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22), cor: COR_IR },
+      valorRealAposIR:  { rotulo: 'VALOR DIÁRIO REAL APÓS IR',            valor: e => formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78), cor: COR_LIQ }
+    };
+
+    // Alinhamento das informações com as barras (também após trocar o tipo do gráfico ou redimensionar a janela)
+    const infoPorCanvas = {};
+    function alinharInfoCanvas(canvasId) {
+      const box = document.getElementById(infoPorCanvas[canvasId]);
+      const cv = document.getElementById(canvasId);
+      if (!box || !cv || !window.Chart || !Chart.getChart) return;
+      const ch = Chart.getChart(cv);
+      const alinhavel = ch && ch.chartArea && (ch.config.type === 'bar' || ch.config.type === 'line');
+      box.style.paddingLeft = alinhavel ? ch.chartArea.left + 'px' : '0px';
+      box.style.paddingRight = alinhavel ? Math.max(0, ch.width - ch.chartArea.right) + 'px' : '0px';
+    }
+    function alinharTodosInfos() { Object.keys(infoPorCanvas).forEach(alinharInfoCanvas); }
+    function registrarInfoAlinhado(canvasId, infoId) {
+      infoPorCanvas[canvasId] = infoId;
+      if (!window.__obsInfoAlinhado && window.ResizeObserver) {
+        window.__obsInfoAlinhado = new ResizeObserver(() => alinharTodosInfos());
+      }
+      const cv = document.getElementById(canvasId);
+      if (window.__obsInfoAlinhado && cv && cv.parentElement && !cv.parentElement.dataset.obsInfo) {
+        cv.parentElement.dataset.obsInfo = '1';
+        window.__obsInfoAlinhado.observe(cv.parentElement);
+      }
+      alinharInfoCanvas(canvasId);
+    }
+
+    function renderizarInfoAbaixoGrafico(canvasId, lista) {
+      const cfg = INFO_ABAIXO_GRAFICOS[canvasId];
+      const box = document.getElementById('info-' + canvasId);
+      if (!cfg || !box) return;
+      if (!lista || !lista.length) { box.innerHTML = ''; box.style.cssText = ''; return; }
+      const catalogo = cfg.tipo === 'escala' ? CAMPOS_INFO_ESCALA : CAMPOS_INFO_CICLO;
+      box.style.display = 'grid';
+      box.style.gridTemplateColumns = 'repeat(' + lista.length + ', 1fr)';
+      box.style.gap = '8px';
+      box.style.marginTop = '10px';
+      const comTitulo = cfg.campos.includes('ciclo');
+      box.innerHTML = lista.map(item => {
+        const titulo = !comTitulo ? '' : (cfg.tipo === 'escala'
+          ? `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(item.data)}</div><div style="color:#94a3b8;">${escaparHtmlDash(rotuloPeriodo(item.cicloNome).join(' '))}</div>`
+          : `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(rotuloPeriodo(item.nome, item.num).join(' '))}</div>`);
+        const linhas = cfg.campos.filter(k => k !== 'ciclo' && catalogo[k]).map(k => {
+          const c = catalogo[k];
+          return `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + c.cor + ';' : ''}">${escaparHtmlDash(c.valor(item))}</div>`;
+        }).join('');
+        return `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">${titulo}${linhas}</div>`;
+      }).join('');
+      registrarInfoAlinhado(canvasId, box.id);
+    }
+
     // ===== Horários (saída mais cedo / chegada mais tarde) =====
     function minutosDoHorario(h) {
       const m = String(h || '').match(/^(\d{1,2}):(\d{2})$/);
@@ -3038,6 +3153,7 @@
         }
       });
       alinharInfo(graficosExtras[chaveInstancia]);
+      registrarInfoAlinhado(canvasId, infoId);
     }
 
     function renderizarGraficotop3Atividades(lista) {
@@ -3313,6 +3429,7 @@
       new Chart(cv.getContext('2d'), montarConfigGrafico(snap, tipo));
       cv.dataset.convertido = '1';
       salvarTipoGrafico(canvasId, tipo);
+      if (typeof alinharTodosInfos === 'function') alinharTodosInfos();
       const sw = cv.closest('.chart-card').querySelector('.chart-type-switch');
       if (sw) sw.querySelectorAll('button').forEach(b => b.classList.toggle('ativo', b.dataset.tipo === tipo));
     }

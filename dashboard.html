@@ -805,6 +805,7 @@
         <div class="chart-container">
           <canvas id="charttop3ValorMedioAtividade"></canvas>
         </div>
+        <div id="info-charttop3ValorMedioAtividade" class="info-abaixo-grafico"></div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
@@ -2181,6 +2182,7 @@
       renderizarInfoAbaixoGrafico('charttop3ValorHora', top3ValorHora);
       renderizarInfoAbaixoGrafico('charttop3ValorRealJetonCiclo', top3ValorRealJetonCiclo);
       renderizarInfoAbaixoGrafico('charttop3ValorMedioEscala', top3ValorMedioEscala);
+      renderizarInfoAbaixoGrafico('charttop3ValorMedioAtividade', top3ValorMedioAtividade);
       renderizarInfoAbaixoGrafico('charttop3ValorMedioHora', top3ValorMedioHora);
       renderizarInfoAbaixoGrafico('charttop3DescontoIR', top3DescontoIR);
 
@@ -2994,6 +2996,7 @@
       charttop3ValorRealJetonCiclo:  { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'perda', 'descontoIR', ...AUX3, 'valorMedioHora'] },
       charttop3ValorMedioEscala:     { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
       charttop3ValorMedioHora:       { tipo: 'ciclo',  campos: ['atividades', 'horas', 'valorMedioHora', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
+      charttop3ValorMedioAtividade:  { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
       charttop3DescontoIR:           { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] }
     };
     const COR_IR = '#f87171', COR_LIQ = '#34d399', COR_BRUTA = '#60a5fa', COR_HORA = '#22d3ee', COR_PERDA = '#fbbf24';

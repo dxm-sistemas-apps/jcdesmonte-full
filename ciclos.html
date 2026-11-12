@@ -189,10 +189,10 @@
 
     <section
       class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
-      <div class="flex flex-col items-center justify-center gap-2 text-center">
+      <div class="flex items-center gap-3">
         <i class="fa-solid fa-recycle text-brand-500 text-2xl"></i>
         <div>
-          <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Ciclos <span class="text-brand-500">FECHADOS</span></h1>
+          <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">Ciclos Fechados</h1>
           <p class="text-justify text-sm text-slate-400 mt-1">Histórico permanente dos ciclos encerrados pelo sistema.
             Clique no título de um ciclo para expandir ou recolher os dados.</p>
         </div>
@@ -354,12 +354,12 @@
       const r = receitasResumoCiclo(ciclo);
       const ho = resumoEscalasHomeOffice(ciclo.escalasData);
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
-      return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
-        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+      return `<span class="block text-xs mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
     function normalizarHTML(html) {
@@ -708,7 +708,11 @@ function centralizarCelulasOrganograma(html) {
           <div class="flex items-center gap-3">
             <i id="chevron-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200 ${estaAberto ? 'rotate-90' : ''}"></i>
             <div>
-              <h2 class="text-xl font-black text-blue-400 uppercase">${esc(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
+              <div class="flex items-center gap-3">
+                <!-- Marcador (como "ESCALA #1"): ordem de fechamento do ciclo, #1 = primeiro ciclo fechado -->
+                <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg whitespace-nowrap">#${ciclos.length - ordem}</span>
+                <h2 class="text-xl font-black text-blue-400 uppercase">${esc(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
+              </div>
               <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">
                 MÊS DE RECEBIMENTO: ${esc(ciclo.recebimentoEm || '')}
                 <span class="text-xs text-slate-500"><br>FECHADO EM ${esc(ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-')}</span>

@@ -636,12 +636,21 @@
             <i class="fa-solid fa-sun text-amber-400 text-lg"></i>
             <div class="chart-card-title">Explosão Solar Hierárquica</div>
           </div>
-          <span class="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-mono font-bold">HIERARQUIA MULTINÍVEL</span>
+          <span class="text-[10px] bg-slate-800 text-amber-400 px-2 py-0.5 rounded font-mono font-bold">CICLO &rarr; LOCAL &rarr; ESCALA</span>
         </div>
         <div class="kpi-subtext text-justify mb-3">
-          Navegue pelas camadas concêntricas (Ciclo &rarr; Turnos &rarr; Locais/Atividades). Clique nos anéis para expandir os valores em zoom interativo.
+          Cada fatia é um ciclo; o 2º anel mostra os locais e o 3º anel as escalas (dias). Clique numa fatia para ampliar e ver os detalhes ao lado; clique no centro para voltar. Escolha abaixo o que medir e qual ciclo analisar.
         </div>
-        <div id="chartSunburstContainer" style="min-height: 480px; width: 100%;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px;">
+          <div id="sunMetricas" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          <select id="sunCiclo" style="background:#0f172a;border:1px solid #334155;color:#e2e8f0;font-size:12px;border-radius:8px;padding:6px 10px;text-transform:uppercase;max-width:100%;"></select>
+          <button id="sunReset" type="button" style="background:#1e293b;border:1px solid #334155;color:#e2e8f0;font-size:12px;font-weight:700;border-radius:8px;padding:6px 12px;text-transform:uppercase;">&#8634; Resetar zoom</button>
+        </div>
+        <div id="sunKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;"></div>
+        <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:stretch;">
+          <div id="chartSunburstContainer" style="min-height:540px;flex:1 1 420px;min-width:0;"></div>
+          <aside id="sunPainel" style="flex:1 1 280px;max-width:100%;background:#0f172a;border:1px solid #334155;border-radius:12px;padding:14px;color:#e2e8f0;text-transform:uppercase;font-size:12px;"></aside>
+        </div>
       </div>
     </section>
 
@@ -1422,89 +1431,220 @@
       return { diariaAlimentacao: parseFloat(esc.valorDiarias) || 0, diariaPernoite: 0, diariaTraslado: 0, auxAlimentacao: parseFloat(esc.valorAuxilios) || 0, auxTransporte: 0 };
     }
 
-    // RENDERIZADOR DO GRÁFICO SUNBURST HIERÁRQUICO
-    function renderizarGraficoSunburst(escalas) {
+    // RENDERIZADOR DO GRÁFICO SUNBURST HIERÁRQUICO (Ciclo -> Local -> Escala)
+    // Métricas disponíveis (botões acima do gráfico). Para tirar uma, apague a linha; para mudar o padrão, troque SUN_METRICA_PADRAO.
+    const SUN_METRICAS = {
+      real:    { rotulo: 'Valor real (após IR)', valor: e => (e.valorRealAposIR != null ? e.valorRealAposIR : (e.jetonBruto || 0) * 0.78), fmt: v => formatMoeda(v) },
+      bruto:   { rotulo: 'Jeton bruto',          valor: e => e.jetonBruto || 0,  fmt: v => formatMoeda(v) },
+      horas:   { rotulo: 'Horas trabalhadas',    valor: e => e.horas || 0,       fmt: v => formatarHorasDecimal(v) },
+      escalas: { rotulo: 'Qtd. de escalas',      valor: () => 1,                 fmt: v => String(Math.round(v * 100) / 100).replace('.', ',') }
+    };
+    const SUN_METRICA_PADRAO = 'real';
+    // Uma cor-base por ciclo (os locais e as escalas usam tons mais claros da mesma cor)
+    const SUN_PALETA = ['#38bdf8', '#34d399', '#a78bfa', '#fbbf24', '#fb7185', '#22d3ee', '#a3e635', '#f472b6', '#fb923c', '#818cf8'];
+    let sunEscalas = [];
+    let sunEstado = { metrica: SUN_METRICA_PADRAO, ciclo: 'todos' };
+    let sunNos = {};   // nome do caminho -> estatísticas, para o painel de detalhes
+
+    function sunClarear(hex, f) {
+      const n = parseInt(hex.slice(1), 16);
+      const c = [n >> 16 & 255, n >> 8 & 255, n & 255].map(v => Math.round(v + (255 - v) * f));
+      return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    function sunNomeCurtoCiclo(nome) {
+      const m = String(nome || '').match(/(\d{2}\/\d{2})\/\d{4}\D+(\d{2}\/\d{2})\/\d{4}/);
+      return m ? m[1] + ' – ' + m[2] : String(nome || 'CICLO');
+    }
+    function sunSomar(a, b) { a.escalas += b.escalas; a.horas += b.horas; a.real += b.real; a.bruto += b.bruto; }
+
+    function construirHierarquiaSunburst(escalas, metrica, cicloFiltro) {
+      const def = SUN_METRICAS[metrica] || SUN_METRICAS[SUN_METRICA_PADRAO];
+      const ciclos = new Map();
+      (escalas || []).forEach(e => {
+        if (cicloFiltro !== 'todos' && e.cicloNome !== cicloFiltro) return;
+        const nomeC = e.cicloNome || 'CICLO';
+        if (!ciclos.has(nomeC)) ciclos.set(nomeC, new Map());
+        const locais = (e.locais && e.locais.length) ? e.locais : ['SEM LOCAL INFORMADO'];
+        const parte = 1 / locais.length;   // escala com vários locais divide o valor entre eles
+        locais.forEach(loc => {
+          const mapaLocais = ciclos.get(nomeC);
+          const L = String(loc).toUpperCase();
+          if (!mapaLocais.has(L)) mapaLocais.set(L, []);
+          mapaLocais.get(L).push({ e, parte });
+        });
+      });
+      sunNos = {};
+      let total = 0;
+      const dados = [];
+      let idx = 0;
+      ciclos.forEach((mapaLocais, nomeC) => {
+        const base = SUN_PALETA[idx++ % SUN_PALETA.length];
+        const stC = { escalas: 0, horas: 0, real: 0, bruto: 0 };
+        const filhosLocais = [];
+        mapaLocais.forEach((itens, local) => {
+          const stL = { escalas: 0, horas: 0, real: 0, bruto: 0 };
+          const folhas = itens.map(({ e, parte }) => {
+            const st = { escalas: parte, horas: (e.horas || 0) * parte, real: SUN_METRICAS.real.valor(e) * parte, bruto: (e.jetonBruto || 0) * parte };
+            sunSomar(stL, st);
+            const v = def.valor(e) * parte;
+            const caminho = nomeC + '|' + local + '|' + (e.data || '') + '|' + Math.random().toString(36).slice(2, 6);
+            sunNos[caminho] = { tipo: 'ESCALA', titulo: (e.data || '') + ' — ' + local, ciclo: nomeC, st, valor: v, valorHora: e.valorHora || 0 };
+            return { name: (e.data || '').slice(0, 5), value: v, caminho, itemStyle: { color: sunClarear(base, 0.55) } };
+          });
+          const caminhoL = nomeC + '|' + local;
+          sunNos[caminhoL] = { tipo: 'LOCAL', titulo: local, ciclo: nomeC, st: stL };
+          filhosLocais.push({ name: local, caminho: caminhoL, itemStyle: { color: sunClarear(base, 0.3) }, children: folhas });
+          sunSomar(stC, stL);
+        });
+        const valorCiclo = filhosLocais.reduce((t, l) => t + l.children.reduce((x, f) => x + f.value, 0), 0);
+        total += valorCiclo;
+        sunNos[nomeC] = { tipo: 'CICLO', titulo: nomeC, ciclo: nomeC, st: stC };
+        dados.push({ name: sunNomeCurtoCiclo(nomeC), caminho: nomeC, itemStyle: { color: base }, children: filhosLocais });
+      });
+      // valores dos pais (para o painel): soma dos filhos na métrica atual
+      Object.keys(sunNos).forEach(k => { sunNos[k].valor = sunNos[k].valor != null ? sunNos[k].valor : null; });
+      const somaFilhos = n => n.children ? n.children.reduce((t, c) => t + somaFilhos(c), 0) : n.value;
+      dados.forEach(c => { sunNos[c.caminho].valor = somaFilhos(c); c.children.forEach(l => { sunNos[l.caminho].valor = somaFilhos(l); }); });
+      return { dados, total, def };
+    }
+
+    function sunRenderKpis(total, def, dados) {
+      const box = document.getElementById('sunKpis');
+      if (!box) return;
+      const locais = {};
+      dados.forEach(c => c.children.forEach(l => { locais[l.name] = (locais[l.name] || 0) + sunNos[l.caminho].valor; }));
+      const ordenados = Object.entries(locais).sort((a, b) => b[1] - a[1]);
+      const nEsc = dados.reduce((t, c) => t + sunNos[c.caminho].st.escalas, 0);
+      const k = (rot, val, cor) => `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 10px;"><div style="font-size:10px;color:#94a3b8;text-transform:uppercase;">${rot}</div><div style="font-size:15px;font-weight:800;color:${cor || '#f8fafc'};overflow-wrap:anywhere;">${val}</div></div>`;
+      box.innerHTML =
+        k(def.rotulo + ' (total)', def.fmt(total), '#34d399') +
+        k('Ciclos', String(dados.length)) +
+        k('Escalas', String(Math.round(nEsc))) +
+        k('Locais', String(ordenados.length)) +
+        k('Local de maior destaque', ordenados.length ? escaparHtmlDash(ordenados[0][0]) : '-', '#fbbf24');
+    }
+
+    function sunRenderPainel(caminho) {
+      const painel = document.getElementById('sunPainel');
+      if (!painel) return;
+      const def = SUN_METRICAS[sunEstado.metrica];
+      const linha = (r, v, cor) => `<div style="display:flex;justify-content:space-between;gap:8px;padding:4px 0;border-bottom:1px solid #1e293b;"><span style="color:#94a3b8;">${r}</span><span style="font-weight:800;color:${cor || '#f8fafc'};text-align:right;">${v}</span></div>`;
+      const n = caminho && sunNos[caminho];
+      if (n) {
+        const st = n.st;
+        const totalGeral = Object.values(sunNos).filter(x => x.tipo === 'CICLO').reduce((t, x) => t + (x.valor || 0), 0);
+        const pct = totalGeral ? ((n.valor || 0) / totalGeral * 100).toFixed(1).replace('.', ',') + '%' : '-';
+        painel.innerHTML =
+          `<div style="font-size:10px;color:#94a3b8;">${n.tipo}</div>` +
+          `<div style="font-size:14px;font-weight:900;color:#f8fafc;margin-bottom:8px;overflow-wrap:anywhere;">${escaparHtmlDash(n.titulo)}</div>` +
+          linha(def.rotulo, def.fmt(n.valor || 0), '#34d399') +
+          linha('% do total exibido', pct, '#fbbf24') +
+          linha('Qtd. de escalas', String(Math.round(st.escalas * 100) / 100).replace('.', ',')) +
+          linha('Horas trabalhadas', formatarHorasDecimal(st.horas)) +
+          linha('Jeton bruto', formatMoeda(st.bruto), '#34d399') +
+          linha('Valor real (após IR)', formatMoeda(st.real), '#34d399') +
+          (st.horas ? linha('Valor por hora', formatMoeda(st.bruto / st.horas), '#34d399') : '') +
+          (n.tipo !== 'CICLO' ? linha('Ciclo', escaparHtmlDash(sunNomeCurtoCiclo(n.ciclo))) : '') +
+          `<button type="button" id="sunVoltarResumo" style="margin-top:10px;width:100%;background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:8px;padding:6px;font-weight:700;text-transform:uppercase;font-size:11px;">Ver ranking de locais</button>`;
+        const bt = document.getElementById('sunVoltarResumo');
+        if (bt) bt.onclick = () => sunRenderPainel(null);
+        return;
+      }
+      // Resumo padrão: ranking dos locais (soma de todos os ciclos exibidos)
+      const locais = {};
+      Object.keys(sunNos).forEach(k => { const x = sunNos[k]; if (x.tipo === 'LOCAL') locais[x.titulo] = (locais[x.titulo] || 0) + (x.valor || 0); });
+      const rank = Object.entries(locais).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const max = rank.length ? rank[0][1] || 1 : 1;
+      painel.innerHTML = `<div style="font-size:10px;color:#94a3b8;">RANKING DE LOCAIS — ${def.rotulo}</div>` +
+        (rank.length ? rank.map(([nome, v], i) => `<div style="margin-top:8px;"><div style="display:flex;justify-content:space-between;gap:8px;"><span style="overflow-wrap:anywhere;">${i + 1}. ${escaparHtmlDash(nome)}</span><span style="font-weight:800;color:#34d399;white-space:nowrap;">${def.fmt(v)}</span></div><div style="height:6px;background:#1e293b;border-radius:4px;margin-top:3px;"><div style="height:6px;width:${Math.max(3, v / max * 100)}%;background:#38bdf8;border-radius:4px;"></div></div></div>`).join('')
+          : '<div style="margin-top:10px;color:#94a3b8;">Nenhuma escala com local registrada.</div>') +
+        `<div style="margin-top:12px;color:#94a3b8;font-size:11px;text-transform:none;">Clique numa fatia do gráfico para ver os detalhes dela aqui.</div>`;
+    }
+
+    function sunControles() {
+      const caixaM = document.getElementById('sunMetricas');
+      const sel = document.getElementById('sunCiclo');
+      if (!caixaM || !sel) return;
+      caixaM.innerHTML = Object.keys(SUN_METRICAS).map(k => {
+        const ativo = k === sunEstado.metrica;
+        return `<button type="button" data-metrica="${k}" style="font-size:12px;font-weight:700;border-radius:8px;padding:6px 12px;text-transform:uppercase;border:1px solid ${ativo ? '#2563eb' : '#334155'};background:${ativo ? '#2563eb' : '#1e293b'};color:${ativo ? '#fff' : '#cbd5e1'};">${SUN_METRICAS[k].rotulo}</button>`;
+      }).join('');
+      caixaM.querySelectorAll('button').forEach(b => b.onclick = () => {
+        sunEstado.metrica = b.dataset.metrica;
+        try { localStorage.setItem('jetcontrol_sunburst_metrica', sunEstado.metrica); } catch (_) {}
+        desenharSunburst();
+      });
+      const nomes = [];
+      sunEscalas.forEach(e => { if (e.cicloNome && !nomes.includes(e.cicloNome)) nomes.push(e.cicloNome); });
+      sel.innerHTML = '<option value="todos">TODOS OS CICLOS</option>' + nomes.map(n => `<option value="${escaparHtmlDash(n)}">${escaparHtmlDash(sunNomeCurtoCiclo(n))}</option>`).join('');
+      sel.value = nomes.includes(sunEstado.ciclo) ? sunEstado.ciclo : 'todos';
+      sunEstado.ciclo = sel.value;
+      sel.onchange = () => { sunEstado.ciclo = sel.value; desenharSunburst(); };
+      const rs = document.getElementById('sunReset');
+      if (rs) rs.onclick = () => desenharSunburst();
+    }
+
+    function desenharSunburst() {
       const dom = document.getElementById('chartSunburstContainer');
       if (!dom) return;
+      sunControles();
+      const { dados, total, def } = construirHierarquiaSunburst(sunEscalas, sunEstado.metrica, sunEstado.ciclo);
+      sunRenderKpis(total, def, dados);
+      sunRenderPainel(null);
       if (instSunburst) instSunburst.dispose();
       instSunburst = echarts.init(dom, 'dark');
-
-      const turnosMap = {
-        'MANHÃ': {},
-        'TARDE': {},
-        'NOITE': {}
-      };
-
-      (escalas || []).forEach(esc => {
-        const jM = parseFloat(esc.jetonManha) || 0;
-        const jT = parseFloat(esc.jetonTarde) || 0;
-        const jN = (parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1);
-        const subJeton = jM + jT + jN;
-
-        const turnoStr = (esc.turno || 'MANHÃ').toUpperCase();
-        const turnoKey = turnosMap[turnoStr] ? turnoStr : 'MANHÃ';
-        const local = (esc.local || esc.localManha || esc.atividade || 'OPERACIONAL').toUpperCase();
-
-        turnosMap[turnoKey][local] = (turnosMap[turnoKey][local] || 0) + (subJeton || 100);
-      });
-
-      const coresTurno = { 'MANHÃ': '#0284c7', 'TARDE': '#059669', 'NOITE': '#7c3aed' };
-
-      const dadosHierarquia = [{
-        name: 'Ciclo Vigente',
-        itemStyle: { color: '#0f172a' },
-        children: Object.keys(turnosMap).map(turno => {
-          const locais = turnosMap[turno];
-          return {
-            name: `Turno ${turno}`,
-            itemStyle: { color: coresTurno[turno] },
-            children: Object.keys(locais).map(loc => ({
-              name: loc,
-              value: Math.round(locais[loc])
-            }))
-          };
-        }).filter(t => t.children.length > 0)
-      }];
-
-      const option = {
+      if (!dados.length) {
+        dom.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:540px;color:#94a3b8;text-transform:uppercase;font-size:13px;">Nenhuma escala registrada para montar o gráfico.</div>';
+        return;
+      }
+      instSunburst.setOption({
         backgroundColor: 'transparent',
+        animationDuration: 900,
+        animationDurationUpdate: 700,
+        animationEasing: 'cubicOut',
         tooltip: {
           trigger: 'item',
+          confine: true,
+          backgroundColor: '#0f172a',
+          borderColor: '#334155',
+          textStyle: { color: '#f8fafc', fontSize: 12 },
           formatter: (p) => {
-            const val = p.value ? `<br/>Subtotal Jeton: ${formatMoeda(p.value)}` : '';
-            return `<strong>${p.name}</strong>${val}`;
+            const n = sunNos[p.data && p.data.caminho];
+            if (!n) return p.name;
+            const caminho = p.treePathInfo || [];
+            const pai = caminho.length > 2 ? caminho[caminho.length - 2].value : total;
+            const pctPai = pai ? ((p.value / pai) * 100).toFixed(1).replace('.', ',') : '0';
+            const pctTot = total ? ((p.value / total) * 100).toFixed(1).replace('.', ',') : '0';
+            return `<strong>${escaparHtmlDash(n.titulo)}</strong><br/>${def.rotulo}: <b>${def.fmt(p.value)}</b><br/>${pctPai}% do nível acima · ${pctTot}% do total`;
           }
         },
         series: [{
           type: 'sunburst',
-          data: dadosHierarquia[0].children.length ? dadosHierarquia : [{ name: 'Sem escalas registradas no ciclo', value: 1 }],
-          radius: [0, '92%'],
-          emphasis: { focus: 'ancestor' },
+          data: dados,
+          radius: [0, '96%'],
+          sort: 'desc',
+          nodeClick: 'rootToNode',
+          emphasis: { focus: 'descendant', itemStyle: { shadowBlur: 14, shadowColor: 'rgba(255,255,255,0.35)' } },
+          blur: { itemStyle: { opacity: 0.35 } },
+          itemStyle: { borderColor: '#0f172a', borderWidth: 2, borderRadius: 4 },
+          label: { color: '#0f172a', fontWeight: 'bold', overflow: 'truncate', minAngle: 6 },
           levels: [
             {},
-            {
-              r0: '0%',
-              r: '24%',
-              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
-              label: { rotate: 'radial', fontSize: 11, fontWeight: 'bold', color: '#ffffff' }
-            },
-            {
-              r0: '24%',
-              r: '58%',
-              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
-              label: { rotate: 'radial', fontSize: 10, color: '#f8fafc', fontWeight: 'bold' }
-            },
-            {
-              r0: '58%',
-              r: '88%',
-              itemStyle: { borderWidth: 2, borderColor: '#1e293b' },
-              label: { position: 'outside', padding: 3, fontSize: 9, color: '#cbd5e1' }
-            }
+            { r0: '14%', r: '40%', label: { rotate: 'tangential', fontSize: 11, minAngle: 4 } },
+            { r0: '40%', r: '70%', label: { rotate: 'radial', fontSize: 10, minAngle: 5 } },
+            { r0: '70%', r: '73%', itemStyle: { borderWidth: 0 }, label: { show: false } },
+            { r0: '73%', r: '96%', label: { rotate: 'radial', fontSize: 9, minAngle: 7, color: '#0f172a' } }
           ]
         }]
-      };
-
-      instSunburst.setOption(option);
+      });
+      instSunburst.on('click', (p) => {
+        if (p && p.data && p.data.caminho) sunRenderPainel(p.data.caminho);
+      });
+    }
+    function renderizarGraficoSunburst(escalas) {
+      sunEscalas = escalas || [];
+      try { const m = localStorage.getItem('jetcontrol_sunburst_metrica'); if (m && SUN_METRICAS[m]) sunEstado.metrica = m; } catch (_) {}
+      desenharSunburst();
     }
 
     window.addEventListener('resize', () => {
@@ -2162,8 +2302,8 @@
       renderizarGraficoFuncoes(acumuladoGeral.funcoes);
       renderizarTabelaCiclos(listaCiclosProcessados);
 
-      // Renderiza o Sunburst Hierárquico com as escalas do ciclo vigente
-      renderizarGraficoSunburst(escalasVigentes);
+      // Renderiza o Sunburst Hierárquico com as escalas de todos os ciclos (fechados + vigente)
+      renderizarGraficoSunburst(listaEscalasDetalhadas);
 
       renderizarGraficoLocais(top6Locais);
       renderizarGraficoGanhoCiclos(top3MaiorGanho);
@@ -3022,19 +3162,25 @@
       charttop3DescontoIR:           { tipo: 'ciclo',  campos: SEQ_CICLO }
     };
     let cicloPorNomeDash = {};
-    const COR_IR = '#f87171', COR_LIQ = '#34d399', COR_BRUTA = '#60a5fa', COR_HORA = '#22d3ee', COR_PERDA = '#fbbf24';
+    // CORES DOS DADOS ABAIXO DOS INDICADORES (Tailwind): troque só o hexadecimal
+    const COR_IR = '#f87171';      // red-400      (desconto IR, não recebidos)
+    const COR_LIQ = '#34d399';     // emerald-400  (receita líquida)
+    const COR_VERDE = '#34d399';   // emerald-400  (valor por hora trabalhada, valor diário total, receita bruta)
+    const COR_PERDA = '#f87171';   // red-400      (perda de rendimento)
+    const COR_AMBAR = '#fbbf24';   // amber-400    (auxílios e diárias percebíveis)
+    const COR_BRANCO = '#f8fafc';  // branco       (auxílios e diárias recebidos quando R$ 0,00)
     const CAMPOS_INFO_CICLO = {
       escalas:          { rotulo: 'QTD. DE ESCALAS',                      valor: c => String(c.escalas || 0) },
       homeOffices:      { rotulo: 'QTD. DE HOME OFFICES',                 valor: c => String(c.homeOffices || 0) },
       atividades:       { rotulo: 'QTD. DE ATIVIDADES',                   valor: c => String(c.qtdAtividades || 0) },
       horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: c => formatarHorasDecimal(c.horas || 0) },
-      valorMedioHora:   { rotulo: 'VALOR POR HORA TRABALHADA',            valor: c => formatMoeda(c.valorMedioHora || 0), cor: COR_HORA },
+      valorMedioHora:   { rotulo: 'VALOR POR HORA TRABALHADA',            valor: c => formatMoeda(c.valorMedioHora || 0), cor: COR_VERDE },
       perda:            { rotulo: 'PERDA DE RENDIMENTO (HOME OFFICE)',    valor: c => formatMoeda(c.perdaRendimentoHomeOffice || 0), cor: COR_PERDA },
-      receitaBruta:     { rotulo: 'RECEITA BRUTA',                        valor: c => formatMoeda(c.receitaBruta || 0), cor: COR_BRUTA },
+      receitaBruta:     { rotulo: 'RECEITA BRUTA',                        valor: c => formatMoeda(c.receitaBruta || 0), cor: COR_VERDE },
       descontoIR:       { rotulo: 'DESCONTO IR',                          valor: c => formatMoeda(c.valorDescontoIR != null ? c.valorDescontoIR : (c.descontoIR || 0)), cor: COR_IR },
       receitaLiquida:   { rotulo: 'RECEITA LÍQUIDA',                      valor: c => formatMoeda(c.receitaLiquida || 0), cor: COR_LIQ },
-      auxPercebiveis:   { rotulo: 'AUXÍLIOS E DIÁRIAS PERCEBÍVEIS',       valor: c => formatMoeda(c.diariasEAuxilios || 0) },
-      auxRecebidos:     { rotulo: 'AUXÍLIOS E DIÁRIAS RECEBIDOS',         valor: c => formatMoeda(c.diariasEAuxiliosRecebiveis || 0), cor: COR_LIQ },
+      auxPercebiveis:   { rotulo: 'AUXÍLIOS E DIÁRIAS PERCEBÍVEIS',       valor: c => formatMoeda(c.diariasEAuxilios || 0), cor: COR_AMBAR },
+      auxRecebidos:     { rotulo: 'AUXÍLIOS E DIÁRIAS RECEBIDOS',         valor: c => formatMoeda(c.diariasEAuxiliosRecebiveis || 0), cor: c => (c.diariasEAuxiliosRecebiveis || 0) > 0 ? COR_VERDE : COR_BRANCO },
       auxNaoRecebidos:  { rotulo: 'AUXÍLIOS E DIÁRIAS NÃO RECEBIDOS',     valor: c => formatMoeda(c.diariasEAuxiliosNaoRecebiveis || 0), cor: COR_IR }
     };
     const CAMPOS_INFO_ESCALA = {
@@ -3042,8 +3188,8 @@
       locais:           { rotulo: 'LOCAIS',                               valor: e => (e.locais && e.locais.length) ? e.locais.join(' / ') : '-' },
       atividades:       { rotulo: 'QTD. DE ATIVIDADES',                   valor: e => String(e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)) },
       horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: e => formatarHorasDecimal(e.horas || 0) },
-      valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_HORA },
-      valorDiarioTotal: { rotulo: 'VALOR DIÁRIO TOTAL',                   valor: e => formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto) , cor: COR_BRUTA },
+      valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_VERDE },
+      valorDiarioTotal: { rotulo: 'VALOR DIÁRIO TOTAL',                   valor: e => formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto), cor: COR_VERDE },
       descontoIR:       { rotulo: 'VALOR DIÁRIO DO DESCONTO IR',          valor: e => formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22), cor: COR_IR },
       valorRealAposIR:  { rotulo: 'VALOR DIÁRIO REAL APÓS IR',            valor: e => formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78), cor: COR_LIQ }
     };
@@ -3088,7 +3234,7 @@
         const titulo = !comTitulo ? '' : (cfg.tipo === 'escala'
           ? `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(item.data)}</div><div style="color:#94a3b8;">${escaparHtmlDash(rotuloPeriodo(item.cicloNome).join(' '))}</div>`
           : `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(rotuloPeriodo(item.nome, item.num).join(' '))}</div>`);
-        const linhaCampo = (c, obj) => `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + c.cor + ';' : ''}">${escaparHtmlDash(c.valor(obj))}</div>`;
+        const linhaCampo = (c, obj) => `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + (typeof c.cor === 'function' ? c.cor(obj) : c.cor) + ';' : ''}">${escaparHtmlDash(c.valor(obj))}</div>`;
         let linhas = cfg.campos.filter(k => k !== 'ciclo' && catalogo[k]).map(k => linhaCampo(catalogo[k], item)).join('');
         if (cfg.tipo === 'escala' && cfg.camposCiclo && cfg.camposCiclo.length) {
           const cic = cicloPorNomeDash[item.cicloNome];

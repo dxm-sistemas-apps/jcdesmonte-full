@@ -201,10 +201,10 @@
       class="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-800 to-brand-dark border border-slate-800 shadow-xl p-6 sm:p-8">
       <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div class="flex flex-col items-center justify-center gap-2 text-center">
+          <div class="flex items-center space-x-3 mb-2">
             <i class="fa-solid fa-file-invoice-dollar text-brand-500 text-2xl"></i>
             <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight uppercase">
-              GESTÃO DE VALORES DO <span class="text-brand-500">JETON</span>
+              GESTÃO DE <span class="text-brand-500">VALORES DO JETON</span>
             </h1>
           </div>
           <p class="text-justify text-sm sm:text-base text-slate-400 font-medium">
@@ -529,6 +529,11 @@
       if (diff < 0) return {texto: 'JETON EM DÉFICIT', cor: 'text-red-400 bg-red-950/60 border border-red-800'};
       if (diff === 0) return {texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800'};
       return {texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800'};
+    }
+
+    // Status da linha TOTAL (mesma regra das linhas: compara o total do JETCONTROL com o total do contracheque)
+    function getStatusTotal(totais) {
+      return getStatus(Number(totais.jc.toFixed(2)), Number(totais.cc.toFixed(2)));
     }
 
     // Leitura dos dados do sistema JETCONTROL
@@ -904,7 +909,7 @@
                     <td class="px-3 py-3 text-cyan-400 font-black">${formatMoeda(totais.ccL)}</td>
                     <td class="px-3 py-3 text-amber-400 font-black">${formatMoeda(totais.dg)}</td>
                     <td class="px-3 py-3 font-black ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
-                    <td class="px-3 py-3"></td>
+                    <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${getStatusTotal(totais).cor}">${getStatusTotal(totais).texto}</span></td>
                   </tr>
                 ` : ''}
               </tbody>
@@ -1093,7 +1098,7 @@
                     <td class="p-2 text-cyan-400">${formatMoeda(totais.cc)}</td>
                     <td class="p-2 text-amber-400">${formatMoeda(totais.dg)}</td>
                     <td class="p-2 ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
-                    <td class="p-2"></td>
+                    <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${getStatusTotal(totais).cor}">${getStatusTotal(totais).texto}</span></td>
                   </tr>
                 </tbody>
               </table>
@@ -1154,8 +1159,10 @@
         const jc = formatNumeroFloat(d.jetcontrol), cc = formatNumeroFloat(d.contracheque);
         dCell.cell.styles.textColor = pdfCorDaSituacao(getDiff(jc, cc), jc === 0 && cc === 0);
         dCell.cell.styles.fontStyle = 'bold';
-      } else if (col === 8) {
-        dCell.cell.styles.textColor = pdfCorDaSituacao(totalDiff, false);
+      } else if (col === 8 || col === 9) {
+        // Linha TOTAL: diferença e status (mesma cor da situação do total)
+        dCell.cell.styles.textColor = pdfCorDaSituacao(totalDiff, Math.abs(totalDiff) < 0.005 && dCell.row.raw && String(dCell.row.raw[9] || '') === 'SEM JETON');
+        dCell.cell.styles.fontStyle = 'bold';
       }
     }
 
@@ -1195,7 +1202,7 @@
       body.push([
         'TOTAL', '', '', formatMoeda(totais.jc), formatMoeda(totais.jcL),
         formatMoeda(totais.cc), formatMoeda(totais.ccL), formatMoeda(totais.dg),
-        formatMoeda(totais.diff), ''
+        formatMoeda(totais.diff), getStatusTotal(totais).texto
       ]);
 
       doc.autoTable({
@@ -1268,7 +1275,7 @@
         body.push([
           'TOTAL', '', '', formatMoeda(totais.jc), formatMoeda(totais.jcL),
           formatMoeda(totais.cc), formatMoeda(totais.ccL), formatMoeda(totais.dg),
-          formatMoeda(totais.diff), ''
+          formatMoeda(totais.diff), getStatusTotal(totais).texto
         ]);
 
         doc.autoTable({

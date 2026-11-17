@@ -560,8 +560,14 @@
         <div class="chart-card-header">
           <div class="chart-card-title" id="title-chartEvolucaoCiclos">Evolução de Faturamento por Ciclo</div>
         </div>
-        <div class="chart-container">
-          <canvas id="chartEvolucaoCiclos"></canvas>
+        <!-- Rolagem horizontal: a largura cresce com a quantidade de ciclos (ver LARGURA_MIN_POR_CICLO_EVOLUCAO) -->
+        <div id="rolagemEvolucao" style="overflow-x:auto;overflow-y:hidden;width:100%;">
+          <div id="larguraEvolucao" style="min-width:100%;">
+            <div class="chart-container" style="height:320px;">
+              <canvas id="chartEvolucaoCiclos"></canvas>
+            </div>
+            <div id="info-chartEvolucaoCiclos" class="info-abaixo-grafico"></div>
+          </div>
         </div>
       </div>
     </section>
@@ -719,6 +725,7 @@
         <div class="chart-container">
           <canvas id="charttop3Horas"></canvas>
         </div>
+        <div id="info-charttop3Horas" class="info-abaixo-grafico"></div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
@@ -739,7 +746,7 @@
         <div class="chart-container">
           <canvas id="charttop3SaidaCedo"></canvas>
         </div>
-        <div id="infotop3SaidaCedo" class="info-top-horarios"></div>
+        <div id="info-charttop3SaidaCedo" class="info-abaixo-grafico"></div>
       </div>
       <div class="chart-card col-6">
         <div class="chart-card-header">
@@ -748,7 +755,7 @@
         <div class="chart-container">
           <canvas id="charttop3ChegadaTarde"></canvas>
         </div>
-        <div id="infotop3ChegadaTarde" class="info-top-horarios"></div>
+        <div id="info-charttop3ChegadaTarde" class="info-abaixo-grafico"></div>
       </div>
     </section>
     <section class="dashboard-grid">
@@ -2103,6 +2110,10 @@
           .reduce((t, e) => t + (e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)), 0);
       });
 
+      // Ciclo de cada escala (para os dados do ciclo exibidos abaixo dos rankings de escalas)
+      cicloPorNomeDash = {};
+      listaCiclosProcessados.forEach(c => { cicloPorNomeDash[c.nome] = c; });
+
       const top3MaiorGanho = [...listaCiclosProcessados]
         .sort((a, b) => b.receitaBruta - a.receitaBruta)
         .slice(0, 3);
@@ -2163,8 +2174,8 @@
       renderizarGraficoAtividadePorCiclo('charttop3HomeOffices', 'top3HomeOffices', top3HomeOffices, 'homeOffices', '#a855f7', 'Home Offices');
 
       renderizarGraficoTopEscalas('charttop3Horas', 'top3Horas', top3Horas, 'horas', '#f59e0b', 'HORAS TRABALHADAS', false);
-      renderizarGraficoTopHorarios('charttop3SaidaCedo', 'top3SaidaCedo', top3SaidaCedo, 'saidaMin', '#22c55e', 'HORÁRIO DE SAÍDA', 'infotop3SaidaCedo');
-      renderizarGraficoTopHorarios('charttop3ChegadaTarde', 'top3ChegadaTarde', top3ChegadaTarde, 'chegadaMin', '#f43f5e', 'HORÁRIO DE CHEGADA', 'infotop3ChegadaTarde');
+      renderizarGraficoTopHorarios('charttop3SaidaCedo', 'top3SaidaCedo', top3SaidaCedo, 'saidaMin', '#22c55e', 'HORÁRIO DE SAÍDA');
+      renderizarGraficoTopHorarios('charttop3ChegadaTarde', 'top3ChegadaTarde', top3ChegadaTarde, 'chegadaMin', '#f43f5e', 'HORÁRIO DE CHEGADA');
       renderizarGraficoTopEscalas('charttop3ValorHora', 'top3ValorHora', top3ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
       renderizarGraficoTopEscalas('charttop3ValorRealJetonEscala', 'top3ValorRealJetonEscala', top3ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
 
@@ -2177,6 +2188,8 @@
       renderizarGraficoAtividadePorCiclo('charttop3DescontoIR', 'top3DescontoIR', top3DescontoIR, 'valorDescontoIR', '#ef4444', 'DESCONTO IR (R$)');
 
       // Informações abaixo de cada indicador (configuradas em INFO_ABAIXO_GRAFICOS)
+      renderizarInfoAbaixoGrafico('chartEvolucaoCiclos', listaCiclosProcessados);
+      renderizarInfoAbaixoGrafico('charttop3Horas', top3Horas);
       renderizarInfoAbaixoGrafico('chartGanhoCiclos', top3MaiorGanho);
       renderizarInfoAbaixoGrafico('charttop3ValorRealJetonEscala', top3ValorRealJetonEscala);
       renderizarInfoAbaixoGrafico('charttop3ValorHora', top3ValorHora);
@@ -2313,12 +2326,8 @@
     const MODO_EXIBICAO_VALOR = {
       padrao: 'grafico',
       porGrafico: {
-        // Rankings: o quadro traz as informações da escala (atividades, horas, valor/hora, jeton, IR...)
-        charttop3Horas: 'quadro',
-        charttop3ValorHora: 'quadro',
-        charttop3SaidaCedo: 'quadro',
-        charttop3ChegadaTarde: 'quadro',
-        charttop3ValorRealJetonEscala: 'quadro',
+        // Os gráficos que têm os dados escritos ABAIXO do indicador (ver INFO_ABAIXO_GRAFICOS) não abrem a janela ao clicar.
+        // Para voltar a abrir a janela em algum deles, acrescente aqui, por exemplo:  charttop3Horas: 'quadro',
         charttop3Atividades: 'quadro'
         // chartTipologiaCarga: 'ambos',
         // chartLocaisFiscalizados: 'quadro',
@@ -2652,7 +2661,11 @@
       return [t.replace(/^\s*CICLO\s*-\s*/i, '').replace(/\(.*?\)/g, '').trim() || `${numFallback || ''}`];
     }
 
+    // Largura mínima de cada ciclo no gráfico de evolução (px). Quando os ciclos não cabem na tela, surge a rolagem horizontal.
+    const LARGURA_MIN_POR_CICLO_EVOLUCAO = 190;
     function renderizarGraficoEvolucao(listaCiclos) {
+      const larguraBox = document.getElementById('larguraEvolucao');
+      if (larguraBox) larguraBox.style.width = (listaCiclos.length * LARGURA_MIN_POR_CICLO_EVOLUCAO) + 'px';
       const ctx = document.getElementById('chartEvolucaoCiclos').getContext('2d');
       if (chartEvolucaoInstance) chartEvolucaoInstance.destroy();
 
@@ -2988,17 +3001,27 @@
     // 'ciclo' na lista = mostra o título (data + período do ciclo) acima do quadro. Nos gráficos de ciclos o período
     // já aparece embaixo de cada barra; para repeti-lo no quadro, acrescente 'ciclo' no início da lista.
     // ============================================================
-    const AUX3 = ['auxPercebiveis', 'auxRecebidos', 'auxNaoRecebidos'];
+    // Sequência padrão dos dados de ciclo exibidos abaixo dos indicadores
+    const SEQ_CICLO = ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR',
+                       'auxPercebiveis', 'auxRecebidos', 'auxNaoRecebidos', 'receitaLiquida'];
+    // tipo 'ciclo'  : "campos" = dados do próprio ciclo.
+    // tipo 'escala' : "campos" = dados da escala; "camposCiclo" = dados do ciclo a que a escala pertence (sob o rótulo "DADOS DO CICLO").
+    //                 Para exibir só os dados da escala, use camposCiclo: [].
     const INFO_ABAIXO_GRAFICOS = {
-      chartGanhoCiclos:              { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'perda', 'descontoIR', ...AUX3] },
-      charttop3ValorRealJetonEscala: { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas', 'valorHora', 'valorDiarioTotal', 'descontoIR'] },
-      charttop3ValorHora:            { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas'] },
-      charttop3ValorRealJetonCiclo:  { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'perda', 'descontoIR', ...AUX3, 'valorMedioHora'] },
-      charttop3ValorMedioEscala:     { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
-      charttop3ValorMedioHora:       { tipo: 'ciclo',  campos: ['atividades', 'horas', 'valorMedioHora', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
-      charttop3ValorMedioAtividade:  { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] },
-      charttop3DescontoIR:           { tipo: 'ciclo',  campos: ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR', ...AUX3, 'receitaLiquida'] }
+      chartEvolucaoCiclos:           { tipo: 'ciclo',  campos: SEQ_CICLO },
+      chartGanhoCiclos:              { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3Horas:                { tipo: 'escala', campos: ['ciclo'], camposCiclo: SEQ_CICLO },
+      charttop3ValorRealJetonEscala: { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas', 'valorHora', 'valorDiarioTotal', 'descontoIR'], camposCiclo: SEQ_CICLO },
+      charttop3ValorHora:            { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas'], camposCiclo: SEQ_CICLO },
+      charttop3SaidaCedo:            { tipo: 'escala', campos: ['ciclo', 'horario', 'locais', 'valorHora', 'valorRealAposIR'], camposCiclo: SEQ_CICLO },
+      charttop3ChegadaTarde:         { tipo: 'escala', campos: ['ciclo', 'horario', 'locais', 'valorHora', 'valorRealAposIR'], camposCiclo: SEQ_CICLO },
+      charttop3ValorRealJetonCiclo:  { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3ValorMedioEscala:     { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3ValorMedioAtividade:  { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3ValorMedioHora:       { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3DescontoIR:           { tipo: 'ciclo',  campos: SEQ_CICLO }
     };
+    let cicloPorNomeDash = {};
     const COR_IR = '#f87171', COR_LIQ = '#34d399', COR_BRUTA = '#60a5fa', COR_HORA = '#22d3ee', COR_PERDA = '#fbbf24';
     const CAMPOS_INFO_CICLO = {
       escalas:          { rotulo: 'QTD. DE ESCALAS',                      valor: c => String(c.escalas || 0) },
@@ -3015,6 +3038,8 @@
       auxNaoRecebidos:  { rotulo: 'AUXÍLIOS E DIÁRIAS NÃO RECEBIDOS',     valor: c => formatMoeda(c.diariasEAuxiliosNaoRecebiveis || 0), cor: COR_IR }
     };
     const CAMPOS_INFO_ESCALA = {
+      horario:          { rotulo: 'HORÁRIO',                              valor: e => `${e.horarioSaida || '-'} ÀS ${e.horarioChegada || '-'}` },
+      locais:           { rotulo: 'LOCAIS',                               valor: e => (e.locais && e.locais.length) ? e.locais.join(' / ') : '-' },
       atividades:       { rotulo: 'QTD. DE ATIVIDADES',                   valor: e => String(e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)) },
       horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: e => formatarHorasDecimal(e.horas || 0) },
       valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_HORA },
@@ -3063,10 +3088,15 @@
         const titulo = !comTitulo ? '' : (cfg.tipo === 'escala'
           ? `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(item.data)}</div><div style="color:#94a3b8;">${escaparHtmlDash(rotuloPeriodo(item.cicloNome).join(' '))}</div>`
           : `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(rotuloPeriodo(item.nome, item.num).join(' '))}</div>`);
-        const linhas = cfg.campos.filter(k => k !== 'ciclo' && catalogo[k]).map(k => {
-          const c = catalogo[k];
-          return `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + c.cor + ';' : ''}">${escaparHtmlDash(c.valor(item))}</div>`;
-        }).join('');
+        const linhaCampo = (c, obj) => `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + c.cor + ';' : ''}">${escaparHtmlDash(c.valor(obj))}</div>`;
+        let linhas = cfg.campos.filter(k => k !== 'ciclo' && catalogo[k]).map(k => linhaCampo(catalogo[k], item)).join('');
+        if (cfg.tipo === 'escala' && cfg.camposCiclo && cfg.camposCiclo.length) {
+          const cic = cicloPorNomeDash[item.cicloNome];
+          if (cic) {
+            linhas += `<div style="margin-top:10px;padding-top:6px;border-top:1px solid #334155;font-weight:800;color:#f8fafc;">DADOS DO CICLO</div>`
+              + cfg.camposCiclo.filter(k => CAMPOS_INFO_CICLO[k]).map(k => linhaCampo(CAMPOS_INFO_CICLO[k], cic)).join('');
+          }
+        }
         return `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">${titulo}${linhas}</div>`;
       }).join('');
       registrarInfoAlinhado(canvasId, box.id);
@@ -3099,37 +3129,18 @@
         `VALOR DIÁRIO REAL APÓS IR: ${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}`
       ];
     }
-    function renderizarGraficoTopHorarios(canvasId, chaveInstancia, listaTop, campo, cor, labelDataset, infoId) {
+    function renderizarGraficoTopHorarios(canvasId, chaveInstancia, listaTop, campo, cor, labelDataset) {
       const cv = document.getElementById(canvasId);
-      const info = document.getElementById(infoId);
+      const info = document.getElementById('info-' + canvasId);
       if (graficosExtras[chaveInstancia]) graficosExtras[chaveInstancia].destroy();
       graficosExtras[chaveInstancia] = null;
       if (!listaTop.length) {
         cv.parentElement.style.display = 'none';
+        info.style.cssText = '';
         info.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:16px;font-size:13px;">NENHUMA ESCALA COM HORÁRIOS REGISTRADA ATÉ O MOMENTO.</div>';
         return;
       }
       cv.parentElement.style.display = '';
-
-      // Informações abaixo de cada ciclo do top 3 (alinhadas com as barras)
-      const alinharInfo = (chart) => {
-        const a = chart.chartArea;
-        if (!a) return;
-        info.style.paddingLeft = a.left + 'px';
-        info.style.paddingRight = Math.max(0, chart.width - a.right) + 'px';
-      };
-      info.style.cssText = 'display:grid;grid-template-columns:repeat(' + listaTop.length + ',1fr);gap:8px;margin-top:10px;';
-      info.innerHTML = listaTop.map(e => {
-        const per = rotuloPeriodo(e.cicloNome).join(' ');
-        const locais = (e.locais && e.locais.length) ? e.locais.map(escaparHtmlDash).join(' / ') : '-';
-        return `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">
-          <div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(e.data)}</div>
-          <div style="color:#94a3b8;">${escaparHtmlDash(per)}</div>
-          <div style="margin-top:6px;color:#94a3b8;">Locais</div><div style="font-weight:700;">${locais}</div>
-          <div style="margin-top:6px;color:#94a3b8;">Valor por Hora</div><div style="font-weight:700;color:#06b6d4;">${formatMoeda(e.valorHora)}</div>
-          <div style="margin-top:6px;color:#94a3b8;">Valor Diário Real Após IR</div><div style="font-weight:700;color:#10b981;">${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}</div>
-        </div>`;
-      }).join('');
 
       const labels = listaTop.map(e => [`${e.data} -`, ...rotuloPeriodo(e.cicloNome)]);
       graficosExtras[chaveInstancia] = new Chart(cv.getContext('2d'), {
@@ -3140,8 +3151,6 @@
           maintainAspectRatio: false,
           events: ['click', 'touchstart'],
           formatarValorIndicador: (v) => formatarMinutosHorario(v),
-          onResize: (chart) => alinharInfo(chart),
-          animation: { onComplete: (ctx) => alinharInfo(ctx.chart) },
           plugins: {
             legend: { display: false },
             tooltip: { callbacks: {
@@ -3155,8 +3164,7 @@
           }
         }
       });
-      alinharInfo(graficosExtras[chaveInstancia]);
-      registrarInfoAlinhado(canvasId, infoId);
+      renderizarInfoAbaixoGrafico(canvasId, listaTop);
     }
 
     function renderizarGraficotop3Atividades(lista) {

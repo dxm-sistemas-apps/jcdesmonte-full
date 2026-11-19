@@ -424,15 +424,9 @@
           <span id="recBalancoAuxilios" class="text-xl font-black text-amber-400">R$ 0,00</span>
         </div>
 
-        <!-- ALÍQUOTA DE IMPOSTO DE RENDA (VALOR FIXO) -->
-        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Alíquota de Imposto de Renda (%)</span>
-          <span id="recAliqIR" class="text-xl font-black text-white">22%</span>
-        </div>
-
         <!-- VALOR DO DESCONTO IR -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1">
-          <span class="block text-sm uppercase font-bold text-slate-400">Desconto IR</span>
+          <span id="recRotuloDescontoIR" class="block text-sm uppercase font-bold text-slate-400">Desconto IR</span>
           <span id="recValorDescontoIR" class="text-xl font-black text-red-400">R$ 0,00</span>
         </div>
 
@@ -2008,12 +2002,62 @@
       if (msg) msg.classList.toggle('hidden', algumVisivel);
     }
 
+    // ===== Alíquota de IR (vem de jeton-valores, por ciclo) =====
+    // Padrão 22% até o contracheque ser lançado em "Jeton Valores".
+    function aliquotaIRDoCiclo(c) {
+      const padrao = { pct: 22, informada: false };
+      try {
+        if (!c || !c.dataAbertura || !c.dataFechamento) return padrao;
+        const pA = String(c.dataAbertura).split('-'), pF = String(c.dataFechamento).split('-');
+        if (pA.length !== 3 || pF.length !== 3) return padrao;
+        const label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+        const banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {};
+        const partes = String(c.recebimentoEm || '').split('/');
+        const mes = (partes[0] || '').trim().toUpperCase(), ano = (partes[1] || '').trim();
+        const achados = [];
+        Object.keys(banco).forEach(a => (banco[a] || []).forEach(i => { if (i && i.ciclo === label) achados.push({ a, i }); }));
+        const alvo = achados.find(x => x.a === ano && (!mes || x.i.mesRecebimento === mes)) || achados.find(x => x.a === ano)
+          || achados.find(x => !mes || x.i.mesRecebimento === mes) || achados[0];
+        if (alvo && String(alvo.i.irpf == null ? '' : alvo.i.irpf).trim() !== '') {
+          const n = parseFloat(String(alvo.i.irpf).replace(',', '.'));
+          if (isFinite(n) && n >= 0 && n < 100) return { pct: n, informada: true };
+        }
+      } catch (_) {}
+      return padrao;
+    }
+    function formatarAliquotaIR(n) { return String(parseFloat(Number(n).toFixed(4))).replace('.', ','); }
+    function rotuloAliquotaIR(info) { return formatarAliquotaIR(info.pct) + '%' + (info.informada ? '' : ' (PADRÃO)'); }
+    // Alíquota em uso nos cálculos (do ciclo vigente; trocada temporariamente ao montar ciclos fechados)
+    let ALIQ_IR_PCT = 22;
+    function fatorLiquidoIR() { return 1 - (ALIQ_IR_PCT / 100); }
+    function comAliquota(pct, fn) {
+      const ant = ALIQ_IR_PCT; ALIQ_IR_PCT = pct;
+      try { return fn(); } finally { ALIQ_IR_PCT = ant; }
+    }
+    function sincronizarAliquotaVigente() {
+      let c = {};
+      try { c = JSON.parse(localStorage.getItem('jetcontrol_ciclo_dados') || '{}') || {}; } catch (_) {}
+      const info = aliquotaIRDoCiclo(c);
+      ALIQ_IR_PCT = info.pct;
+      const r = document.getElementById('recRotuloDescontoIR');
+      if (r) r.textContent = `Desconto IR (${formatarAliquotaIR(info.pct)}%${info.informada ? '' : ' PADRÃO'})`;
+      return info;
+    }
+    sincronizarAliquotaVigente();
+
     const JETON_MEDIO_DOBRADA = 220;
     const JETON_MEDIO_QUADRUPLA = 440;
     const ALIQUOTA_IR_HOME_OFFICE = 0.22;
     const VALOR_PERDA_RENDIMENTO_COM_ATIVIDADE = 160;
-    const VALOR_MEDIA_PERDA_RENDIMENTO =
-      ((JETON_MEDIO_DOBRADA + JETON_MEDIO_QUADRUPLA) / 2) * (1 - ALIQUOTA_IR_HOME_OFFICE);
+    // Perda média do home office sem atividade: jeton médio já descontada a alíquota de IR do ciclo
+    // Perda com atividade: metade da média (R$ 330,00 / 2 = R$ 165,00) menos a alíquota de IR do ciclo
+    function valorPerdaComAtividade() { return (((JETON_MEDIO_DOBRADA + JETON_MEDIO_QUADRUPLA) / 2) / 2) * fatorLiquidoIR(); }
+    function valorMediaPerdaPadrao() { return ((JETON_MEDIO_DOBRADA + JETON_MEDIO_QUADRUPLA) / 2) * fatorLiquidoIR(); }
+    // Perda de rendimento de uma escala de home office (acompanha a alíquota do ciclo em uso)
+    function perdaRendimentoEscala(esc) {
+      if (esc && esc.haveraAtividade === true) return valorPerdaComAtividade();
+      return valorMediaPerdaPadrao();
+    }
 
     const LABELS_CONDICAO_HOME_OFFICE = {
       compulsorio: 'Compulsório',
@@ -2203,7 +2247,7 @@
 
     // Perda de rendimento: R$ 160,00 quando haverá atividade no dia (Reunião); caso contrário, a média padrão
     function perdaRendimentoHomeOffice(prefixo) {
-      return haveraAtividadeParaSalvar(prefixo) === true ? VALOR_PERDA_RENDIMENTO_COM_ATIVIDADE : VALOR_MEDIA_PERDA_RENDIMENTO;
+      return haveraAtividadeParaSalvar(prefixo) === true ? valorPerdaComAtividade() : valorMediaPerdaPadrao();
     }
     function valorMediaPerdaRendimentoParaSalvar(prefixo) {
       return valorHomeOfficeParaSalvar(prefixo) === true ? perdaRendimentoHomeOffice(prefixo) : null;
@@ -2338,7 +2382,7 @@
       }
 
       if (horasTrabalhadasNum > 0) {
-        const valorDiarioRealAposIRAtual = totalJeton * 0.78 + diariasComputadasAtual + auxiliosComputadosAtual;
+        const valorDiarioRealAposIRAtual = totalJeton * fatorLiquidoIR() + diariasComputadasAtual + auxiliosComputadosAtual;
         const valorPorHora = valorDiarioRealAposIRAtual / horasTrabalhadasNum;
         document.getElementById('calcValorHoraTrabalhada').value = `${formatarMoeda(valorPorHora)} /H`;
       } else {
@@ -2602,7 +2646,8 @@
       elBalancoAuxilios.innerText = formatarMoeda(balancoAuxilios);
       aplicarCorValorDiariaAux(elBalancoAuxilios, balancoAuxilios);
 
-      const aliqIR = 22;
+      sincronizarAliquotaVigente();
+      const aliqIR = ALIQ_IR_PCT;
       const valorDescontoIR = valorTotalJeton * (aliqIR / 100);
       document.getElementById('recValorDescontoIR').innerText = formatarMoeda(valorDescontoIR);
 
@@ -2839,7 +2884,7 @@
       horasTrabalhadasStr = formatarMinutosComoHoras(diffMinutos);
 
       if (horasTrabalhadasNum > 0) {
-        const valorDiarioRealAposIR = totalJeton * 0.78 + diariasComputadasSalvar + auxiliosComputadosSalvar;
+        const valorDiarioRealAposIR = totalJeton * fatorLiquidoIR() + diariasComputadasSalvar + auxiliosComputadosSalvar;
         const valorPorHora = valorDiarioRealAposIR / horasTrabalhadasNum;
         valorHoraStr = `${formatarMoeda(valorPorHora)} /H`;
       }
@@ -3601,7 +3646,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const totalDecididoAuxilios = somaDecididos.rec.auxilios + somaDecididos.nao.auxilios;
       const jetonCard = (parseFloat(esc.jetonManha) || 0) + (parseFloat(esc.jetonTarde) || 0) + ((parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1));
       const valorDiarioTotal = jetonCard + diariasComputadas + auxiliosComputados;
-      const valorDiarioRealAposIR = jetonCard * 0.78 + diariasComputadas + auxiliosComputados;
+      const valorDiarioRealAposIR = jetonCard * fatorLiquidoIR() + diariasComputadas + auxiliosComputados;
       const valorDescontoIR = valorDiarioTotal - valorDiarioRealAposIR;
 
       let horasTrabalhadasNumCard = 0;
@@ -3706,7 +3751,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
                 <div class="space-y-2">
                 ${esc.homeOffice === true ? `
                   ${esc.homeOfficeCondicao === 'reuniao' ? `<div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>` : ''}
-                  <div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(esc.valorMediaPerdaRendimento != null ? esc.valorMediaPerdaRendimento : VALOR_MEDIA_PERDA_RENDIMENTO)}</span></div>
+                  <div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(perdaRendimentoEscala(esc))}</span></div>
                 ` : `
                   <div><strong>VALOR DIÁRIO DO JETON:</strong> <span class="text-emerald-400 font-bold">${formatarMoeda(jetonCard)}</span></div>
                   <div class="pt-1"><strong>DIÁRIA DE ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.diariaAlimentacao)} font-bold">${formatarMoeda(valorItemCard('diariaAlimentacao'))}</span>${badgeStatus(stCard.diariaAlimentacao)}</div>
@@ -3765,7 +3810,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         if (e && e.homeOffice === true) {
           r.ho++;
           if (r.hasOwnProperty(e.homeOfficeCondicao)) r[e.homeOfficeCondicao]++;
-          r.perda += e.valorMediaPerdaRendimento != null ? (parseFloat(e.valorMediaPerdaRendimento) || 0) : VALOR_MEDIA_PERDA_RENDIMENTO;
+          r.perda += perdaRendimentoEscala(e);
         } else r.escalas++;
       });
       return r;
@@ -3784,12 +3829,13 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
-      const ho = resumoEscalasHomeOffice(ciclo.escalasData);
+      const ho = comAliquota(aliquotaIRDoCiclo(ciclo).pct, () => resumoEscalasHomeOffice(ciclo.escalasData));
       const linhaPerda = ho.ho > 0
         ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
+        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
@@ -3818,11 +3864,12 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         .filter(el => !el.classList.contains('hidden'))
         .map(el => el.id.replace('corpoEsc-', ''));
 
-      container.innerHTML = ciclos.slice().reverse().map((ciclo) => {
+      container.innerHTML = ciclos.slice().reverse().map((ciclo, ordem) => {
         const idCiclo = ciclo.id;
         const escalasArr = ciclo.escalasData || [];
+        const pctCiclo = aliquotaIRDoCiclo(ciclo).pct;
         const cardsHTML = escalasArr.length
-          ? escalasArr.map((esc, idx) => montarCardEscalaHTML(esc, idx, 'fechado', idCiclo)).join('')
+          ? comAliquota(pctCiclo, () => escalasArr.map((esc, idx) => montarCardEscalaHTML(esc, idx, 'fechado', idCiclo)).join(''))
           : '<div class="p-6 text-center text-slate-500 italic">NENHUMA ESCALA NESTE CICLO.</div>';
 
         // Verifica se este ciclo estava aberto
@@ -3838,7 +3885,10 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
               <div class="flex items-center gap-3">
                 <i id="chevronEsc-${idCiclo}" class="fa-solid fa-chevron-right text-blue-400 transition-transform duration-200 ${estaAberto ? 'rotate-90' : ''}"></i>
                 <div>
-                  <h2 class="text-xl font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h2>
+                  <div class="flex items-center gap-3">
+                    <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg whitespace-nowrap">#${ciclos.length - ordem}</span>
+                    <h2 class="text-xl font-black text-blue-400 uppercase">${nomeDoCicloFechado(ciclo)}</h2>
+                  </div>
                   <p class="text-sm text-slate-300 mt-1 uppercase font-semibold">
                     MÊS DE RECEBIMENTO: ${ciclo.recebimentoEm || ''}
                     <span class="text-sm text-slate-500"><br>FECHADO EM ${ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-'}</span>
@@ -3881,6 +3931,33 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       corpo.classList.toggle('hidden');
       if (vaiExibir) ajustarCardsCicloFechado(corpo);
       if (chevron) chevron.classList.toggle('rotate-90', vaiExibir);
+    }
+
+    // Recria os snapshots (escalas, estatísticas, receitas) do ciclo fechado com a alíquota de IR do respectivo ciclo
+    function regerarSnapshotsCicloFechado(ciclo) {
+      const pct = aliquotaIRDoCiclo(ciclo).pct;
+      comAliquota(pct, () => {
+        ciclo.escalas = construirSnapshotEscalasHTML(ciclo.escalasData);
+        const v = calcularEstatisticasReceitasArray(ciclo.escalasData);
+        ciclo.estatisticas = construirEstatisticasHTML(v);
+        ciclo.receitas = construirReceitasHTML(v);
+      });
+      ciclo.aliquotaIR = pct;
+    }
+    // Atualiza ciclos fechados quando a alíquota lançada em Jeton Valores mudou
+    function atualizarCiclosFechadosComAliquota() {
+      let ciclos = [];
+      try { ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]'); } catch (_) { return false; }
+      let mudou = false;
+      ciclos.forEach(c => {
+        if (!c || !Array.isArray(c.escalasData) || !c.escalasData.length) return;
+        const pct = aliquotaIRDoCiclo(c).pct;
+        if (c.aliquotaIR === pct) return;
+        if (c.aliquotaIR === undefined && pct === 22) { c.aliquotaIR = 22; mudou = true; return; }
+        regerarSnapshotsCicloFechado(c); mudou = true;
+      });
+      if (mudou) localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(ciclos));
+      return mudou;
     }
 
     function construirSnapshotEscalasHTML(escalasArr) {
@@ -3963,7 +4040,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const qtdEscalas = escalasArr.filter(e => e.homeOffice !== true).length;
       const somaAtividades = totalSimples + totalDobradas + totalTriplas + totalQuadruplas;
 
-      const aliqIR = 22;
+      const aliqIR = ALIQ_IR_PCT;
       const valorDescontoIR = valorTotalJeton * (aliqIR / 100);
       const valorRealJeton = (valorTotalJeton + valorDiariasRecebivel + valorAuxiliosRecebivel) - valorDescontoIR;
       const balancoDiarias = -valorDiariasNaoRec;
@@ -3981,7 +4058,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         balancoDiarias, balancoAuxilios, valorDescontoIR, valorRealJeton,
         totalHomeOffices, totalHomeOfficesCompulsorio, totalHomeOfficesReuniao, totalHomeOfficesSolicitado,
         horasHomeOfficeReuniao, minutosHomeOfficeReuniao,
-        totalKms, totalAtividadesCiclo
+        totalKms, totalAtividadesCiclo, aliqIR
       };
     }
 
@@ -4026,7 +4103,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido dos Auxílios</span><span id="recValorRecebivelAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxiliosRecebivel)}">${formatarMoeda(v.valorAuxiliosRecebivel)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR (22%)</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Alíquota de IR</span><span id="recAliqIR" class="text-xl font-black text-white">${formatarAliquotaIR(v.aliqIR != null ? v.aliqIR : 22)}%</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorRealJeton)}</span></div>
           </div>
         </section>
@@ -4307,7 +4385,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       horasTrabalhadasNum = diffMinutos / 60;
       horasTrabalhadasStr = formatarMinutosComoHoras(diffMinutos);
       if (horasTrabalhadasNum > 0) {
-        const valorDiarioRealAposIR = (jManha + jTarde + jNoiteEfetivo) * 0.78 + diariasComputadasModal + auxiliosComputadosModal;
+        const valorDiarioRealAposIR = (jManha + jTarde + jNoiteEfetivo) * fatorLiquidoIR() + diariasComputadasModal + auxiliosComputadosModal;
         valorHoraStr = `${formatarMoeda(valorDiarioRealAposIR / horasTrabalhadasNum)} /H`;
       }
 
@@ -4358,10 +4436,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       ciclo.escalasData[index] = dadosEscala;
       memorizarLocaisDaEscala(dadosEscala);
 
-      ciclo.escalas = construirSnapshotEscalasHTML(ciclo.escalasData);
-      const valoresRecalculados = calcularEstatisticasReceitasArray(ciclo.escalasData);
-      ciclo.estatisticas = construirEstatisticasHTML(valoresRecalculados);
-      ciclo.receitas = construirReceitasHTML(valoresRecalculados);
+      regerarSnapshotsCicloFechado(ciclo);
       // Organogramas antigos ficariam desatualizados: limpa para que a página Ciclos os recalcule das escalas atuais
       ciclo.organogramaDiarias = '';
       ciclo.organogramaAuxilios = '';
@@ -4400,6 +4475,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     window.addEventListener('DOMContentLoaded', () => {
       inicializarMenuRodape();
       var iniciar = function () {
+        sincronizarAliquotaVigente();
+        atualizarCiclosFechadosComAliquota();
         carregarRascunhoForm();
         atualizarDatalistLocais();
         renderizarCardsEscalas();
@@ -4416,8 +4493,26 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       }
     });
 
+    // Alíquota lançada em Jeton Valores: reaplica ao voltar para esta página/aba
+    function reaplicarAliquotaIR() {
+      const antes = ALIQ_IR_PCT;
+      sincronizarAliquotaVigente();
+      const mudouFechados = atualizarCiclosFechadosComAliquota();
+      if (antes !== ALIQ_IR_PCT || mudouFechados) {
+        renderizarCardsEscalas();
+        calcularValoresEscala();
+        atualizarEstatisticasEReceitasCiclo();
+        renderizarCiclosFechados();
+      }
+    }
+    window.addEventListener('focus', reaplicarAliquotaIR);
+    window.addEventListener('pageshow', reaplicarAliquotaIR);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reaplicarAliquotaIR(); });
+    window.addEventListener('storage', (e) => { if (!e.key || e.key === 'jetcontrol_jeton_valores' || e.key === 'jetonData') reaplicarAliquotaIR(); });
+
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {
+        reaplicarAliquotaIR();
         atualizarDatalistLocais();
         renderizarCardsEscalas();
         atualizarEstatisticasEReceitasCiclo();

@@ -303,14 +303,13 @@
               class="flex items-center justify-start w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 focus-within:border-brand-500 cursor-text select-none">
               <!-- CAMPO EDITÁVEL -->
               <div contenteditable="true" id="formIrpf" role="textbox" inputmode="numeric"
-                class="bg-transparent border-none p-0 text-red-400 font-bold text-sm focus:outline-none min-w-[5px] empty:before:content-['0'] empty:before:text-red-400/40 select-text">
-                </div>
+                class="bg-transparent border-none p-0 text-red-400 font-bold text-sm focus:outline-none min-w-[2ch] select-text"></div>
 
               <!-- SÍMBOLO FIXO -->
               <span class="text-red-400 font-bold text-sm select-none">%</span>
             </div>
 
-            <span class="text-[10px] text-slate-500 mt-1 block">De acordo com a % sobre o Jeton no contracheque</span>
+            <span class="text-[10px] text-slate-500 mt-1 block">Preencha quando receber o contracheque. Até lá, o sistema usa 22% (padrão) nos cálculos.</span>
           </div>
 
           <script>
@@ -536,10 +535,25 @@
       return String(parseFloat(Number(n).toFixed(4))).replace('.', ',');
     }
 
+    // Alíquota ainda não informada => estimativa com 22% (padrão)
+    function irpfEfetivo(irpf) { return String(irpf == null ? '' : irpf).trim() === '' ? 22 : parseIrpf(irpf); }
+    function textoIrpf(irpf) { return String(irpf == null ? '' : irpf).trim() === '' ? '—' : String(irpf).replace('.', ',') + '%'; }
+    // Alíquota já lançada para o ciclo (para não apagar ao puxar dados do sistema de novo)
+    function irpfLancadoDoCiclo(label) {
+      try {
+        const banco = obterBancoDados();
+        for (const ano of Object.keys(banco)) {
+          const it = (banco[ano] || []).find(i => i && i.ciclo === label);
+          if (it && String(it.irpf == null ? '' : it.irpf).trim() !== '') return String(it.irpf);
+        }
+      } catch (_) {}
+      return '';
+    }
+
     function calcLiq(val, irpf) {
       const v = formatNumeroFloat(val);
       if (v === 0) return 0;
-      return v * (1 - (parseIrpf(irpf) / 100));
+      return v * (1 - (irpfEfetivo(irpf) / 100));
     }
 
     function getDiff(jc, cc) {
@@ -600,7 +614,7 @@
           mesRecebimento: mesRec || '',
           anoRecebimento: anoRec || new Date().getFullYear().toString(),
           totalJeton: totalJeton > 0 ? totalJeton.toFixed(2) : '0.00',
-          irpf: '22'
+          irpf: irpfLancadoDoCiclo(cicloLabel || '')
         };
       } catch (_) {
         return {
@@ -608,7 +622,7 @@
           mesRecebimento: '',
           anoRecebimento: new Date().getFullYear().toString(),
           totalJeton: '0.00',
-          irpf: '22'
+          irpf: ''
         };
       }
     }
@@ -624,7 +638,6 @@
 
       const todosPreenchidos = ciclo !== '' &&
         jetcontrol !== '' &&
-        irpf !== '' &&
         contracheque !== '' &&
         dgad !== '';
 
@@ -654,7 +667,7 @@
         mesRecebimento: (partes[0] || '').trim().toUpperCase(),
         anoRecebimento: (partes[1] || '').trim() || (c.dataFechamento || '').slice(0, 4) || new Date().getFullYear().toString(),
         totalJeton: total.toFixed(2),
-        irpf: '22'
+        irpf: irpfLancadoDoCiclo(label)
       };
     }
 
@@ -823,7 +836,7 @@
       const dgad = desformatarMoeda(document.getElementById('formJetonDgad').value);
       const irpf = document.getElementById('formIrpf').value.trim();
 
-      if (!ciclo || irpf === '') {
+      if (!ciclo) {
         alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
         return;
       }
@@ -848,7 +861,7 @@
       document.getElementById('formJetonJetcontrol').value = 'R$ 0,00';
       document.getElementById('formJetonContracheque').value = 'R$ 0,00';
       document.getElementById('formJetonDgad').value = 'R$ 0,00';
-      document.getElementById('formIrpf').value = '22';
+      document.getElementById('formIrpf').value = '';
 
       validarCamposFormulario();
 
@@ -885,7 +898,7 @@
             <tr class="hover:bg-slate-800/40 transition">
               <td class="px-3 py-2.5 font-bold text-slate-200">${d.ciclo}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
-              <td class="px-3 py-2.5 text-red-400 font-bold">${String(d.irpf).replace('.', ',')}%</td>
+              <td class="px-3 py-2.5 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
               <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
@@ -970,7 +983,8 @@
       }
 
       const jc = lista.map(d => formatNumeroFloat(d.jetcontrol));
-      const irpf = lista.map(d => parseIrpf(d.irpf));
+      const irpf = lista.filter(d => String(d.irpf == null ? '' : d.irpf).trim() !== '').map(d => parseIrpf(d.irpf));
+      const txtIrpfStat = (fn) => irpf.length ? formatIrpf(fn()) + '%' : '—';
       const maxJC = Math.max(...jc);
       const minJC = Math.min(...jc);
       const avgJC = jc.reduce((a, b) => a + b, 0) / jc.length;
@@ -1010,15 +1024,15 @@
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MAIOR ALÍQUOTA:</span>
-                <span class="text-emerald-400 font-black text-sm">${formatIrpf(Math.max(...irpf))}%</span>
+                <span class="text-emerald-400 font-black text-sm">${txtIrpfStat(() => Math.max(...irpf))}</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA:</span>
-                <span class="text-red-400 font-black text-sm">${formatIrpf(Math.min(...irpf))}%</span>
+                <span class="text-red-400 font-black text-sm">${txtIrpfStat(() => Math.min(...irpf))}</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
-                <span class="text-brand-400 font-black text-sm">${formatIrpf(irpf.reduce((a, b) => a + b, 0) / irpf.length)}%</span>
+                <span class="text-brand-400 font-black text-sm">${txtIrpfStat(() => irpf.reduce((a, b) => a + b, 0) / irpf.length)}</span>
               </div>
             </div>
           </div>
@@ -1106,7 +1120,7 @@
                       <tr>
                         <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
                         <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
-                        <td class="p-2 text-red-400 font-bold">${String(d.irpf).replace('.', ',')}%</td>
+                        <td class="p-2 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
                         <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
                         <td class="p-2 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
@@ -1216,7 +1230,7 @@
         totais.diff += getDiff(jc, cc);
 
         return [
-          d.ciclo, d.mesRecebimento || '-', String(d.irpf || '22').replace('.', ',') + '%',
+          d.ciclo, d.mesRecebimento || '-', textoIrpf(d.irpf),
           formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
           formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
           formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),
@@ -1289,7 +1303,7 @@
           totais.diff += getDiff(jc, cc);
 
           return [
-            d.ciclo, d.mesRecebimento || '-', String(d.irpf || '22').replace('.', ',') + '%',
+            d.ciclo, d.mesRecebimento || '-', textoIrpf(d.irpf),
             formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
             formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
             formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),

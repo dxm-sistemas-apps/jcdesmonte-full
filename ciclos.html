@@ -316,6 +316,74 @@
     function formatarMoedaBR(v) {
       return (Number(v) || 0).toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'}).replace(/\u00a0/g, ' ');
     }
+    // ===== Alíquota de IR por ciclo (valor lançado em Jeton Valores; padrão 22% enquanto não lançado) =====
+    function aliquotaIRDoCiclo(c) {
+      const padrao = {pct: 22, informada: false};
+      try {
+        if (!c || !c.dataAbertura || !c.dataFechamento) return padrao;
+        const pA = String(c.dataAbertura).split('-'), pF = String(c.dataFechamento).split('-');
+        if (pA.length !== 3 || pF.length !== 3) return padrao;
+        const label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+        const banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {};
+        const partes = String(c.recebimentoEm || '').split('/');
+        const mes = (partes[0] || '').trim().toUpperCase(), ano = (partes[1] || '').trim();
+        const achados = [];
+        Object.keys(banco).forEach(a => (banco[a] || []).forEach(i => {if (i && i.ciclo === label) achados.push({a, i});}));
+        const alvo = achados.find(x => x.a === ano && (!mes || x.i.mesRecebimento === mes)) || achados.find(x => x.a === ano)
+          || achados.find(x => !mes || x.i.mesRecebimento === mes) || achados[0];
+        if (alvo && String(alvo.i.irpf == null ? '' : alvo.i.irpf).trim() !== '') {
+          const n = parseFloat(String(alvo.i.irpf).replace(',', '.'));
+          if (isFinite(n) && n >= 0 && n < 100) return {pct: n, informada: true};
+        }
+      } catch (_) { }
+      return padrao;
+    }
+    function formatarAliquotaIR(n) {return String(parseFloat(Number(n).toFixed(4))).replace('.', ',');}
+    function rotuloAliquotaIR(info) {return formatarAliquotaIR(info.pct) + '%' + (info.informada ? '' : ' (PADRÃO)');}
+
+    // Reaplica a alíquota atual do ciclo ao resumo de receitas guardado (só troca o desconto de IR e o que depende dele)
+    function repararAliquotaCiclos() {
+      let ciclos;
+      try {ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS) || '[]');} catch (_) {return;}
+      let mudou = false;
+      ciclos.forEach(c => {
+        if (!c || !c.receitas) return;
+        const pct = aliquotaIRDoCiclo(c).pct;
+        if (c.aliquotaIR === pct) return;
+        const temp = document.createElement('div');
+        temp.innerHTML = c.receitas;
+        const el = id => temp.querySelector('#' + id);
+        const elJeton = el('recValorTotalJeton'), elDesc = el('recValorDescontoIR'), elReal = el('recValorRealJeton');
+        if (!elJeton || !elDesc || !elReal) {c.aliquotaIR = pct; mudou = true; return;}
+        const jeton = moedaParaNumero(elJeton.textContent), descAntigo = moedaParaNumero(elDesc.textContent), realAntigo = moedaParaNumero(elReal.textContent);
+        const descNovo = jeton * pct / 100, realNovo = realAntigo + descAntigo - descNovo;
+        const fator = realAntigo > 0 ? realNovo / realAntigo : 1;
+        elDesc.textContent = formatarMoedaBR(descNovo);
+        elReal.textContent = formatarMoedaBR(realNovo);
+        [['recValorMedioEscala', ''], ['recValorMedioAtividade', ''], ['recValorMedioHora', ' /H']].forEach(([id, suf]) => {
+          const e = el(id); if (e) e.textContent = formatarMoedaBR(moedaParaNumero(e.textContent) * fator) + suf;
+        });
+        const cardDesc = elDesc.parentElement;
+        const rotDesc = cardDesc && cardDesc.querySelector('span');
+        if (rotDesc) rotDesc.textContent = 'Desconto IR';
+        let elAliq = el('recAliqIR');
+        if (!elAliq && cardDesc) {
+          const novo = cardDesc.cloneNode(true);
+          const spans = novo.querySelectorAll('span');
+          spans[0].textContent = 'Alíquota de IR';
+          spans[1].id = 'recAliqIR';
+          spans[1].className = 'text-xl font-black text-white';
+          cardDesc.parentNode.insertBefore(novo, cardDesc);
+          elAliq = spans[1];
+        }
+        if (elAliq) elAliq.textContent = formatarAliquotaIR(pct) + '%';
+        c.receitas = temp.innerHTML;
+        c.aliquotaIR = pct;
+        mudou = true;
+      });
+      if (mudou) localStorage.setItem(STORAGE_KEY_CICLOS, JSON.stringify(ciclos));
+    }
+
     function receitasResumoCiclo(ciclo) {
       const temp = document.createElement('div');
       temp.innerHTML = ciclo.receitas || '';
@@ -325,15 +393,16 @@
       return {bruta: liquida + desconto, desconto, liquida};
     }
     // Perda de rendimento padrão do home office (média entre jeton dobrado e quádruplo, já sem IR) — igual ao de Escalas
-    const VALOR_MEDIA_PERDA_RENDIMENTO = ((220 + 440) / 2) * (1 - 0.22);
+    const perdaMediaHO = (aliqPct) => ((220 + 440) / 2) * (1 - aliqPct / 100);
     // Separa escalas de atividade de home office (e os 3 modos de home office) e soma a perda de rendimento
-    function resumoEscalasHomeOffice(escalasArr) {
+    function resumoEscalasHomeOffice(escalasArr, aliqPct) {
+      if (aliqPct === undefined) aliqPct = 22;
       const r = {escalas: 0, ho: 0, compulsorio: 0, reuniao: 0, solicitado: 0, perda: 0};
       (Array.isArray(escalasArr) ? escalasArr : []).forEach(e => {
         if (e && e.homeOffice === true) {
           r.ho++;
           if (['compulsorio', 'reuniao', 'solicitado'].includes(e.homeOfficeCondicao)) r[e.homeOfficeCondicao]++;
-          r.perda += e.valorMediaPerdaRendimento != null ? (parseFloat(e.valorMediaPerdaRendimento) || 0) : VALOR_MEDIA_PERDA_RENDIMENTO;
+          r.perda += e.haveraAtividade === true ? (((220 + 440) / 2) / 2) * (1 - aliqPct / 100) : perdaMediaHO(aliqPct);
         } else r.escalas++;
       });
       return r;
@@ -352,14 +421,15 @@
     }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
-      const ho = resumoEscalasHomeOffice(ciclo.escalasData);
+      const ho = resumoEscalasHomeOffice(ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct);
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-xs text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
-      return `<span class="block text-xs mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
-        + `<span class="block text-xs mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+      return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-xs text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-xs text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
+        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
 
     function normalizarHTML(html) {
@@ -430,7 +500,38 @@
       });
     }
 
-    function sanitizarSnapshotEscalas(html, escalasData) {
+    // Reaplica a alíquota de IR do ciclo aos cards de escala guardados (desconto, valor real, valor por hora e perda de home office)
+    function ajustarAliquotaCardsEscala(raiz, escalasData, pct) {
+      const container = raiz.querySelector('#containerCardsEscalas');
+      if (!container) return;
+      const linha = (card, re) => Array.from(card.querySelectorAll('div')).find(d => {
+        const st = d.querySelector(':scope > strong');
+        return st && re.test(st.textContent.trim().toUpperCase()) && d.querySelector(':scope > span');
+      });
+      Array.from(container.children).forEach((card, idx) => {
+        const e = (Array.isArray(escalasData) ? escalasData[idx] : null) || {};
+        const perda = linha(card, /^PERDA DE RENDIMENTO/);
+        if (perda && e.homeOffice === true) {
+          const v = e.haveraAtividade === true ? (((220 + 440) / 2) / 2) * (1 - pct / 100) : perdaMediaHO(pct);
+          perda.querySelector(':scope > span').textContent = formatarMoedaBR(v);
+          return;
+        }
+        const jetonL = linha(card, /^VALOR DI[ÁA]RIO DO JETON:/), descL = linha(card, /^VALOR DI[ÁA]RIO DO DESCONTO IR:/), realL = linha(card, /^VALOR DI[ÁA]RIO REAL AP[ÓO]S IR:/);
+        if (!jetonL || !descL || !realL) return;
+        const sp = d => d.querySelector(':scope > span');
+        const jeton = moedaParaNumero(sp(jetonL).textContent), descAntigo = moedaParaNumero(sp(descL).textContent), realAntigo = moedaParaNumero(sp(realL).textContent);
+        const descNovo = jeton * pct / 100, realNovo = realAntigo + descAntigo - descNovo;
+        sp(descL).textContent = formatarMoedaBR(descNovo);
+        sp(realL).textContent = formatarMoedaBR(realNovo);
+        const horaL = linha(card, /^VALOR POR HORA TRABALHADA:/);
+        if (horaL && realAntigo > 0) {
+          const h = moedaParaNumero(sp(horaL).textContent);
+          sp(horaL).textContent = formatarMoedaBR(h * realNovo / realAntigo) + ' /H';
+        }
+      });
+    }
+
+    function sanitizarSnapshotEscalas(html, escalasData, pct) {
       if (!html) return html;
       const temp = document.createElement('div');
       temp.innerHTML = html;
@@ -445,6 +546,7 @@
         });
         reordenarPernoiteAposFuncao(secao);
         ajustarJornadaHomeOffice(secao, escalasData);
+        if (pct !== undefined) ajustarAliquotaCardsEscala(secao, escalasData, pct);
         const containerCards = secao.querySelector('#containerCardsEscalas');
         if (containerCards) {
           Array.from(containerCards.children).forEach(card => {
@@ -671,6 +773,7 @@ function centralizarCelulasOrganograma(html) {
 
       // Completa organogramas que foram salvos vazios (ciclo fechado sem abrir a página de Cotas Extras)
       repararOrganogramasCiclos();
+      repararAliquotaCiclos();
 
       const bruto = localStorage.getItem(STORAGE_KEY_CICLOS) || '[]';
       const assinatura = bruto.length + ':' + hashTexto(bruto);
@@ -713,9 +816,9 @@ function centralizarCelulasOrganograma(html) {
                 <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg whitespace-nowrap">#${ciclos.length - ordem}</span>
                 <h2 class="text-xl font-black text-blue-400 uppercase">${esc(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
               </div>
-              <p class="text-xs text-slate-300 mt-1 uppercase font-semibold">
+              <p class="text-sm text-slate-300 mt-1 uppercase font-semibold">
                 MÊS DE RECEBIMENTO: ${esc(ciclo.recebimentoEm || '')}
-                <span class="text-xs text-slate-500"><br>FECHADO EM ${esc(ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-')}</span>
+                <span class="text-sm text-slate-500"><br>FECHADO EM ${esc(ciclo.fechadoEm ? new Date(ciclo.fechadoEm).toLocaleString('pt-BR') : '-')}</span>
               </p>
               ${htmlResumoReceitasCiclo(ciclo)}
             </div>
@@ -749,7 +852,7 @@ function centralizarCelulasOrganograma(html) {
                 <tr><td class="px-4 py-4 align-top font-black text-emerald-400 uppercase">2. Organograma dos Auxílios</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlAuxilios)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. Receitas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-indigo-400 uppercase">4. Estatísticas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.estatisticas))}</td></tr>
-                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData)}</td></tr>
+                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -900,7 +1003,7 @@ function centralizarCelulasOrganograma(html) {
     }
 
     function montarEscalasEmPares(ciclo) {
-      const escalasSanitizado = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas));
+      const escalasSanitizado = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct);
       const temp = document.createElement('div');
       temp.innerHTML = escalasSanitizado;
       const secao = temp.firstElementChild;
@@ -1334,7 +1437,7 @@ function centralizarCelulasOrganograma(html) {
 
     function pdfItensEscalas(ciclo, medidor) {
       const t = document.createElement('div');
-      t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData);
+      t.innerHTML = sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct);
       const cards = Array.from((t.querySelector('#containerCardsEscalas') || {children: []}).children);
       const sub = cards.length ? `${cards.length} ${cards.length === 1 ? 'escala' : 'escalas'}` : '';
       const itens = [pdfMedirItem(pdfTituloSecao(5, 'Escalas Cadastradas', '#475569', sub), medidor, {keepNext: true})];
@@ -1903,6 +2006,11 @@ function centralizarCelulasOrganograma(html) {
         prosseguir();
       }
     });
+
+    // Alíquota lançada em Jeton Valores: reaplica ao voltar para esta página
+    window.addEventListener('focus', () => renderizarCiclos());
+    window.addEventListener('pageshow', () => renderizarCiclos());
+    document.addEventListener('visibilitychange', () => {if (!document.hidden) renderizarCiclos();});
 
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {renderizarCiclos();});

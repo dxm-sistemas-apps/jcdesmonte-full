@@ -1269,8 +1269,38 @@
       return valor;
     }
 
-    function extrairEscalasDetalhadasDeHtml(htmlEscalas, nomeCiclo, computarDiariasEAuxilios) {
+    // ===== Alíquota de IR por ciclo (valor lançado em jeton-valores; padrão 22% enquanto não lançado) =====
+    function aliquotaIRDoCiclo(c) {
+      const padrao = { pct: 22, informada: false };
+      try {
+        if (!c || !c.dataAbertura || !c.dataFechamento) return padrao;
+        const pA = String(c.dataAbertura).split('-'), pF = String(c.dataFechamento).split('-');
+        if (pA.length !== 3 || pF.length !== 3) return padrao;
+        const label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+        const banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {};
+        const partes = String(c.recebimentoEm || '').split('/');
+        const mes = (partes[0] || '').trim().toUpperCase(), ano = (partes[1] || '').trim();
+        const achados = [];
+        Object.keys(banco).forEach(a => (banco[a] || []).forEach(i => { if (i && i.ciclo === label) achados.push({ a, i }); }));
+        const alvo = achados.find(x => x.a === ano && (!mes || x.i.mesRecebimento === mes)) || achados.find(x => x.a === ano)
+          || achados.find(x => !mes || x.i.mesRecebimento === mes) || achados[0];
+        if (alvo && String(alvo.i.irpf == null ? '' : alvo.i.irpf).trim() !== '') {
+          const n = parseFloat(String(alvo.i.irpf).replace(',', '.'));
+          if (isFinite(n) && n >= 0 && n < 100) return { pct: n, informada: true };
+        }
+      } catch (_) {}
+      return padrao;
+    }
+    // Perda de rendimento de uma escala de home office: sem atividade = jeton médio líquido da alíquota do ciclo; com atividade = valor fixo
+    function perdaRendimentoHO(e, aliq) {
+      if (e && e.haveraAtividade === true) return (((220 + 440) / 2) / 2) * (1 - aliq);
+      return ((220 + 440) / 2) * (1 - aliq);
+    }
+    function formatarAliquotaIR(n) { return String(parseFloat(Number(n).toFixed(4))).replace('.', ','); }
+
+    function extrairEscalasDetalhadasDeHtml(htmlEscalas, nomeCiclo, computarDiariasEAuxilios, aliq) {
       if (computarDiariasEAuxilios === undefined) computarDiariasEAuxilios = true;
+      if (aliq === undefined) aliq = 0.22;
       const lista = [];
       if (!htmlEscalas) return lista;
 
@@ -1314,9 +1344,13 @@
         });
 
         const realTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO REAL APÓS IR:');
+        const descTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO DO DESCONTO IR:');
+        const valorDescontoIR = jetonBruto * aliq; // alíquota do ciclo (Jeton Valores)
+        // o card guardado pode ter sido gerado com outra alíquota: troca só o desconto
+        const descAntigo = descTxt !== null ? parseMoeda(descTxt) : jetonBruto * 0.22;
         const valorRealAposIR = !computarDiariasEAuxilios
-          ? (jetonBruto * 0.78)
-          : (realTxt !== null ? parseMoeda(realTxt) : ((jetonBruto * 0.78) + diarias + auxilios));
+          ? (jetonBruto * (1 - aliq))
+          : (realTxt !== null ? (parseMoeda(realTxt) + descAntigo - valorDescontoIR) : ((jetonBruto * (1 - aliq)) + diarias + auxilios));
         const valorHora = horas > 0 ? (valorRealAposIR / horas) : 0;
 
         let atividades = 0, periodoAtiv = '';
@@ -1331,10 +1365,8 @@
 
         const qtdTotTxt = extrairCampoPorRotulo(card, 'QTD. DE ATIVIDADES:');
         const totTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO TOTAL:');
-        const descTxt = extrairCampoPorRotulo(card, 'VALOR DIÁRIO DO DESCONTO IR:');
         const qtdAtividadesTotal = qtdTotTxt !== null ? (parseInt(String(qtdTotTxt).replace(/\D/g, ''), 10) || 0) : atividades;
         const valorDiarioTotal = (computarDiariasEAuxilios && totTxt !== null) ? parseMoeda(totTxt) : jetonBruto;
-        const valorDescontoIR = (computarDiariasEAuxilios && descTxt !== null) ? parseMoeda(descTxt) : (jetonBruto * 0.22);
 
         const kmTxt = extrairCampoPorRotulo(card, 'LOGÍSTICA/DESLOCAMENTO:');
         const kmRodados = kmTxt ? (parseFloat(String(kmTxt).replace(/[^\d,]/g, '').replace(',', '.')) || 0) : 0;
@@ -1345,13 +1377,14 @@
           kmRodados,
           horas,
           valorHora,
-          valorRealJeton: jetonBruto * 0.78,
+          valorRealJeton: jetonBruto * (1 - aliq),
           jetonBruto,
           atividades,
           periodoAtiv,
           qtdAtividadesTotal,
           valorDiarioTotal,
           valorDescontoIR,
+          aliquotaIR: aliq * 100,
           valorRealAposIR,
           horarioSaida,
           horarioChegada,
@@ -1740,6 +1773,7 @@
 
       let acumuladoGeral = {
         jetonBruto: 0,
+        descontoIR: 0,
         diarias: 0,
         auxilios: 0,
         diariasRecebivel: 0,
@@ -1778,10 +1812,18 @@
       const contagemLocais = {};
 
       ciclosFechados.forEach((ciclo, idx) => {
+        const aliqCiclo = aliquotaIRDoCiclo(ciclo).pct / 100;
         let jetonBrutoCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorTotalJeton'));
         let diariasCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorDiarias'));
         let auxiliosCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorAuxilios'));
         let receitaLiquidaCicloDireta = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorRealJeton'));
+        // O resumo guardado pode ter sido calculado com outra alíquota: reaplica a alíquota atual do ciclo
+        const descontoIRSnapshot = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorDescontoIR'));
+        const descontoIRCicloNovo = jetonBrutoCiclo * aliqCiclo;
+        const fatorRealCiclo = (receitaLiquidaCicloDireta > 0)
+          ? ((receitaLiquidaCicloDireta + descontoIRSnapshot - descontoIRCicloNovo) / receitaLiquidaCicloDireta) : 1;
+        if (receitaLiquidaCicloDireta > 0) receitaLiquidaCicloDireta = receitaLiquidaCicloDireta + descontoIRSnapshot - descontoIRCicloNovo;
+        acumuladoGeral.descontoIR += descontoIRCicloNovo;
         
         let diariasRecebivelCiclo = (ciclo.receitas && ciclo.receitas.indexOf('recValorRecebivelDiarias') !== -1)
           ? parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorRecebivelDiarias'))
@@ -1870,7 +1912,7 @@
         const totalBrutoCiclo = jetonBrutoCiclo + diariasRecebivelCiclo + auxiliosRecebivelCiclo; // só diárias/auxílios RECEBIDOS
         const receitaLiquidaCiclo = receitaLiquidaCicloDireta > 0
           ? receitaLiquidaCicloDireta
-          : (jetonBrutoCiclo * (1 - aliquotaIR)) + diariasCiclo + auxiliosCiclo;
+          : (jetonBrutoCiclo * (1 - aliqCiclo)) + diariasCiclo + auxiliosCiclo;
         const rendimentoHoraCiclo = metricasEscalas.horasTrabalhadas > 0
           ? (receitaLiquidaCiclo / metricasEscalas.horasTrabalhadas)
           : 0;
@@ -1887,7 +1929,7 @@
 
         const somarPerda = (condicaoFiltro) => escalasDoCiclo
           .filter(e => e.homeOffice === true && (!condicaoFiltro || e.homeOfficeCondicao === condicaoFiltro))
-          .reduce((soma, e) => soma + (parseFloat(e.valorMediaPerdaRendimento) || 0), 0);
+          .reduce((soma, e) => soma + perdaRendimentoHO(e, aliqCiclo), 0);
         acumuladoGeral.perdaRendimentoHomeOffice += somarPerda();
         acumuladoGeral.perdaRendimentoCompulsorio += somarPerda('compulsorio');
         acumuladoGeral.perdaRendimentoReuniao += somarPerda('reuniao');
@@ -1903,11 +1945,11 @@
             ? `${dataBR(ciclo.dataAbertura)} À ${dataBR(ciclo.dataFechamento)}`
             : `${ciclo.numero || (idx + 1)}`);
 
-        const valorDescontoIRCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorDescontoIR')) || (jetonBrutoCiclo * aliquotaIR);
-        const valorMedioEscalaCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioEscala'));
-        const valorMedioAtividadeCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioAtividade'));
-        const valorMedioHoraCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioHora'));
-        const valorRealDeJetonCiclo = jetonBrutoCiclo * (1 - aliquotaIR);
+        const valorDescontoIRCiclo = descontoIRCicloNovo;
+        const valorMedioEscalaCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioEscala')) * fatorRealCiclo;
+        const valorMedioAtividadeCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioAtividade')) * fatorRealCiclo;
+        const valorMedioHoraCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioHora')) * fatorRealCiclo;
+        const valorRealDeJetonCiclo = jetonBrutoCiclo * (1 - aliqCiclo);
 
         listaCiclosProcessados.push({
           num: ciclo.numero || (idx + 1),
@@ -1924,7 +1966,8 @@
           perdaRendimentoHomeOffice: somarPerda(),
           diariasEAuxiliosRecebiveis: diariasRecebivelCiclo + auxiliosRecebivelCiclo,
           diariasEAuxiliosNaoRecebiveis: -(naoDiariasCiclo + naoAuxiliosCiclo),
-          descontoIR: jetonBrutoCiclo * aliquotaIR,
+          descontoIR: jetonBrutoCiclo * aliqCiclo,
+          aliquotaIR: aliqCiclo * 100,
           simples: metricasEscalas.simples,
           dobrada: metricasEscalas.dobrada,
           tripla: metricasEscalas.tripla,
@@ -1938,7 +1981,7 @@
           status: 'FECHADO'
         });
 
-        listaEscalasDetalhadas.push(...extrairEscalasDetalhadasDeHtml(ciclo.escalas, nomeCicloProcessado, ciclo.computarDiariasEAuxilios !== false));
+        listaEscalasDetalhadas.push(...extrairEscalasDetalhadasDeHtml(ciclo.escalas, nomeCicloProcessado, ciclo.computarDiariasEAuxilios !== false, aliqCiclo));
       });
 
       const escalasVigentes = JSON.parse(localStorage.getItem('jetcontrol_escalas_dados')) || [];
@@ -1950,6 +1993,7 @@
           ? `${dataBR(cicloVigenteDadosPrevia.dataAbertura)} À ${dataBR(cicloVigenteDadosPrevia.dataFechamento)} (ABERTO)`
           : `${ciclosFechados.length + 1} (ABERTO)`);
 
+      const aliqVig = aliquotaIRDoCiclo(cicloVigenteDadosPrevia).pct / 100;
       let jetonBrutoVigente = 0;
       let diariasVigente = 0;
       let auxiliosVigente = 0;
@@ -2021,7 +2065,7 @@
           horasDetalhe = (dMinChegada - dMinSaida) / 60;
         }
 
-        const valorRealAposIRDetalhe = (jetonBrutoDetalhe * 0.78) + diariasDetalhe + auxiliosDetalhe;
+        const valorRealAposIRDetalhe = (jetonBrutoDetalhe * (1 - aliqVig)) + diariasDetalhe + auxiliosDetalhe;
         if (escala.homeOffice !== true) { // Home Office não é escala trabalhada (fora dos rankings)
         listaEscalasDetalhadas.push({
           data: escala.data ? dataBR(escala.data) : '-',
@@ -2029,13 +2073,14 @@
           kmRodados: (escala.kmRodados != null && escala.kmRodados !== '') ? (parseFloat(escala.kmRodados) || 0) : ((parseFloat(escala.kmFinal) >= parseFloat(escala.kmInicial)) ? (parseFloat(escala.kmFinal) - parseFloat(escala.kmInicial)) : 0),
           horas: horasDetalhe,
           valorHora: horasDetalhe > 0 ? (valorRealAposIRDetalhe / horasDetalhe) : 0,
-          valorRealJeton: jetonBrutoDetalhe * 0.78,
+          valorRealJeton: jetonBrutoDetalhe * (1 - aliqVig),
           jetonBruto: jetonBrutoDetalhe,
           atividades: maxAtividadesPeriodoDash(escala).max,
           periodoAtiv: maxAtividadesPeriodoDash(escala).per,
           qtdAtividadesTotal: ['Manha', 'Tarde', 'Noite'].reduce((t, P) => t + (escala['local' + P] ? 1 : 0) + (escala['atividadesExtras' + P] || []).filter(a => a && a.local).length, 0),
           valorDiarioTotal: jetonBrutoDetalhe + diariasDetalhe + auxiliosDetalhe,
-          valorDescontoIR: jetonBrutoDetalhe * 0.22,
+          valorDescontoIR: jetonBrutoDetalhe * aliqVig,
+          aliquotaIR: aliqVig * 100,
           valorRealAposIR: valorRealAposIRDetalhe,
           horarioSaida: escala.horarioSaida || '',
           horarioChegada: escala.horarioChegada || '',
@@ -2078,7 +2123,7 @@
 
         if (escala.homeOffice === true) {
           homeOfficesVigente++;
-          const perdaEsc = parseFloat(escala.valorMediaPerdaRendimento) || 0;
+          const perdaEsc = perdaRendimentoHO(escala, aliqVig);
           perdaRendimentoVigente += perdaEsc;
           if (escala.homeOfficeCondicao === 'compulsorio') { homeOfficesCompulsorioVigente++; perdaRendimentoCompulsorioVigente += perdaEsc; }
           if (escala.homeOfficeCondicao === 'reuniao') {
@@ -2128,6 +2173,7 @@
       });
 
       acumuladoGeral.jetonBruto += jetonBrutoVigente;
+      acumuladoGeral.descontoIR += jetonBrutoVigente * aliqVig;
       acumuladoGeral.diarias += diariasVigente;
       acumuladoGeral.auxilios += auxiliosVigente;
       acumuladoGeral.diariasRecebivel += diariasRecebivelVigente;
@@ -2173,22 +2219,25 @@
       const totalDiariasEAuxiliosGeral = acumuladoGeral.diarias + acumuladoGeral.auxilios;
       const totalDiariasEAuxiliosRecebivelGeral = acumuladoGeral.diariasRecebivel + acumuladoGeral.auxiliosRecebivel;
       const receitaBrutaGeral = acumuladoGeral.jetonBruto + totalDiariasEAuxiliosRecebivelGeral;
-      const jetonLiquidoGeral = acumuladoGeral.jetonBruto * (1 - aliquotaIR);
+      const jetonLiquidoGeral = acumuladoGeral.jetonBruto - acumuladoGeral.descontoIR;
       const receitaLiquidaGeral = jetonLiquidoGeral + totalDiariasEAuxiliosRecebivelGeral;
       const rendimentoHoraGeral = acumuladoGeral.horas > 0 ? (receitaLiquidaGeral / acumuladoGeral.horas) : 0;
 
+      const ciclosAliqDistintas = new Set([...listaCiclosProcessados.map(c => c.aliquotaIR), aliqVig * 100]).size > 1;
       const preencherKpis = (P, av) => {
         const totalDiariasEAuxiliosVig = av.diarias + av.auxilios;
         const totalDiariasEAuxiliosRecebivelVig = av.diariasRecebivel + av.auxiliosRecebivel;
         const receitaBrutaVig = av.jetonBruto + av.diariasRecebivel + av.auxiliosRecebivel;
-        const receitaLiquidaVig = av.jetonBruto * (1 - aliquotaIR) + totalDiariasEAuxiliosRecebivelVig;
+        const receitaLiquidaVig = (av.jetonBruto - av.descontoIR) + totalDiariasEAuxiliosRecebivelVig;
+        const aliqMediaPct = av.jetonBruto > 0 ? (av.descontoIR / av.jetonBruto * 100) : (aliqVig * 100);
         const rendimentoHoraVig = av.horas > 0 ? (receitaLiquidaVig / av.horas) : 0;
 
         document.getElementById(P + 'kpi-receita-bruta').textContent = formatMoeda(receitaBrutaVig);
         definirTextoRotulo(P + 'kpi-receita-bruta-sub', textoReceitaBrutaSub(ciclosFechados.length, P === 'tc-'));
 
         document.getElementById(P + 'kpi-receita-liquida').textContent = formatMoeda(receitaLiquidaVig);
-        definirTextoRotulo(P + 'kpi-ir-desc', textoReceitaLiquidaSub(100 - aliquotaIR * 100));
+        definirTextoRotulo(P + 'kpi-ir-desc', textoReceitaLiquidaSub(formatarAliquotaIR(100 - aliqMediaPct)));
+        definirTextoRotulo(P + 'kpi-total-desconto-ir-sub', P === 'tc-' ? `Alíquota${ciclosAliqDistintas ? ' média' : ''} de ${formatarAliquotaIR(aliqMediaPct)}% Sobre o Jeton Bruto` : `Alíquota de ${formatarAliquotaIR(aliqVig * 100)}% Sobre o Jeton Bruto`);
 
         document.getElementById(P + 'kpi-total-escalas').textContent = av.escalas;
         definirTextoRotulo(P + 'kpi-escalas-sub', textoVolumeEscalasSub(av.simples, av.dobrada, av.tripla, av.quadrupla));
@@ -2213,7 +2262,7 @@
         document.getElementById(P + 'kpi-rendimento-hora').textContent = `${formatMoeda(rendimentoHoraVig)}/h`;
         definirTextoRotulo(P + 'kpi-total-horas', textoRendimentoHoraSub(av.horas));
 
-        document.getElementById(P + 'kpi-total-desconto-ir').textContent = formatMoeda(av.jetonBruto * aliquotaIR);
+        document.getElementById(P + 'kpi-total-desconto-ir').textContent = formatMoeda(av.descontoIR);
 
         const totalRecebivelVig = av.diariasRecebivel + av.auxiliosRecebivel;
         const balancoDiariasVig = -av.diariasNaoRecebivel;
@@ -2246,16 +2295,16 @@
       document.getElementById('last-updated').textContent = `Sincronizado: ${agora.toLocaleTimeString('pt-BR')}`;
 
       const totalBrutoVigente = jetonBrutoVigente + diariasRecebivelVigente + auxiliosRecebivelVigente;
-      const receitaLiquidaVigente = (jetonBrutoVigente * (1 - aliquotaIR)) + diariasRecebivelVigente + auxiliosRecebivelVigente;
+      const receitaLiquidaVigente = (jetonBrutoVigente * (1 - aliqVig)) + diariasRecebivelVigente + auxiliosRecebivelVigente;
       const rendimentoHoraVigente = horasVigente > 0 ? (receitaLiquidaVigente / horasVigente) : 0;
 
       const somaAtividadesVigente = simplesVigente + dobradaVigente + triplaVigente + quadruplaVigente;
-      const valorDescontoIRVigente = jetonBrutoVigente * aliquotaIR;
+      const valorDescontoIRVigente = jetonBrutoVigente * aliqVig;
       const qtdEscalasVigentesSemHO = escalasVigentes.filter(e => e.homeOffice !== true).length;
       const valorMedioEscalaVigente = qtdEscalasVigentesSemHO > 0 ? (receitaLiquidaVigente / qtdEscalasVigentesSemHO) : 0;
       const valorMedioAtividadeVigente = somaAtividadesVigente > 0 ? (receitaLiquidaVigente / somaAtividadesVigente) : 0;
       const valorMedioHoraVigente = rendimentoHoraVigente;
-      const valorRealDeJetonVigente = jetonBrutoVigente * (1 - aliquotaIR);
+      const valorRealDeJetonVigente = jetonBrutoVigente * (1 - aliqVig);
 
       listaCiclosProcessados.push({
         num: (ciclosFechados.length + 1) + ' (Aberto)',
@@ -2272,7 +2321,8 @@
         perdaRendimentoHomeOffice: perdaRendimentoVigente,
         diariasEAuxiliosRecebiveis: diariasRecebivelVigente + auxiliosRecebivelVigente,
         diariasEAuxiliosNaoRecebiveis: -(naoDiariasVigente + naoAuxiliosVigente),
-        descontoIR: jetonBrutoVigente * aliquotaIR,
+        descontoIR: jetonBrutoVigente * aliqVig,
+        aliquotaIR: aliqVig * 100,
         simples: simplesVigente,
         dobrada: dobradaVigente,
         tripla: triplaVigente,
@@ -2353,7 +2403,7 @@
       renderizarGraficoComposicao('chartComposicaoReceita', 'composicaoValorFinal', 'composicaoBruta', 'JETON BRUTO',
         acumuladoGeral.jetonBruto, acumuladoGeral.auxiliosRecebivel, acumuladoGeral.diariasRecebivel);
       renderizarGraficoComposicao('chartComposicaoReceitaLiquida', 'composicaoLiquidaValorFinal', 'composicaoLiquida', 'JETON LÍQUIDO',
-        acumuladoGeral.jetonBruto * (1 - aliquotaIR), acumuladoGeral.auxiliosRecebivel, acumuladoGeral.diariasRecebivel);
+        acumuladoGeral.jetonBruto - acumuladoGeral.descontoIR, acumuladoGeral.auxiliosRecebivel, acumuladoGeral.diariasRecebivel);
       renderizarGraficoTipologia(acumuladoGeral.simples, acumuladoGeral.dobrada, acumuladoGeral.tripla, acumuladoGeral.quadrupla);
       renderizarGraficoTurnos(acumuladoGeral.turnos);
       renderizarGraficoFuncoes(acumuladoGeral.funcoes);
@@ -3151,6 +3201,7 @@
         `VALOR POR HORA TRABALHADA: ${formatMoeda(e.valorHora)}`,
         `VALOR DIÁRIO DO JETON: ${formatMoeda(e.jetonBruto)}`,
         `VALOR DIÁRIO TOTAL: ${formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto)}`,
+        `ALÍQUOTA IR: ${formatarAliquotaIR(e.aliquotaIR != null ? e.aliquotaIR : 22)}%`,
         `VALOR DIÁRIO DO DESCONTO IR: ${formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22)}`,
         `VALOR DIÁRIO REAL APÓS IR: ${formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78)}`
       ];
@@ -3207,7 +3258,7 @@
     // já aparece embaixo de cada barra; para repeti-lo no quadro, acrescente 'ciclo' no início da lista.
     // ============================================================
     // Sequência padrão dos dados de ciclo exibidos abaixo dos indicadores
-    const SEQ_CICLO = ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'descontoIR',
+    const SEQ_CICLO = ['escalas', 'homeOffices', 'atividades', 'perda', 'receitaBruta', 'aliquotaIR', 'descontoIR',
                        'auxPercebiveis', 'auxRecebidos', 'auxNaoRecebidos', 'receitaLiquida'];
     // tipo 'ciclo'  : "campos" = dados do próprio ciclo.
     // tipo 'escala' : "campos" = dados da escala; "camposCiclo" = dados do ciclo a que a escala pertence (sob o rótulo "DADOS DO CICLO").
@@ -3216,7 +3267,7 @@
       chartEvolucaoCiclos:           { tipo: 'ciclo',  campos: SEQ_CICLO },
       chartGanhoCiclos:              { tipo: 'ciclo',  campos: SEQ_CICLO },
       charttop3Horas:                { tipo: 'escala', campos: ['ciclo'], camposCiclo: SEQ_CICLO },
-      charttop3ValorRealJetonEscala: { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas', 'valorHora', 'valorDiarioTotal', 'descontoIR'], camposCiclo: SEQ_CICLO },
+      charttop3ValorRealJetonEscala: { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas', 'valorHora', 'valorDiarioTotal', 'aliquotaIR', 'descontoIR'], camposCiclo: SEQ_CICLO },
       charttop3ValorHora:            { tipo: 'escala', campos: ['ciclo', 'atividades', 'horas'], camposCiclo: SEQ_CICLO },
       charttop3SaidaCedo:            { tipo: 'escala', campos: ['ciclo', 'horario', 'locais', 'valorHora', 'valorRealAposIR'], camposCiclo: SEQ_CICLO },
       charttop3ChegadaTarde:         { tipo: 'escala', campos: ['ciclo', 'horario', 'locais', 'valorHora', 'valorRealAposIR'], camposCiclo: SEQ_CICLO },
@@ -3245,6 +3296,7 @@
       valorMedioHora:   { rotulo: 'VALOR POR HORA TRABALHADA',            valor: c => formatMoeda(c.valorMedioHora || 0), cor: COR_VERDE },
       perda:            { rotulo: 'PERDA DE RENDIMENTO (HOME OFFICE)',    valor: c => formatMoeda(c.perdaRendimentoHomeOffice || 0), cor: COR_PERDA },
       receitaBruta:     { rotulo: 'RECEITA BRUTA',                        valor: c => formatMoeda(c.receitaBruta || 0), cor: COR_VERDE },
+      aliquotaIR:       { rotulo: 'ALÍQUOTA IR',                         valor: c => formatarAliquotaIR(c.aliquotaIR != null ? c.aliquotaIR : 22) + '%', cor: COR_BRANCO },
       descontoIR:       { rotulo: 'DESCONTO IR',                          valor: c => formatMoeda(c.valorDescontoIR != null ? c.valorDescontoIR : (c.descontoIR || 0)), cor: COR_IR },
       receitaLiquida:   { rotulo: 'RECEITA LÍQUIDA',                      valor: c => formatMoeda(c.receitaLiquida || 0), cor: COR_LIQ },
       auxPercebiveis:   { rotulo: 'AUXÍLIOS E DIÁRIAS PERCEBÍVEIS',       valor: c => formatMoeda(c.diariasEAuxilios || 0), cor: COR_AMBAR },
@@ -3259,6 +3311,7 @@
       horas:            { rotulo: 'QTD. DE HORAS TRABALHADAS',            valor: e => formatarHorasDecimal(e.horas || 0) },
       valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_VERDE },
       valorDiarioTotal: { rotulo: 'VALOR DIÁRIO TOTAL',                   valor: e => formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto), cor: COR_VERDE },
+      aliquotaIR:       { rotulo: 'ALÍQUOTA IR',                         valor: e => formatarAliquotaIR(e.aliquotaIR != null ? e.aliquotaIR : 22) + '%', cor: COR_BRANCO },
       descontoIR:       { rotulo: 'VALOR DIÁRIO DO DESCONTO IR',          valor: e => formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22), cor: COR_IR },
       kmRodados:        { rotulo: 'LOGÍSTICA/DESLOCAMENTO',               valor: e => formatarKmDash(e.kmRodados || 0), cor: COR_KM },
       valorRealAposIR:  { rotulo: 'VALOR DIÁRIO REAL APÓS IR',            valor: e => formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78), cor: COR_LIQ }

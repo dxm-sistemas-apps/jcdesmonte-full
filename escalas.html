@@ -1218,12 +1218,36 @@
     }
 
     function focarCampo(id) {
-      const campo = typeof id === 'string' ? document.getElementById(id) : id;
+      let campo = typeof id === 'string' ? document.getElementById(id) : id;
       if (!campo) return;
+      // Campo oculto (data): destaca o calendário no lugar
+      if (campo.type === 'hidden') {
+        campo = document.getElementById(campo.id === 'dataAtividade' ? 'calendarioFixoAtividade' : (campo.id + 'Display')) || campo.parentElement;
+      }
+      // Contêiner (ex.: opções de home office): foca o primeiro controle visível dentro dele
+      if (campo && campo.id === 'calendarioFixoAtividade') { campo.setAttribute('tabindex', '-1'); campo.style.outline = 'none'; }
+      else if (campo && !/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(campo.tagName)) {
+        const interno = campo.querySelector('input:not([type="hidden"]):not(:disabled), select:not(:disabled), textarea:not(:disabled), button:not(:disabled)');
+        if (interno) campo = interno; else if (campo.tabIndex < 0) campo.setAttribute('tabindex', '-1');
+      }
+      // Expande seções recolhidas que contenham o campo
+      const det = campo.closest && campo.closest('details');
+      if (det && !det.open) det.open = true;
       campo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const alvoVisual = (campo.closest && (campo.closest('[id^="wrapper"]') || campo.closest('.calendario-fixo'))) || campo;
       setTimeout(() => {
-        try { campo.focus({ preventScroll: true }); } catch (_) { campo.focus(); }
-      }, 350);
+        try { campo.focus({ preventScroll: true }); } catch (_) { try { campo.focus(); } catch (e) {} }
+        if (campo.select && /^(text|number|search|tel)$/.test(campo.type || '')) { try { campo.select(); } catch (e) {} }
+        // reforço de rolagem caso o alerta tenha restaurado o foco/rolagem
+        try { campo.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+        const alvo = (campo.id === 'calendarioFixoAtividade') ? campo : (campo.tagName === 'INPUT' && campo.type !== 'radio' && campo.type !== 'checkbox' ? campo : alvoVisual);
+        if (alvo && alvo.style) {
+          const antes = alvo.style.boxShadow;
+          alvo.style.transition = 'box-shadow .3s';
+          alvo.style.boxShadow = '0 0 0 3px rgba(248,113,113,.85)';
+          setTimeout(() => { alvo.style.boxShadow = antes; }, 1800);
+        }
+      }, 400);
     }
 
     async function alertarCampoObrigatorio(id, mensagem) {
@@ -1942,7 +1966,7 @@
         if (!chk || !wrapper || wrapper.classList.contains('hidden')) continue;
         if (chk.dataset.decidido !== '1') {
           await mostrarAlertaEstilizado(`MARQUE 👍 (RECEBIDO) OU 👎 (NÃO RECEBIDO) PARA: ${item.nome}.`, 'CAMPO OBRIGATÓRIO');
-          wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          focarCampo(wrapper);
           return false;
         }
       }
@@ -2688,6 +2712,14 @@
       }
       if (!horarioChegada && !document.getElementById('horarioChegada').disabled) {
         await alertarCampoObrigatorio('horarioChegada', 'PREENCHA O CAMPO HORÁRIO DE CHEGADA.');
+        return;
+      }
+      if (!document.getElementById('kmInicial').disabled && numeroKm(document.getElementById('kmInicial').value) === null) {
+        await alertarCampoObrigatorio('kmInicial', 'PREENCHA O CAMPO KM INICIAL.');
+        return;
+      }
+      if (!document.getElementById('kmFinal').disabled && numeroKm(document.getElementById('kmFinal').value) === null) {
+        await alertarCampoObrigatorio('kmFinal', 'PREENCHA O CAMPO KM FINAL.');
         return;
       }
       {
@@ -4175,16 +4207,19 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const modalHOSim = valorHomeOfficeParaSalvar('modal') === true;
       if (modalHOSim && !condicaoHomeOfficeParaSalvar('modal')) {
         await mostrarAlertaEstilizado('SELECIONE A CONDIÇÃO DO HOME OFFICE.');
+        focarCampo('modalWrapperHomeOfficeCondicao');
         return;
       }
       if (modalHOSim && condicaoHomeOfficeParaSalvar('modal') === 'reuniao' && haveraAtividadeParaSalvar('modal') === null) {
         await mostrarAlertaEstilizado('RESPONDA SE HAVERÁ ATIVIDADE NESTE DIA (HOME OFFICE - REUNIÃO).');
+        focarCampo('modalWrapperHaveraAtividade');
         return;
       }
       const horarioSaidaLiberado = !document.getElementById('modalHorarioSaida').disabled;
       const horarioChegadaLiberado = !document.getElementById('modalHorarioChegada').disabled;
       if (!data || (!horarioSaida && horarioSaidaLiberado) || (!horarioChegada && horarioChegadaLiberado)) {
         await mostrarAlertaEstilizado('PREENCHA A DATA E OS HORÁRIOS DE SAÍDA E CHEGADA.');
+        focarCampo(!data ? 'modalDataAtividade' : (!horarioSaida && horarioSaidaLiberado ? 'modalHorarioSaida' : 'modalHorarioChegada'));
         return;
       }
       if (ciclo.dataAbertura && data < ciclo.dataAbertura) {
@@ -4226,6 +4261,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         for (let k = 0; k < lista.length; k++) {
           if (!lista[k].local || lista[k].funcao.length === 0 || lista[k].jeton === '') {
             await mostrarAlertaEstilizado(`PREENCHA O LOCAL, A FUNÇÃO E O JETON DA ${k + 2}ª ATIVIDADE (${P === 'Manha' ? 'MANHÃ' : P.toUpperCase()}).`, 'CAMPO OBRIGATÓRIO');
+            focarCampo('modalLocalExtra' + P + '_' + (k + 2));
             return;
           }
         }

@@ -215,6 +215,12 @@
       letter-spacing: 0.025em;
     }
 
+    /* Card "3 ciclos com maior ganho": ocupa toda a largura da tela */
+    html, body { overflow-x: hidden; }
+    .ganho-fullbleed { width: 100vw; max-width: 100vw; position: relative; left: 50%; margin-left: -50vw; padding: 0 1rem; box-sizing: border-box; }
+    .ganho-fullbleed .chart-container { min-height: 420px; }
+    @media (min-width: 1024px) { .ganho-fullbleed { padding: 0 2rem; } }
+
     .chart-container {
       position: relative;
       flex: 1;
@@ -677,7 +683,7 @@
     </section>
 
     <!-- PAINEL DE GRÁFICOS - LINHA 4 (CICLOS COM MAIOR GANHO) -->
-    <section class="dashboard-grid">
+    <section class="dashboard-grid ganho-fullbleed">
       <div class="chart-card col-12">
         <div class="chart-card-header">
           <div class="chart-card-title" id="title-chartGanhoCiclos">3 Ciclos com Maior Ganho (Receita Bruta x Receita Líquida)</div>

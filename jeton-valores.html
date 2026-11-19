@@ -316,6 +316,8 @@
           <script>
             const container = document.getElementById('containerIrpf');
             const inputEditable = document.getElementById('formIrpf');
+            // .value do campo editável (texto exatamente como digitado, ex.: 21,22)
+            Object.defineProperty(inputEditable, 'value', { get() { return inputEditable.innerText.trim(); }, set(v) { inputEditable.innerText = String(v == null ? '' : v).replace('.', ','); }, configurable: true });
 
             // Função centralizada para forçar o cursor sempre para o final do texto
             function moverCursorParaOFinal(elemento) {
@@ -330,9 +332,22 @@
 
             // 1. Bloqueia letras e aceita apenas números
             inputEditable.addEventListener('keypress', function (e) {
-              if (isNaN(String.fromCharCode(e.keyCode || e.which)) || e.keyCode === 13) {
+              const ch = String.fromCharCode(e.keyCode || e.which);
+              const txt = inputEditable.innerText.trim();
+              const ehSep = (ch === ',' || ch === '.');
+              if (ehSep) {
                 e.preventDefault();
+                if (txt !== '' && !txt.includes(',')) document.execCommand('insertText', false, ',');
+                return;
               }
+              if (e.keyCode === 13 || ch === ' ' || isNaN(ch)) e.preventDefault();
+            });
+            // Colar / outras entradas: mantém só dígitos e uma vírgula, sem arredondar
+            inputEditable.addEventListener('input', function () {
+              const t = inputEditable.innerText.replace(/\./g, ',').replace(/[^\d,]/g, '');
+              const i = t.indexOf(',');
+              const limpo = i < 0 ? t : t.slice(0, i + 1) + t.slice(i + 1).replace(/,/g, '');
+              if (limpo !== inputEditable.innerText) { inputEditable.innerText = limpo; moverCursorParaOFinal(inputEditable); }
             });
 
             // 2. Clique simples em QUALQUER lugar do container joga o cursor no fim
@@ -511,10 +526,20 @@
       return isNaN(num) ? 0 : num;
     }
 
+    // Alíquota IR: aceita vírgula ou ponto e NÃO arredonda (ex.: "21,22" => 21.22)
+    function parseIrpf(val) {
+      const n = parseFloat(String(val == null ? '' : val).trim().replace(/\s/g, '').replace('%', '').replace(',', '.'));
+      return isNaN(n) ? 0 : n;
+    }
+    function formatIrpf(n) {
+      // exibe exatamente o valor (até 4 casas, sem zeros sobrando), com vírgula
+      return String(parseFloat(Number(n).toFixed(4))).replace('.', ',');
+    }
+
     function calcLiq(val, irpf) {
       const v = formatNumeroFloat(val);
       if (v === 0) return 0;
-      return v * (1 - (formatNumeroFloat(irpf) / 100));
+      return v * (1 - (parseIrpf(irpf) / 100));
     }
 
     function getDiff(jc, cc) {
@@ -860,7 +885,7 @@
             <tr class="hover:bg-slate-800/40 transition">
               <td class="px-3 py-2.5 font-bold text-slate-200">${d.ciclo}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
-              <td class="px-3 py-2.5 text-red-400 font-bold">${d.irpf}%</td>
+              <td class="px-3 py-2.5 text-red-400 font-bold">${String(d.irpf).replace('.', ',')}%</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
               <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
@@ -945,7 +970,7 @@
       }
 
       const jc = lista.map(d => formatNumeroFloat(d.jetcontrol));
-      const irpf = lista.map(d => formatNumeroFloat(d.irpf));
+      const irpf = lista.map(d => parseIrpf(d.irpf));
       const maxJC = Math.max(...jc);
       const minJC = Math.min(...jc);
       const avgJC = jc.reduce((a, b) => a + b, 0) / jc.length;
@@ -985,15 +1010,15 @@
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MAIOR ALÍQUOTA:</span>
-                <span class="text-emerald-400 font-black text-sm">${Math.max(...irpf)}%</span>
+                <span class="text-emerald-400 font-black text-sm">${formatIrpf(Math.max(...irpf))}%</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA:</span>
-                <span class="text-red-400 font-black text-sm">${Math.min(...irpf)}%</span>
+                <span class="text-red-400 font-black text-sm">${formatIrpf(Math.min(...irpf))}%</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
-                <span class="text-brand-400 font-black text-sm">${(irpf.reduce((a, b) => a + b, 0) / irpf.length).toFixed(0)}%</span>
+                <span class="text-brand-400 font-black text-sm">${formatIrpf(irpf.reduce((a, b) => a + b, 0) / irpf.length)}%</span>
               </div>
             </div>
           </div>
@@ -1081,7 +1106,7 @@
                       <tr>
                         <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
                         <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
-                        <td class="p-2 text-red-400 font-bold">${d.irpf}%</td>
+                        <td class="p-2 text-red-400 font-bold">${String(d.irpf).replace('.', ',')}%</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
                         <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
                         <td class="p-2 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
@@ -1191,7 +1216,7 @@
         totais.diff += getDiff(jc, cc);
 
         return [
-          d.ciclo, d.mesRecebimento || '-', (d.irpf || '22') + '%',
+          d.ciclo, d.mesRecebimento || '-', String(d.irpf || '22').replace('.', ',') + '%',
           formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
           formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
           formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),
@@ -1264,7 +1289,7 @@
           totais.diff += getDiff(jc, cc);
 
           return [
-            d.ciclo, d.mesRecebimento || '-', (d.irpf || '22') + '%',
+            d.ciclo, d.mesRecebimento || '-', String(d.irpf || '22').replace('.', ',') + '%',
             formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
             formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
             formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),

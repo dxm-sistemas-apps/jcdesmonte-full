@@ -321,6 +321,17 @@
           </div>
         </div>
 
+        <!-- TOTAL DE ATIVIDADES -->
+        <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="block text-sm uppercase font-bold text-slate-400">Total de Atividades</span>
+            <span id="statTotalAtividades" class="text-xl font-black text-white">0</span>
+          </div>
+          <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
+            <i class="fa-solid fa-list-check"></i>
+          </div>
+        </div>
+
         <!-- TOTAL DE HORAS DE HOME OFFICE (CONDIÇÃO - REUNIÃO) -->
         <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
           <div>
@@ -329,6 +340,17 @@
           </div>
           <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
             <i class="fa-solid fa-people-group"></i>
+          </div>
+        </div>
+
+        <!-- TOTAL DE KMS RODADOS -->
+        <div class="lg:col-start-2 bg-slate-900/60 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <span class="block text-sm uppercase font-bold text-slate-400">Total de Kms Rodados</span>
+            <span id="statTotalKms" class="text-xl font-black text-white">0 km</span>
+          </div>
+          <div class="bg-slate-700/30 text-slate-300 p-3 rounded-lg text-lg">
+            <i class="fa-solid fa-route"></i>
           </div>
         </div>
       </div>
@@ -446,18 +468,8 @@
       <form id="formEscala" class="space-y-6">
         <input type="hidden" id="editIndex" value="-1">
         
-        <!-- Linha 1: Data e Horários Principais -->
-        <div class="relative flex flex-col items-center text-center">
-  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Data da Atividade *</label>
-  <input type="hidden" id="dataAtividade">
-  <div id="dataAtividadeSelecionada" class="text-xs font-bold text-slate-400 uppercase mb-2">Data selecionada: <span class="text-white">—</span></div>
-  <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
-  <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
-</div>
-          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-1">
-  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
-  <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
-</div>
+        <!-- HOME OFFICE (acima da data) -->
+        <div class="space-y-4">
           <div id="wrapperHomeOffice">
             <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Home Office</label>
             <div class="flex flex-wrap items-center gap-x-5 gap-y-1 min-h-[42px]">
@@ -476,9 +488,6 @@
             <input type="checkbox" id="chkHomeOffice" class="hidden" data-decidido="1">
             <input type="checkbox" id="chkHaveraAtividade" class="hidden" data-decidido="0">
           </div>
-        </div>
-
-        <!-- CONDIÇÃO DO HOME OFFICE (SÓ APARECE QUANDO "SIM" ESTÁ MARCADO) -->
         <div id="wrapperHomeOfficeCondicao" class="hidden">
           <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Condição do Home Office</label>
           <div class="flex flex-wrap gap-2">
@@ -505,7 +514,27 @@
             </div>
           </div>
         </div>
+        </div>
 
+        <!-- Linha 1: Data e Horários Principais -->
+        <div class="relative flex flex-col items-center text-center">
+  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Data da Atividade *</label>
+  <input type="hidden" id="dataAtividade">
+  <div id="dataAtividadeSelecionada" class="text-xs font-bold text-slate-400 uppercase mb-2">Data selecionada: <span class="text-white">—</span></div>
+  <div id="calendarioFixoAtividade" class="bg-slate-900 border border-slate-700 rounded-xl p-3 relative" style="width:256px;max-width:100%"></div>
+  <input type="text" id="dataAtividadeDisplay" readonly tabindex="-1" class="hidden">
+</div>
+          <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800 space-y-1">
+  <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Saída *</label>
+  <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioSaida" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+  <div class="mt-3">
+    <label for="kmInicial" class="block text-xs uppercase font-bold text-slate-400 mb-1">Km Inicial</label>
+    <input type="number" id="kmInicial" inputmode="decimal" step="any" min="0" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500 disabled:opacity-50">
+  </div>
+</div>
+        </div>
+
+        <!-- CONDIÇÃO DO HOME OFFICE (SÓ APARECE QUANDO "SIM" ESTÁ MARCADO) -->
         <hr class="border-slate-800">
         
         <!-- TURNO MANHÃ -->
@@ -751,6 +780,16 @@
         <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
           <label class="block text-sm uppercase font-bold text-slate-400 mb-1">Horário de Chegada *</label>
           <input type="text" inputmode="numeric" maxlength="5" autocomplete="off" placeholder="HH:MM" id="horarioChegada" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+          <div class="mt-3">
+            <label for="kmFinal" class="block text-xs uppercase font-bold text-slate-400 mb-1">Km Final</label>
+            <input type="number" id="kmFinal" inputmode="decimal" step="any" min="0" placeholder="0" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500 disabled:opacity-50">
+          </div>
+        </div>
+
+        <!-- LOGÍSTICA/DESLOCAMENTO -->
+        <div class="bg-slate-900/80 p-4 rounded-xl border border-slate-800">
+          <label class="block text-sm uppercase font-bold text-slate-400 mb-1">LOGÍSTICA/DESLOCAMENTO</label>
+          <input type="text" id="calcLogisticaDeslocamento" readonly value="0 km rodados" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-bold text-sm">
         </div>
 
         <!-- ANOTAÇÕES -->
@@ -1399,6 +1438,8 @@
         dataAtividade: document.getElementById('dataAtividade').value,
         horarioSaida: document.getElementById('horarioSaida').value,
         horarioChegada: document.getElementById('horarioChegada').value,
+        kmInicial: document.getElementById('kmInicial').value,
+        kmFinal: document.getElementById('kmFinal').value,
         localManha: document.getElementById('localManha').value,
         pernoiteManha: document.getElementById('pernoiteManha').value,
         jetonManha: document.getElementById('jetonManha').value,
@@ -1437,6 +1478,8 @@
         document.getElementById('dataAtividade').value = esc.dataAtividade || '';
         document.getElementById('horarioSaida').value = esc.horarioSaida || '';
         document.getElementById('horarioChegada').value = esc.horarioChegada || '';
+        document.getElementById('kmInicial').value = esc.kmInicial != null ? esc.kmInicial : '';
+        document.getElementById('kmFinal').value = esc.kmFinal != null ? esc.kmFinal : '';
         document.getElementById('localManha').value = esc.localManha || '';
         document.getElementById('localTarde').value = esc.localTarde || '';
         document.getElementById('localNoite').value = esc.localNoite || '';
@@ -1595,6 +1638,38 @@
       (esc['atividadesExtras' + P] || []).forEach(a => { if (a && a.local) lista.push({ local: a.local, funcao: a.funcao || [] }); });
       return lista;
     }
+
+    // ===== Logística/deslocamento (Km) =====
+    function numeroKm(v) {
+      if (v === '' || v === null || v === undefined) return null;
+      const n = parseFloat(String(v).replace(',', '.'));
+      return isFinite(n) ? n : null;
+    }
+    function kmRodadosEscala(esc) {
+      if (!esc || esc.homeOffice === true) return 0;
+      if (esc.kmRodados != null && esc.kmRodados !== '') return parseFloat(esc.kmRodados) || 0;
+      const i = numeroKm(esc.kmInicial), f = numeroKm(esc.kmFinal);
+      return (i !== null && f !== null && f >= i) ? (f - i) : 0;
+    }
+    function formatarKmNumero(n) {
+      return (Number(n) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 });
+    }
+    function formatarKmRodados(n) { return `${formatarKmNumero(n)} km rodados`; }
+    // Soma de "Qtd. de Atividade" dos períodos que têm local da atividade preenchido
+    function totalAtividadesPorLocal(esc) {
+      if (!esc || esc.homeOffice === true) return 0;
+      return ['Manha', 'Tarde', 'Noite'].reduce((acc, P) => acc + (esc['local' + P] ? (parseInt(esc['qtdAtividade' + P], 10) || 1) : 0), 0);
+    }
+    function atualizarLogisticaForm() {
+      const el = document.getElementById('calcLogisticaDeslocamento');
+      if (!el) return;
+      const i = numeroKm(document.getElementById('kmInicial').value);
+      const f = numeroKm(document.getElementById('kmFinal').value);
+      el.value = formatarKmRodados((i !== null && f !== null && f >= i) ? (f - i) : 0);
+    }
+    ['kmInicial', 'kmFinal'].forEach(id => {
+      document.addEventListener('input', ev => { if (ev.target && ev.target.id === id) { atualizarLogisticaForm(); if (typeof salvarRascunhoForm === 'function') { try { salvarRascunhoForm(); } catch (e) {} } } });
+    });
 
     function totalAtividadesEscala(esc) {
       return PERIODOS_ATIV.reduce((acc, P) => acc + obterAtividadesPeriodo(esc, P).length, 0);
@@ -2123,6 +2198,7 @@
     function idsCamposBloqueaveisHomeOffice(prefixo) {
       const idify = (nome) => prefixo ? `${prefixo}${nome.charAt(0).toUpperCase()}${nome.slice(1)}` : nome;
       const idsHorarios = [idify('horarioSaida'), idify('horarioChegada')];
+      if (!prefixo) idsHorarios.push('kmInicial', 'kmFinal');
       const idsDemais = [idify('percepcaoQuartoJeton')];
       ['Manha', 'Tarde', 'Noite'].forEach(periodo => {
         idsDemais.push(idify(`local${periodo}`), idify(`pernoite${periodo}`), idify(`jeton${periodo}`), idify(`qtdAtividade${periodo}`));
@@ -2170,6 +2246,7 @@
     }
 
     function calcularValoresEscala() {
+      atualizarLogisticaForm();
       let jManha = somaJetonsPeriodoForm('Manha');
       let jTarde = somaJetonsPeriodoForm('Tarde');
       let jNoite = somaJetonsPeriodoForm('Noite');
@@ -2418,6 +2495,7 @@
       let valorTotalJeton = 0;
       let totalHomeOffices = 0, totalHomeOfficesCompulsorio = 0, totalHomeOfficesReuniao = 0, totalHomeOfficesSolicitado = 0;
       let totalMinutosHomeOfficeReuniao = 0;
+      let totalKms = 0, totalAtividadesCiclo = 0;
 
       escalasSalvas.forEach(esc => {
         const jetons = listaJetonsEscala(esc);
@@ -2446,6 +2524,8 @@
           totalMinutosTrabalhados += calcularMinutosEntreHorarios(esc.horarioSaida, esc.horarioChegada);
         }
 
+        totalKms += kmRodadosEscala(esc);
+        totalAtividadesCiclo += totalAtividadesPorLocal(esc);
         const jetonStat = (parseFloat(esc.jetonManha) || 0) + (parseFloat(esc.jetonTarde) || 0) + ((parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1));
         valorTotalJeton += jetonStat;
       });
@@ -2465,6 +2545,8 @@
       document.getElementById('statHomeOffices').innerText = totalHomeOffices;
       document.getElementById('statHomeOfficesDetalhe').innerHTML = textoHomeOfficesDetalhe(totalHomeOfficesCompulsorio, totalHomeOfficesReuniao, totalHomeOfficesSolicitado);
       document.getElementById('statHorasHomeOfficeReuniao').innerText = formatarMinutosComoHoras(totalMinutosHomeOfficeReuniao);
+      document.getElementById('statTotalAtividades').innerText = totalAtividadesCiclo;
+      document.getElementById('statTotalKms').innerText = formatarKmNumero(totalKms) + ' km';
 
       document.getElementById('recValorTotalJeton').innerText = formatarMoeda(valorTotalJeton);
 
@@ -2608,6 +2690,13 @@
         await alertarCampoObrigatorio('horarioChegada', 'PREENCHA O CAMPO HORÁRIO DE CHEGADA.');
         return;
       }
+      {
+        const kmI = numeroKm(document.getElementById('kmInicial').value), kmF = numeroKm(document.getElementById('kmFinal').value);
+        if (kmI !== null && kmF !== null && kmF < kmI) {
+          await alertarCampoObrigatorio('kmFinal', 'O KM FINAL NÃO PODE SER MENOR QUE O KM INICIAL.');
+          return;
+        }
+      }
 
       const temManha = localManha !== '' || jetonManhaVal !== '' || funcaoManha.length > 0;
       const temTarde = localTarde !== '' || jetonTardeVal !== '' || funcaoTarde.length > 0;
@@ -2726,11 +2815,21 @@
       let escalasSalvas = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS)) || [];
       const editIndex = parseInt(document.getElementById('editIndex').value);
 
+      const kmSalvar = (() => {
+        const ho = valorHomeOfficeParaSalvar('') === true;
+        const i = ho ? null : numeroKm(document.getElementById('kmInicial').value);
+        const f = ho ? null : numeroKm(document.getElementById('kmFinal').value);
+        return { inicial: i === null ? '' : i, final: f === null ? '' : f, rodados: (i !== null && f !== null) ? (f - i) : 0 };
+      })();
+
       const dadosEscala = {
         numero: editIndex >= 0 ? escalasSalvas[editIndex].numero : '',
         data,
         horarioSaida,
         horarioChegada,
+        kmInicial: kmSalvar.inicial,
+        kmFinal: kmSalvar.final,
+        kmRodados: kmSalvar.rodados,
         localManha,
         localTarde,
         localNoite,
@@ -3318,6 +3417,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       document.getElementById('dataAtividade').value = esc.data || '';
       document.getElementById('horarioSaida').value = esc.horarioSaida || '';
       document.getElementById('horarioChegada').value = esc.horarioChegada || '';
+      document.getElementById('kmInicial').value = esc.kmInicial != null ? esc.kmInicial : '';
+      document.getElementById('kmFinal').value = esc.kmFinal != null ? esc.kmFinal : '';
       document.getElementById('localManha').value = esc.localManha || '';
       document.getElementById('localTarde').value = esc.localTarde || '';
       document.getElementById('localNoite').value = esc.localNoite || '';
@@ -3586,6 +3687,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${esc.homeOffice === true ? 0 : (totalAtividadesEscala(esc) || 1)}</span></div>
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
                   <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
+                  <div><strong>LOGÍSTICA/DESLOCAMENTO:</strong> <span class="text-white font-bold">${formatarKmRodados(kmRodadosEscala(esc))}</span></div>
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
                   <div><strong>VALOR DIÁRIO DO DESCONTO IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
                   <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
@@ -3773,6 +3875,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       let valorDiariasNaoRec = 0, valorAuxiliosNaoRec = 0;
       let totalHomeOffices = 0, totalHomeOfficesCompulsorio = 0, totalHomeOfficesReuniao = 0, totalHomeOfficesSolicitado = 0;
       let totalMinutosHomeOfficeReuniao = 0;
+      let totalKms = 0, totalAtividadesCiclo = 0;
 
       escalasArr.forEach(esc => {
         const jetons = listaJetonsEscala(esc);
@@ -3794,6 +3897,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
           totalMinutosTrabalhados += calcularMinutosEntreHorarios(esc.horarioSaida, esc.horarioChegada);
         }
 
+        totalKms += kmRodadosEscala(esc);
+        totalAtividadesCiclo += totalAtividadesPorLocal(esc);
         const jetonStat = (parseFloat(esc.jetonManha) || 0) + (parseFloat(esc.jetonTarde) || 0) + ((parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1));
         valorTotalJeton += jetonStat;
 
@@ -3843,7 +3948,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         valorDiarias, valorAuxilios, valorDiariasRecebivel, valorAuxiliosRecebivel,
         balancoDiarias, balancoAuxilios, valorDescontoIR, valorRealJeton,
         totalHomeOffices, totalHomeOfficesCompulsorio, totalHomeOfficesReuniao, totalHomeOfficesSolicitado,
-        horasHomeOfficeReuniao, minutosHomeOfficeReuniao
+        horasHomeOfficeReuniao, minutosHomeOfficeReuniao,
+        totalKms, totalAtividadesCiclo
       };
     }
 
@@ -3862,7 +3968,9 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Total de Escalas</span><span id="statTotalEscalas" class="text-xl font-black text-white">${v.totalEscalas}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas Trabalhadas</span><span id="statTotalHoras" class="text-xl font-black text-cyan-400">${formatarMinutosComoHoras(v.horasTotais * 60 + v.minutosTotais)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Home Offices</span><span id="statHomeOffices" class="text-xl font-black text-purple-400">${v.totalHomeOffices}</span><span id="statHomeOfficesDetalhe" class="block text-[10px] text-slate-500 uppercase mt-0.5">${textoHomeOfficesDetalhe(v.totalHomeOfficesCompulsorio, v.totalHomeOfficesReuniao, v.totalHomeOfficesSolicitado)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Total de Atividades</span><span id="statTotalAtividades" class="text-xl font-black text-white">${v.totalAtividadesCiclo || 0}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Horas de Home Office (Reunião)</span><span id="statHorasHomeOfficeReuniao" class="text-xl font-black text-indigo-400">${formatarMinutosComoHoras(v.horasHomeOfficeReuniao * 60 + v.minutosHomeOfficeReuniao)}</span></div>
+            <div class="lg:col-start-2 bg-slate-900/60 border border-slate-800 p-4 rounded-xl"><span class="block text-xs uppercase font-bold text-slate-400">Total de Kms Rodados</span><span id="statTotalKms" class="text-xl font-black text-white">${formatarKmNumero(v.totalKms)} km</span></div>
           </div>
         </section>
       `;
@@ -4170,6 +4278,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const dadosEscala = {
         numero: ciclo.escalasData[index].numero,
         data, horarioSaida, horarioChegada,
+        kmInicial: ciclo.escalasData[index].kmInicial, kmFinal: ciclo.escalasData[index].kmFinal, kmRodados: ciclo.escalasData[index].kmRodados,
         localManha, localTarde, localNoite,
         pernoiteManha, pernoiteTarde, pernoiteNoite,
         funcaoManha, funcaoTarde, funcaoNoite,

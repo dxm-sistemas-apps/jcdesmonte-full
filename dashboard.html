@@ -423,6 +423,11 @@
           <div class="kpi-subtext" id="kpi-escalas-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
+          <div class="kpi-label" id="label-kpi-km">LOGÍSTICA/DESLOCAMENTO</div>
+          <div class="kpi-value" id="kpi-km">0 km rodados</div>
+          <div class="kpi-subtext" id="kpi-km-sub">(calculado automaticamente)</div>
+        </div>
+        <div class="kpi-card white">
           <div class="kpi-label" id="label-kpi-home-offices">Qtd. de Home Offices</div>
           <div class="kpi-value" id="kpi-home-offices">0</div>
           <div class="kpi-subtext" id="kpi-home-offices-sub">(calculado automaticamente)</div>
@@ -488,6 +493,11 @@
           <div class="kpi-label" id="tc-label-kpi-total-escalas">Qtd. de Escalas</div>
           <div class="kpi-value" id="tc-kpi-total-escalas">0</div>
           <div class="kpi-subtext" id="tc-kpi-escalas-sub">(calculado automaticamente)</div>
+        </div>
+        <div class="kpi-card white">
+          <div class="kpi-label" id="tc-label-kpi-km">LOGÍSTICA/DESLOCAMENTO</div>
+          <div class="kpi-value" id="tc-kpi-km">0 km rodados</div>
+          <div class="kpi-subtext" id="tc-kpi-km-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
           <div class="kpi-label" id="tc-label-kpi-home-offices">Qtd. de Home Offices</div>
@@ -767,6 +777,27 @@
         <div id="info-charttop3ChegadaTarde" class="info-abaixo-grafico"></div>
       </div>
     </section>
+    <!-- PAINEL: LOGÍSTICA/DESLOCAMENTO (top 3 escalas e 3 ciclos com mais km rodados) -->
+    <section class="dashboard-grid">
+      <div class="chart-card col-6">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="title-charttop3KmEscala">top 3 Escalas com Maior LOGÍSTICA/DESLOCAMENTO</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="charttop3KmEscala"></canvas>
+        </div>
+        <div id="info-charttop3KmEscala" class="info-abaixo-grafico"></div>
+      </div>
+      <div class="chart-card col-6">
+        <div class="chart-card-header">
+          <div class="chart-card-title" id="title-charttop3KmCiclo">3 Ciclos com Maior LOGÍSTICA/DESLOCAMENTO</div>
+        </div>
+        <div class="chart-container">
+          <canvas id="charttop3KmCiclo"></canvas>
+        </div>
+        <div id="info-charttop3KmCiclo" class="info-abaixo-grafico"></div>
+      </div>
+    </section>
     <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
@@ -999,7 +1030,9 @@
       top3ValorMedioEscala: null,
       top3ValorMedioAtividade: null,
       top3ValorMedioHora: null,
-      top3DescontoIR: null
+      top3DescontoIR: null,
+      top3KmEscala: null,
+      top3KmCiclo: null
     };
 
     function parseMoeda(val) {
@@ -1086,6 +1119,9 @@
     ];
 
     // Horas em decimal (9h20m -> 9,3H). Aceita texto antigo "9H 20M" e novo "9,3H".
+    function formatarKmNumeroDash(n) { return (Number(n) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 1 }); }
+    function formatarKmDash(n) { return formatarKmNumeroDash(n) + ' km rodados'; }
+
     function formatarHorasDecimal(horas) {
       const n = Math.round((Number(horas) || 0) * 10) / 10;
       // valor exato (10, 8...) sem decimal; os demais com 1 casa (9,3)
@@ -1294,9 +1330,13 @@
         const valorDiarioTotal = (computarDiariasEAuxilios && totTxt !== null) ? parseMoeda(totTxt) : jetonBruto;
         const valorDescontoIR = (computarDiariasEAuxilios && descTxt !== null) ? parseMoeda(descTxt) : (jetonBruto * 0.22);
 
+        const kmTxt = extrairCampoPorRotulo(card, 'LOGÍSTICA/DESLOCAMENTO:');
+        const kmRodados = kmTxt ? (parseFloat(String(kmTxt).replace(/[^\d,]/g, '').replace(',', '.')) || 0) : 0;
+
         lista.push({
           data: dataTexto,
           cicloNome: nomeCiclo,
+          kmRodados,
           horas,
           valorHora,
           valorRealJeton: jetonBruto * 0.78,
@@ -1980,6 +2020,7 @@
         listaEscalasDetalhadas.push({
           data: escala.data ? dataBR(escala.data) : '-',
           cicloNome: nomeCicloVigente,
+          kmRodados: (escala.kmRodados != null && escala.kmRodados !== '') ? (parseFloat(escala.kmRodados) || 0) : ((parseFloat(escala.kmFinal) >= parseFloat(escala.kmInicial)) ? (parseFloat(escala.kmFinal) - parseFloat(escala.kmInicial)) : 0),
           horas: horasDetalhe,
           valorHora: horasDetalhe > 0 ? (valorRealAposIRDetalhe / horasDetalhe) : 0,
           valorRealJeton: jetonBrutoDetalhe * 0.78,
@@ -2250,6 +2291,14 @@
           .reduce((t, e) => t + (e.qtdAtividadesTotal != null ? e.qtdAtividadesTotal : (e.atividades || 0)), 0);
       });
 
+      listaCiclosProcessados.forEach(c => {
+        c.kmRodados = listaEscalasDetalhadas.filter(e => e.cicloNome === c.nome).reduce((t, e) => t + (e.kmRodados || 0), 0);
+      });
+      const kmVigenteDash = (listaCiclosProcessados.find(c => c.status === 'VIGENTE') || {}).kmRodados || 0;
+      const kmTodosCiclosDash = listaCiclosProcessados.reduce((t, c) => t + (c.kmRodados || 0), 0);
+      document.getElementById('kpi-km').textContent = formatarKmDash(kmVigenteDash);
+      document.getElementById('tc-kpi-km').textContent = formatarKmDash(kmTodosCiclosDash);
+
       // Ciclo de cada escala (para os dados do ciclo exibidos abaixo dos rankings de escalas)
       cicloPorNomeDash = {};
       listaCiclosProcessados.forEach(c => { cicloPorNomeDash[c.nome] = c; });
@@ -2279,6 +2328,8 @@
         .filter(e => e.saidaMin !== null && e.chegadaMin !== null);
       const top3SaidaCedo = [...escalasComHorario].sort((a, b) => a.saidaMin - b.saidaMin).slice(0, 3);
       const top3ChegadaTarde = [...escalasComHorario].sort((a, b) => b.chegadaMin - a.chegadaMin).slice(0, 3);
+      const top3KmEscala = [...listaEscalasDetalhadas].filter(e => (e.kmRodados || 0) > 0).sort((a, b) => b.kmRodados - a.kmRodados).slice(0, 3);
+      const top3KmCiclo = [...listaCiclosProcessados].filter(c => (c.kmRodados || 0) > 0).sort((a, b) => b.kmRodados - a.kmRodados).slice(0, 3);
       const top3ValorRealJetonEscala = [...listaEscalasDetalhadas].sort((a, b) => b.valorRealJeton - a.valorRealJeton).slice(0, 3);
 
       const top3Atividades = listaEscalasDetalhadas
@@ -2319,6 +2370,9 @@
       renderizarGraficoTopEscalas('charttop3ValorHora', 'top3ValorHora', top3ValorHora, 'valorHora', '#06b6d4', 'VALOR POR HORA (R$)', true);
       renderizarGraficoTopEscalas('charttop3ValorRealJetonEscala', 'top3ValorRealJetonEscala', top3ValorRealJetonEscala, 'valorRealJeton', '#10b981', 'VALOR REAL DE JETON (R$)', true);
 
+      renderizarGraficoTopEscalas('charttop3KmEscala', 'top3KmEscala', top3KmEscala, 'kmRodados', '#38bdf8', 'LOGÍSTICA/DESLOCAMENTO (KM)', false);
+      renderizarGraficoAtividadePorCiclo('charttop3KmCiclo', 'top3KmCiclo', top3KmCiclo, 'kmRodados', '#38bdf8', 'LOGÍSTICA/DESLOCAMENTO (KM)');
+
       renderizarGraficotop3Atividades(top3Atividades);
 
       renderizarGraficoAtividadePorCiclo('charttop3ValorRealJetonCiclo', 'top3ValorRealJetonCiclo', top3ValorRealJetonCiclo, 'valorRealDeJeton', '#10b981', 'VALOR REAL DE JETON (R$)');
@@ -2338,6 +2392,8 @@
       renderizarInfoAbaixoGrafico('charttop3ValorMedioAtividade', top3ValorMedioAtividade);
       renderizarInfoAbaixoGrafico('charttop3ValorMedioHora', top3ValorMedioHora);
       renderizarInfoAbaixoGrafico('charttop3DescontoIR', top3DescontoIR);
+      renderizarInfoAbaixoGrafico('charttop3KmEscala', top3KmEscala);
+      renderizarInfoAbaixoGrafico('charttop3KmCiclo', top3KmCiclo);
 
       aplicarSeletoresGraficos();
     }
@@ -3026,8 +3082,8 @@
         data: {
           labels,
           datasets: [
-            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6 },
-            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6 }
+            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 0.92, barPercentage: 0.96, maxBarThickness: 220 },
+            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 0.92, barPercentage: 0.96, maxBarThickness: 220 }
           ]
         },
         options: {
@@ -3051,6 +3107,7 @@
 
       const labels = listaCiclosTop.map(c => rotuloPeriodo(c.nome, c.num));
       const ehMoeda = /R\$/.test(labelDataset || '');
+      const ehKm = campo === 'kmRodados';
       const dados = listaCiclosTop.map(c => c[campo] || 0);
 
       graficosExtras[chaveInstancia] = new Chart(ctx, {
@@ -3067,12 +3124,13 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          formatarValorIndicador: ehKm ? ((v) => formatarKmDash(v)) : undefined,
           plugins: {
             legend: { display: false },
-            tooltip: ehMoeda ? { callbacks: { label: (item) => formatMoeda(item.parsed.y) } } : {}
+            tooltip: ehKm ? { callbacks: { label: (item) => formatarKmDash(item.parsed.y) } } : (ehMoeda ? { callbacks: { label: (item) => formatMoeda(item.parsed.y) } } : {})
           },
           scales: {
-            y: { grid: { color: '#334155' }, ticks: ehMoeda ? { color: '#94a3b8', callback: (v) => formatMoeda(v) } : { color: '#94a3b8', stepSize: 1, precision: 0 } },
+            y: { grid: { color: '#334155' }, ticks: ehKm ? { color: '#94a3b8', callback: (v) => formatarKmNumeroDash(v) } : ehMoeda ? { color: '#94a3b8', callback: (v) => formatMoeda(v) } : { color: '#94a3b8', stepSize: 1, precision: 0 } },
             x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
           }
         }
@@ -3098,6 +3156,7 @@
 
       const labels = listaTop.map(e => [`${e.data} -`, ...rotuloPeriodo(e.cicloNome)]);
       const dados = listaTop.map(e => e[campo] || 0);
+      const ehKm = campo === 'kmRodados';
 
       graficosExtras[chaveInstancia] = new Chart(ctx, {
         type: 'bar',
@@ -3115,17 +3174,17 @@
           maintainAspectRatio: false,
           events: ['click', 'touchstart'], // informações detalhadas aparecem ao clicar no indicador
           // valor escrito no gráfico: exatamente como no card (horas = mesmo formato de "QTD. DE HORAS TRABALHADAS")
-          formatarValorIndicador: (v) => ehMoeda ? formatMoeda(v) : formatarHorasDecimal(v),
+          formatarValorIndicador: (v) => ehKm ? formatarKmDash(v) : (ehMoeda ? formatMoeda(v) : formatarHorasDecimal(v)),
           plugins: {
             legend: { display: false },
             tooltip: { callbacks: {
               afterTitle: (items) => items && items.length ? linhasDetalheEscala(listaTop[items[0].dataIndex]) : [],
               // horas e valor/hora já constam nas linhas de detalhe; só o valor real de jeton precisa da linha própria
-              label: (item) => (campo === 'horas' || campo === 'valorHora') ? [] : `${labelDataset}: ` + (ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y))
+              label: (item) => (campo === 'horas' || campo === 'valorHora') ? [] : (ehKm ? formatarKmDash(item.parsed.y) : `${labelDataset}: ` + (ehMoeda ? formatMoeda(item.parsed.y) : formatarHorasDecimal(item.parsed.y)))
             } }
           },
           scales: {
-            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => ehMoeda ? formatMoeda(v) : `${v}H` } },
+            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => ehKm ? formatarKmNumeroDash(v) : (ehMoeda ? formatMoeda(v) : `${v}H`) } },
             x: { grid: { display: false }, ticks: { display: false } }
           }
         }
@@ -3159,7 +3218,9 @@
       charttop3ValorMedioEscala:     { tipo: 'ciclo',  campos: SEQ_CICLO },
       charttop3ValorMedioAtividade:  { tipo: 'ciclo',  campos: SEQ_CICLO },
       charttop3ValorMedioHora:       { tipo: 'ciclo',  campos: SEQ_CICLO },
-      charttop3DescontoIR:           { tipo: 'ciclo',  campos: SEQ_CICLO }
+      charttop3DescontoIR:           { tipo: 'ciclo',  campos: SEQ_CICLO },
+      charttop3KmEscala:             { tipo: 'escala', campos: ['ciclo', 'horario', 'locais', 'kmRodados'], camposCiclo: SEQ_CICLO },
+      charttop3KmCiclo:              { tipo: 'ciclo',  campos: ['ciclo', 'kmRodados', ...SEQ_CICLO] }
     };
     let cicloPorNomeDash = {};
     // CORES DOS DADOS ABAIXO DOS INDICADORES (Tailwind): troque só o hexadecimal
@@ -3168,6 +3229,7 @@
     const COR_VERDE = '#34d399';   // emerald-400  (valor por hora trabalhada, valor diário total, receita bruta)
     const COR_PERDA = '#f87171';   // red-400      (perda de rendimento)
     const COR_AMBAR = '#fbbf24';   // amber-400    (auxílios e diárias percebíveis)
+    const COR_KM = '#38bdf8';      // sky-400     (logística/deslocamento)
     const COR_BRANCO = '#f8fafc';  // branco       (auxílios e diárias recebidos quando R$ 0,00)
     const CAMPOS_INFO_CICLO = {
       escalas:          { rotulo: 'QTD. DE ESCALAS',                      valor: c => String(c.escalas || 0) },
@@ -3181,6 +3243,7 @@
       receitaLiquida:   { rotulo: 'RECEITA LÍQUIDA',                      valor: c => formatMoeda(c.receitaLiquida || 0), cor: COR_LIQ },
       auxPercebiveis:   { rotulo: 'AUXÍLIOS E DIÁRIAS PERCEBÍVEIS',       valor: c => formatMoeda(c.diariasEAuxilios || 0), cor: COR_AMBAR },
       auxRecebidos:     { rotulo: 'AUXÍLIOS E DIÁRIAS RECEBIDOS',         valor: c => formatMoeda(c.diariasEAuxiliosRecebiveis || 0), cor: c => (c.diariasEAuxiliosRecebiveis || 0) > 0 ? COR_VERDE : COR_BRANCO },
+      kmRodados:        { rotulo: 'LOGÍSTICA/DESLOCAMENTO',            valor: c => formatarKmDash(c.kmRodados || 0), cor: COR_KM },
       auxNaoRecebidos:  { rotulo: 'AUXÍLIOS E DIÁRIAS NÃO RECEBIDOS',     valor: c => formatMoeda(c.diariasEAuxiliosNaoRecebiveis || 0), cor: COR_IR }
     };
     const CAMPOS_INFO_ESCALA = {
@@ -3191,6 +3254,7 @@
       valorHora:        { rotulo: 'VALOR POR HORA TRABALHADA',            valor: e => formatMoeda(e.valorHora || 0), cor: COR_VERDE },
       valorDiarioTotal: { rotulo: 'VALOR DIÁRIO TOTAL',                   valor: e => formatMoeda(e.valorDiarioTotal != null ? e.valorDiarioTotal : e.jetonBruto), cor: COR_VERDE },
       descontoIR:       { rotulo: 'VALOR DIÁRIO DO DESCONTO IR',          valor: e => formatMoeda(e.valorDescontoIR != null ? e.valorDescontoIR : e.jetonBruto * 0.22), cor: COR_IR },
+      kmRodados:        { rotulo: 'LOGÍSTICA/DESLOCAMENTO',               valor: e => formatarKmDash(e.kmRodados || 0), cor: COR_KM },
       valorRealAposIR:  { rotulo: 'VALOR DIÁRIO REAL APÓS IR',            valor: e => formatMoeda(e.valorRealAposIR != null ? e.valorRealAposIR : e.jetonBruto * 0.78), cor: COR_LIQ }
     };
 

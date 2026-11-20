@@ -2500,7 +2500,7 @@
     // ============================================================================
     // RÓTULOS COM 2+ PALAVRAS: uma palavra POR LINHA, centralizadas (como um <br> automático)
     // Vale para os rótulos de baixo (eixo X) de TODOS os gráficos de barras/linhas, por exemplo
-    // "JETON BRUTO" vira "JETON" em cima e "BRUTO" embaixo. Rótulos que já vêm em várias linhas
+    // "JETON BRUTO" vira "JETON" em cima e "BRUTO" embaixo. Rótulo no formato "LOCAL - OUTRO LOCAL" vira "LOCAL" em cima e "OUTRO LOCAL" embaixo (sem o "-"). Rótulos que já vêm em várias linhas
     // (ex.: datas dos ciclos, ou os que você quebrou com <br> acima) não são alterados.
     // Para desligar tudo: "ativo: false". Para deixar um gráfico de fora: coloque o id dele em "exceto".
     // ============================================================================
@@ -2516,13 +2516,19 @@
           const d = chart.config.data;
           if (!d || !Array.isArray(d.labels)) return;
           let alterou = false;
-          d.labels = d.labels.map(l => {
+          const quebrar = (l) => {
             if (typeof l !== 'string') return l;
-            const p = l.trim().split(/\s+/);
-            if (p.length < 2) return l;
-            alterou = true;
-            return p;
-          });
+            const t = l.trim();
+            // "VALVERDE - NOVA IGUAÇU": 1ª parte em cima e o restante (mesmo composto) embaixo, sem o "-"
+            const h = t.split(/\s+[-–—]\s+/);
+            if (h.length > 1) return [h[0].trim(), h.slice(1).join(' - ').trim()];
+            const p = t.split(/\s+/);
+            return p.length > 1 ? p : t;
+          };
+          d.labels = d.labels.map(l => { const r = quebrar(l); if (Array.isArray(r) && !Array.isArray(l)) alterou = true; return r; });
+          // se algum rótulo foi quebrado, TODOS passam a ser lista de linhas (os de 1 palavra ficam com 1 linha),
+          // evitando mistura de texto simples com listas, que fazia alguns rótulos sumirem
+          if (alterou) d.labels = d.labels.map(l => Array.isArray(l) ? l : [l]);
           if (alterou) {
             const o = chart.config.options = chart.config.options || {};
             o.scales = o.scales || {}; o.scales.x = o.scales.x || {};

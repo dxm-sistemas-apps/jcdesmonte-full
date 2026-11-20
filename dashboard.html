@@ -215,12 +215,7 @@
       letter-spacing: 0.025em;
     }
 
-    /* Card "3 ciclos com maior ganho": ocupa toda a largura da tela */
     html, body { overflow-x: hidden; }
-    .ganho-fullbleed { width: 100vw; max-width: 100vw; position: relative; left: 50%; margin-left: -50vw; padding: 0 1rem; box-sizing: border-box; }
-    .ganho-fullbleed .chart-container { min-height: 420px; }
-    .ganho-fullbleed .chart-card { padding-left: .75rem; padding-right: .75rem; }
-    @media (min-width: 1024px) { .ganho-fullbleed { padding: 0 2rem; } }
 
     .chart-container {
       position: relative;
@@ -694,7 +689,7 @@
     </section>
 
     <!-- PAINEL DE GRÁFICOS - LINHA 4 (CICLOS COM MAIOR GANHO) -->
-    <section class="dashboard-grid ganho-fullbleed">
+    <section class="dashboard-grid">
       <div class="chart-card col-12">
         <div class="chart-card-header">
           <div class="chart-card-title" id="title-chartGanhoCiclos">3 Ciclos com Maior Ganho (Receita Bruta x Receita Líquida)</div>
@@ -3153,23 +3148,22 @@
         data: {
           labels,
           datasets: [
-            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 0.98, barPercentage: 0.96 },
-            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 0.98, barPercentage: 0.96 }
+            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6 },
+            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          formatarValorIndicador: (v) => formatMoeda(v),
           plugins: {
             legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 15 } },
             tooltip: { callbacks: { label: (item) => `${item.dataset.label}: ${formatMoeda(item.parsed.y)}` } }
           },
           scales: {
-            // sem eixo lateral (os valores ficam sobre as barras): a área do gráfico ocupa toda a largura
-            y: { grid: { color: '#334155' }, border: { display: false }, ticks: { display: false } },
+            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => formatMoeda(v) } },
             x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-          },
-          layout: { padding: 0 }
+          }
         }
       });
     }

@@ -2464,6 +2464,62 @@
       aplicarSeletoresGraficos();
     }
 
+    // ============================================================================
+    // ★ PADRÃO VISUAL DE TODOS OS GRÁFICOS DO DASHBOARD  ★   (EDITE SOMENTE AQUI)
+    // Tudo abaixo vale para TODOS os gráficos e para as caixas de informação abaixo deles.
+    // Para mudar só UM gráfico, use os blocos "porGrafico" mais abaixo (fonte do eixo X, valor diagonal etc.).
+    // ============================================================================
+    const PADRAO_VISUAL = {
+      // ---- MARGENS DO GRÁFICO (em pixels) -------------------------------------
+      // margemDireita: espaço entre o fim do gráfico (linhas horizontais, barras e caixas de info) e a borda do card.
+      //   Quanto MENOR, mais o gráfico se estica até a lateral direita. A esquerda é dada pelos valores do eixo Y.
+      margemDireita: 8,
+      margemEsquerda: 0,
+      margemTopo: 4,          // espaço acima do gráfico (gráficos com valor em diagonal usam "espacoTopo" em VALOR_DIAGONAL)
+      margemBaixo: 0,
+
+      // ---- LARGURA DAS BARRAS (0 a 1) -----------------------------------------
+      // larguraGrupo: fatia do espaço de cada categoria ocupada pelas barras (1 = sem vão entre categorias).
+      // larguraBarra: fatia do grupo ocupada por cada barra (1 = barras coladas; menor = mais espaço entre elas).
+      larguraGrupo: 1,
+      larguraBarra: 0.94,
+
+      // ---- TAMANHO DAS FONTES DOS GRÁFICOS (px) -------------------------------
+      fonteEixoY: 12,         // valores da esquerda (R$ 8.000,00 ...)
+      fonteLegenda: 12,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
+      // fonte dos rótulos de baixo (eixo X): veja FONTE_ROTULOS_GRAFICOS logo abaixo
+      // fonte do valor escrito acima do indicador: veja VALOR_DIAGONAL.fonte
+
+      // ---- CAIXAS DE INFORMAÇÃO ABAIXO DOS GRÁFICOS ---------------------------
+      infoFonte: 11,          // tamanho da letra das caixas (px). Diminua se o texto quebrar em telas pequenas
+      infoPaddingVertical: 8, // espaço interno em cima/baixo (px)
+      infoPaddingLateral: 6,  // espaço interno nas laterais (px) — menor = mais espaço para o texto
+      infoEspacoEntreCaixas: 8, // distância entre as caixas (px)
+      infoArredondamento: 10  // cantos arredondados (px)
+    };
+    (function () { // aplica as medidas das caixas de informação (variáveis CSS lidas na função renderizarInfoAbaixoGrafico)
+      const r = document.documentElement.style;
+      r.setProperty('--info-fonte', PADRAO_VISUAL.infoFonte + 'px');
+      r.setProperty('--info-pad-v', PADRAO_VISUAL.infoPaddingVertical + 'px');
+      r.setProperty('--info-pad-h', PADRAO_VISUAL.infoPaddingLateral + 'px');
+      r.setProperty('--info-gap', PADRAO_VISUAL.infoEspacoEntreCaixas + 'px');
+      r.setProperty('--info-raio', PADRAO_VISUAL.infoArredondamento + 'px');
+    })();
+    if (window.Chart && Chart.defaults) {
+      // larguras das barras (valem para todo gráfico de barras que não defina a sua própria)
+      if (Chart.defaults.datasets && Chart.defaults.datasets.bar) {
+        Chart.defaults.datasets.bar.categoryPercentage = PADRAO_VISUAL.larguraGrupo;
+        Chart.defaults.datasets.bar.barPercentage = PADRAO_VISUAL.larguraBarra;
+      }
+      // fontes do eixo Y e da legenda
+      if (Chart.defaults.scales && Chart.defaults.scales.linear) {
+        Chart.defaults.scales.linear.ticks = Object.assign({}, Chart.defaults.scales.linear.ticks, { font: { size: PADRAO_VISUAL.fonteEixoY } });
+      }
+      if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
+        Chart.defaults.plugins.legend.labels = Object.assign({}, Chart.defaults.plugins.legend.labels, { font: { size: PADRAO_VISUAL.fonteLegenda } });
+      }
+    }
+
     // ============================================================
     // TAMANHO DA FONTE DOS RÓTULOS DE BAIXO (EIXO X) DOS GRÁFICOS
     // Para mudar TODOS: altere "padrao". Para mudar UM gráfico: descomente/adicione
@@ -2618,9 +2674,12 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 60,
+      angulo: 60,             // inclinação do valor escrito acima do indicador (graus)
+      fonte: 12,              // tamanho da fonte desse valor (px)
       espacoTopo: 64,
-      espacoDireita: 56,
+      // margem direita: usa PADRAO_VISUAL.margemDireita (igual em todos os gráficos). Aumente aqui SOMENTE se o
+      // valor em diagonal do último indicador estiver sendo cortado na borda direita.
+      espacoDireita: PADRAO_VISUAL.margemDireita,
       porGrafico: {
         chartComposicaoReceita: true,          // Composição da Receita Bruta
         chartComposicaoReceitaLiquida: true,   // Composição da Receita Líquida
@@ -2678,7 +2737,7 @@
           if (!valorDiagonalAtivo(chart)) return;
           const o = chart.config.options = chart.config.options || {};
           const base = (o.layout && o.layout.padding) || {};
-          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: 4, right: 8, bottom: 0, left: 0 }, base, { top: VALOR_DIAGONAL.espacoTopo, right: VALOR_DIAGONAL.espacoDireita }) });
+          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: VALOR_DIAGONAL.espacoTopo, right: VALOR_DIAGONAL.espacoDireita }) });
         }
       });
     }
@@ -2834,7 +2893,7 @@
               (m0.data || []).forEach((el0, i0) => {
                 if (!el0 || ds0.data[i0] === undefined || ds0.data[i0] === null) return;
                 const txt0 = textoValorIndicador(chart, { d: d0, i: i0 });
-                if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el0, txt0, 11); return; }
+                if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el0, txt0, VALOR_DIAGONAL.fonte); return; }
                 const w0 = c0.measureText(txt0).width + 10, h0 = 18;
                 const x0 = Math.min(Math.max(el0.x - w0 / 2, a0.left + 1), a0.right - w0 - 1);
                 // na BASE do indicador (encostado no eixo), sempre dentro da área do gráfico
@@ -2858,7 +2917,7 @@
           const el = meta && meta.data && meta.data[sel.i];
           if (!el) return;
           const txt = textoValorIndicador(chart, sel);
-          if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el, txt, 12); return; }
+          if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el, txt, VALOR_DIAGONAL.fonte); return; }
           const c = chart.ctx, area = chart.chartArea;
           c.save();
           c.font = 'bold 12px sans-serif';
@@ -2899,7 +2958,7 @@
       Chart.defaults.plugins.tooltip.enabled = false; // os valores aparecem no quadro próprio, ao clicar no indicador
     }
     if (window.Chart && Chart.defaults && Chart.defaults.layout) {
-      Chart.defaults.layout.padding = { top: 4, right: 8, bottom: 0, left: 0 };
+      Chart.defaults.layout.padding = { top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda };
     }
     if (window.Chart && Chart.defaults && Chart.defaults.interaction) {
       Chart.defaults.interaction.mode = 'nearest';
@@ -3148,14 +3207,13 @@
         data: {
           labels,
           datasets: [
-            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 1, barPercentage: 0.94 },
-            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 1, barPercentage: 0.94 }
+            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6 },
+            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: { padding: { left: 0, right: 0, top: 18, bottom: 0 } },
           formatarValorIndicador: (v) => formatMoeda(v),
           plugins: {
             legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 15 } },
@@ -3362,7 +3420,7 @@
       const catalogo = cfg.tipo === 'escala' ? CAMPOS_INFO_ESCALA : CAMPOS_INFO_CICLO;
       box.style.display = 'grid';
       box.style.gridTemplateColumns = 'repeat(' + lista.length + ', 1fr)';
-      box.style.gap = '8px';
+      box.style.gap = 'var(--info-gap, 8px)';
       box.style.marginTop = '10px';
       const comTitulo = cfg.campos.includes('ciclo');
       box.innerHTML = lista.map(item => {
@@ -3378,7 +3436,7 @@
               + cfg.camposCiclo.filter(k => CAMPOS_INFO_CICLO[k]).map(k => linhaCampo(CAMPOS_INFO_CICLO[k], cic)).join('');
           }
         }
-        return `<div style="background:#0f172a;border:1px solid #334155;border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">${titulo}${linhas}</div>`;
+        return `<div style="background:#0f172a;border:1px solid #334155;border-radius:var(--info-raio, 10px);padding:var(--info-pad-v, 8px) var(--info-pad-h, 6px);text-align:center;font-size:var(--info-fonte, 11px);line-height:1.45;color:#e2e8f0;text-transform:uppercase;overflow-wrap:anywhere;">${titulo}${linhas}</div>`;
       }).join('');
       registrarInfoAlinhado(canvasId, box.id);
     }

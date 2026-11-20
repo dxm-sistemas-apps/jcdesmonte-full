@@ -3148,13 +3148,14 @@
         data: {
           labels,
           datasets: [
-            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6 },
-            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6 }
+            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 1, barPercentage: 0.94 },
+            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 1, barPercentage: 0.94 }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: { padding: { left: 0, right: 0, top: 18, bottom: 0 } },
           formatarValorIndicador: (v) => formatMoeda(v),
           plugins: {
             legend: { position: 'bottom', labels: { color: '#f8fafc', padding: 15 } },

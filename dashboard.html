@@ -2487,16 +2487,56 @@
       // ---- TAMANHO DAS FONTES DOS GRÁFICOS (px) -------------------------------
       fonteEixoY: 12,         // valores da esquerda (R$ 8.000,00 ...)
       fonteLegenda: 12,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
+      fonteValor: 12,         // valor escrito (em diagonal) acima do indicador
       // fonte dos rótulos de baixo (eixo X): veja FONTE_ROTULOS_GRAFICOS logo abaixo
-      // fonte do valor escrito acima do indicador: veja VALOR_DIAGONAL.fonte
+      // fonte do valor escrito acima do indicador: fonteValor, logo abaixo
 
       // ---- CAIXAS DE INFORMAÇÃO ABAIXO DOS GRÁFICOS ---------------------------
       infoFonte: 11,          // tamanho da letra das caixas (px). Diminua se o texto quebrar em telas pequenas
       infoPaddingVertical: 8, // espaço interno em cima/baixo (px)
       infoPaddingLateral: 6,  // espaço interno nas laterais (px) — menor = mais espaço para o texto
       infoEspacoEntreCaixas: 8, // distância entre as caixas (px)
-      infoArredondamento: 10  // cantos arredondados (px)
+      infoArredondamento: 10, // cantos arredondados (px)
+
+      // ---- AJUSTE INDIVIDUAL POR GRÁFICO ---------------------------------------
+      // Para mudar UM gráfico, escreva uma linha com o id dele (lista abaixo) e, dentro das chaves, SÓ o que quer
+      // mudar. O que não for escrito continua com o padrão acima. Qualquer opção deste bloco pode ser usada:
+      //   margemDireita, margemEsquerda, margemTopo, margemBaixo, larguraGrupo, larguraBarra, fonteEixoY,
+      //   fonteLegenda, fonteValor (valor escrito acima da barra), infoFonte, infoPaddingVertical,
+      //   infoPaddingLateral, infoEspacoEntreCaixas, infoArredondamento
+      // Exemplo (descomente e ajuste):  chartGanhoCiclos: { larguraBarra: 0.8, fonteEixoY: 10, infoFonte: 10 },
+      // (a fonte dos rótulos de baixo, eixo X, de cada gráfico fica em FONTE_ROTULOS_GRAFICOS)
+      //
+      // IDs dos gráficos:
+      //   chartEvolucaoCiclos ........... Evolução de Faturamento por Ciclo
+      //   chartComposicaoReceita ........ Composição da Receita Bruta
+      //   chartComposicaoReceitaLiquida . Composição da Receita Líquida
+      //   chartTipologiaCarga ........... Tipologia de Carga de Trabalho
+      //   chartTurnos ................... Alocação de Turnos Operacionais
+      //   chartFuncoes .................. Distribuição de Funções
+      //   chartLocaisFiscalizados ....... top 6 Locais Mais Fiscalizados
+      //   chartGanhoCiclos .............. 3 Ciclos com Maior Ganho (Receita Bruta x Líquida)
+      //   chartAtividadeSimples / chartAtividadeDobradas / chartAtividadeTriplas / chartAtividadeQuadruplas
+      //   charttop3HomeOffices .......... 3 Ciclos com Mais Home Offices
+      //   charttop3Horas ................ top 3 Escalas com Maior Qtd. de Horas
+      //   charttop3ValorHora ............ top 3 Escalas com Maior Valor por Hora
+      //   charttop3SaidaCedo / charttop3ChegadaTarde ... top 3 Escalas Saída Mais Cedo / Chegada Mais Tarde
+      //   charttop3KmEscala / charttop3KmCiclo ......... Logística/Deslocamento (escalas / ciclos)
+      //   charttop3ValorRealJetonEscala . top 3 Escalas com Maior Valor Real de Jeton
+      //   charttop3Atividades ........... top 3 Escalas com 2 ou Mais Atividades
+      //   charttop3ValorRealJetonCiclo .. 3 Ciclos com Maior Valor Real de Jeton
+      //   charttop3ValorMedioEscala / charttop3ValorMedioAtividade / charttop3ValorMedioHora
+      //   charttop3DescontoIR ........... 3 Ciclos com Maior Desconto IR
+      porGrafico: {
+        // chartGanhoCiclos: { larguraBarra: 0.8, fonteEixoY: 10, infoFonte: 10 },
+        // charttop3ValorRealJetonEscala: { margemDireita: 8, fonteValor: 11 },
+      }
     };
+    // Valor de uma opção para um gráfico: o ajuste individual (se houver) ou o padrão
+    function visualDe(canvasId, chave) {
+      const ov = canvasId && PADRAO_VISUAL.porGrafico && PADRAO_VISUAL.porGrafico[canvasId];
+      return (ov && ov[chave] !== undefined) ? ov[chave] : PADRAO_VISUAL[chave];
+    }
     (function () { // aplica as medidas das caixas de informação (variáveis CSS lidas na função renderizarInfoAbaixoGrafico)
       const r = document.documentElement.style;
       r.setProperty('--info-fonte', PADRAO_VISUAL.infoFonte + 'px');
@@ -2518,6 +2558,37 @@
       if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
         Chart.defaults.plugins.legend.labels = Object.assign({}, Chart.defaults.plugins.legend.labels, { font: { size: PADRAO_VISUAL.fonteLegenda } });
       }
+    }
+
+    if (window.Chart && Chart.register) {
+      // aplica os ajustes individuais de PADRAO_VISUAL.porGrafico a cada gráfico (margens, barras e fontes)
+      Chart.register({
+        id: 'padraoVisualPorGrafico',
+        beforeInit(chart) {
+          const id = chart.canvas && chart.canvas.id;
+          const ov = id && PADRAO_VISUAL.porGrafico[id];
+          if (!ov) return;
+          const o = chart.config.options = chart.config.options || {};
+          if (['margemDireita', 'margemEsquerda', 'margemTopo', 'margemBaixo'].some(k => ov[k] !== undefined) && !valorDiagonalAtivo(chart)) {
+            o.layout = Object.assign({}, o.layout, { padding: {
+              top: visualDe(id, 'margemTopo'), right: visualDe(id, 'margemDireita'),
+              bottom: visualDe(id, 'margemBaixo'), left: visualDe(id, 'margemEsquerda') } });
+          }
+          if (chart.config.type === 'bar') {
+            chart.config.data.datasets.forEach(ds => {
+              if (ov.larguraGrupo !== undefined && ds.categoryPercentage === undefined) ds.categoryPercentage = ov.larguraGrupo;
+              if (ov.larguraBarra !== undefined && ds.barPercentage === undefined) ds.barPercentage = ov.larguraBarra;
+            });
+          }
+          if (ov.fonteEixoY !== undefined) {
+            o.scales = o.scales || {}; o.scales.y = o.scales.y || {}; o.scales.y.ticks = Object.assign({}, o.scales.y.ticks, { font: { size: ov.fonteEixoY } });
+          }
+          if (ov.fonteLegenda !== undefined) {
+            o.plugins = o.plugins || {}; o.plugins.legend = o.plugins.legend || {};
+            o.plugins.legend.labels = Object.assign({}, o.plugins.legend.labels, { font: { size: ov.fonteLegenda } });
+          }
+        }
+      });
     }
 
     // ============================================================
@@ -2675,10 +2746,10 @@
     const VALOR_DIAGONAL = {
       padrao: false,
       angulo: 60,             // inclinação do valor escrito acima do indicador (graus)
-      fonte: 12,              // tamanho da fonte desse valor (px)
+      // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
-      // margem direita: usa PADRAO_VISUAL.margemDireita (igual em todos os gráficos). Aumente aqui SOMENTE se o
-      // valor em diagonal do último indicador estiver sendo cortado na borda direita.
+      // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
+      //  use margemDireita em PADRAO_VISUAL.porGrafico. Aumente se o valor do último indicador for cortado.)
       espacoDireita: PADRAO_VISUAL.margemDireita,
       porGrafico: {
         chartComposicaoReceita: true,          // Composição da Receita Bruta
@@ -2737,7 +2808,7 @@
           if (!valorDiagonalAtivo(chart)) return;
           const o = chart.config.options = chart.config.options || {};
           const base = (o.layout && o.layout.padding) || {};
-          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: VALOR_DIAGONAL.espacoTopo, right: VALOR_DIAGONAL.espacoDireita }) });
+          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: VALOR_DIAGONAL.espacoTopo, right: visualDe(chart.canvas && chart.canvas.id, 'margemDireita'), bottom: visualDe(chart.canvas && chart.canvas.id, 'margemBaixo'), left: visualDe(chart.canvas && chart.canvas.id, 'margemEsquerda') }) });
         }
       });
     }
@@ -2893,7 +2964,7 @@
               (m0.data || []).forEach((el0, i0) => {
                 if (!el0 || ds0.data[i0] === undefined || ds0.data[i0] === null) return;
                 const txt0 = textoValorIndicador(chart, { d: d0, i: i0 });
-                if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el0, txt0, VALOR_DIAGONAL.fonte); return; }
+                if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el0, txt0, visualDe(chart.canvas && chart.canvas.id, 'fonteValor')); return; }
                 const w0 = c0.measureText(txt0).width + 10, h0 = 18;
                 const x0 = Math.min(Math.max(el0.x - w0 / 2, a0.left + 1), a0.right - w0 - 1);
                 // na BASE do indicador (encostado no eixo), sempre dentro da área do gráfico
@@ -2917,7 +2988,7 @@
           const el = meta && meta.data && meta.data[sel.i];
           if (!el) return;
           const txt = textoValorIndicador(chart, sel);
-          if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el, txt, VALOR_DIAGONAL.fonte); return; }
+          if (valorDiagonalAtivo(chart)) { desenharValorDiagonal(chart, el, txt, visualDe(chart.canvas && chart.canvas.id, 'fonteValor')); return; }
           const c = chart.ctx, area = chart.chartArea;
           c.save();
           c.font = 'bold 12px sans-serif';
@@ -3168,7 +3239,18 @@
       const ctx = document.getElementById('chartLocaisFiscalizados').getContext('2d');
       if (graficosExtras.locais) graficosExtras.locais.destroy();
 
-      const labels = topLocais.map(([nome]) => nome);
+      // Nomes longos viram várias linhas (sem girar) para o rótulo não "empurrar" o gráfico para a direita.
+      // LARGURA_LINHA_LOCAL = máximo de caracteres por linha do nome; diminua se o nome ainda estiver largo demais.
+      const LARGURA_LINHA_LOCAL = 12;
+      const quebrarNome = (nome) => {
+        const linhas = []; let atual = '';
+        String(nome).split(/\s+/).forEach(p => {
+          if (atual && (atual + ' ' + p).length > LARGURA_LINHA_LOCAL) { linhas.push(atual); atual = p; } else atual = atual ? atual + ' ' + p : p;
+        });
+        if (atual) linhas.push(atual);
+        return linhas.length > 1 ? linhas : (linhas[0] || '');
+      };
+      const labels = topLocais.map(([nome]) => quebrarNome(nome));
       const dados = topLocais.map(([, qtd]) => qtd);
 
       graficosExtras.locais = new Chart(ctx, {
@@ -3188,7 +3270,7 @@
           plugins: { legend: { display: false } },
           scales: {
             y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1, precision: 0 } },
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, font: { size: 10 } } }
+            x: { grid: { display: false }, ticks: { color: '#94a3b8', autoSkip: false, minRotation: 0, maxRotation: 0, align: 'inner', font: { size: 10 } } }
           }
         }
       });
@@ -3421,6 +3503,9 @@
       box.style.display = 'grid';
       box.style.gridTemplateColumns = 'repeat(' + lista.length + ', 1fr)';
       box.style.gap = 'var(--info-gap, 8px)';
+      // ajuste individual deste gráfico (PADRAO_VISUAL.porGrafico): sobrepõe as variáveis CSS só nesta caixa
+      [['infoFonte', '--info-fonte', 'px'], ['infoPaddingVertical', '--info-pad-v', 'px'], ['infoPaddingLateral', '--info-pad-h', 'px'], ['infoEspacoEntreCaixas', '--info-gap', 'px'], ['infoArredondamento', '--info-raio', 'px']]
+        .forEach(([k, v, u]) => box.style.setProperty(v, visualDe(canvasId, k) + u));
       box.style.marginTop = '10px';
       const comTitulo = cfg.campos.includes('ciclo');
       box.innerHTML = lista.map(item => {

@@ -2553,9 +2553,9 @@
       larguraBarra: 0.94,
 
       // ---- TAMANHO DAS FONTES DOS GRÁFICOS (px) -------------------------------
-      fonteEixoY: 12,         // valores da esquerda (R$ 8.000,00 ...)
-      fonteLegenda: 12,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
-      fonteValor: 12,         // valor escrito (em diagonal) acima do indicador
+      fonteEixoY: 11,         // valores da esquerda (R$ 8.000,00 ...)
+      fonteLegenda: 11,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
+      fonteValor: 13,         // valor escrito (em diagonal) acima do indicador
       // fonte dos rótulos de baixo (eixo X): veja FONTE_ROTULOS_GRAFICOS logo abaixo
       // fonte do valor escrito acima do indicador: fonteValor, logo abaixo
 
@@ -2665,7 +2665,7 @@
     // a linha dele em "porGrafico" (a chave é o id do <canvas>) com o tamanho desejado.
     // ============================================================
     const FONTE_ROTULOS_GRAFICOS = {
-      padrao: 10,
+      padrao: 11,
       porGrafico: {
         // chartEvolucaoCiclos: 9,
         // chartTipologiaCarga: 9,
@@ -2813,7 +2813,7 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 60,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 62,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
@@ -3173,7 +3173,7 @@
       graficosExtras[chaveInstancia] = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: [rotuloJeton, 'AUXÍLIOS RECEBIDOS', 'DIÁRIAS RECEBIDOS'],
+          labels: [rotuloJeton, 'AUXÍLIOS RECEBIDOS', 'DIÁRIAS RECEBIDAS'],
           datasets: [{
             label: 'VALOR (R$)',
             data: [jeton, auxiliosRecebivel, diariasRecebivel],

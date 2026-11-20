@@ -219,6 +219,7 @@
     html, body { overflow-x: hidden; }
     .ganho-fullbleed { width: 100vw; max-width: 100vw; position: relative; left: 50%; margin-left: -50vw; padding: 0 1rem; box-sizing: border-box; }
     .ganho-fullbleed .chart-container { min-height: 420px; }
+    .ganho-fullbleed .chart-card { padding-left: .75rem; padding-right: .75rem; }
     @media (min-width: 1024px) { .ganho-fullbleed { padding: 0 2rem; } }
 
     .chart-container {
@@ -429,6 +430,11 @@
           <div class="kpi-subtext" id="kpi-escalas-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
+          <div class="kpi-label" id="label-kpi-atividades">Qtd. de Atividades</div>
+          <div class="kpi-value" id="kpi-atividades">0</div>
+          <div class="kpi-subtext" id="kpi-atividades-sub">(calculado automaticamente)</div>
+        </div>
+        <div class="kpi-card white">
           <div class="kpi-label" id="label-kpi-km">LOGÍSTICA/DESLOCAMENTO</div>
           <div class="kpi-value" id="kpi-km">0 km rodados</div>
           <div class="kpi-subtext" id="kpi-km-sub">(calculado automaticamente)</div>
@@ -499,6 +505,11 @@
           <div class="kpi-label" id="tc-label-kpi-total-escalas">Qtd. de Escalas</div>
           <div class="kpi-value" id="tc-kpi-total-escalas">0</div>
           <div class="kpi-subtext" id="tc-kpi-escalas-sub">(calculado automaticamente)</div>
+        </div>
+        <div class="kpi-card white">
+          <div class="kpi-label" id="tc-label-kpi-atividades">Qtd. de Atividades</div>
+          <div class="kpi-value" id="tc-kpi-atividades">0</div>
+          <div class="kpi-subtext" id="tc-kpi-atividades-sub">(calculado automaticamente)</div>
         </div>
         <div class="kpi-card white">
           <div class="kpi-label" id="tc-label-kpi-km">LOGÍSTICA/DESLOCAMENTO</div>
@@ -2352,6 +2363,10 @@
       });
       const kmVigenteDash = (listaCiclosProcessados.find(c => c.status === 'VIGENTE') || {}).kmRodados || 0;
       const kmTodosCiclosDash = listaCiclosProcessados.reduce((t, c) => t + (c.kmRodados || 0), 0);
+      const ativVigenteDash = (listaCiclosProcessados.find(c => c.status === 'VIGENTE') || {}).qtdAtividades || 0;
+      const ativTodosCiclosDash = listaCiclosProcessados.reduce((t, c) => t + (c.qtdAtividades || 0), 0);
+      document.getElementById('kpi-atividades').textContent = ativVigenteDash;
+      document.getElementById('tc-kpi-atividades').textContent = ativTodosCiclosDash;
       document.getElementById('kpi-km').textContent = formatarKmDash(kmVigenteDash);
       document.getElementById('tc-kpi-km').textContent = formatarKmDash(kmTodosCiclosDash);
 
@@ -3138,8 +3153,8 @@
         data: {
           labels,
           datasets: [
-            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 0.92, barPercentage: 0.96, maxBarThickness: 220 },
-            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 0.92, barPercentage: 0.96, maxBarThickness: 220 }
+            { label: 'RECEITA BRUTA', data: bruta, backgroundColor: '#3b82f6', borderRadius: 6, categoryPercentage: 0.98, barPercentage: 0.96 },
+            { label: 'RECEITA LÍQUIDA', data: liquida, backgroundColor: '#10b981', borderRadius: 6, categoryPercentage: 0.98, barPercentage: 0.96 }
           ]
         },
         options: {
@@ -3150,9 +3165,11 @@
             tooltip: { callbacks: { label: (item) => `${item.dataset.label}: ${formatMoeda(item.parsed.y)}` } }
           },
           scales: {
-            y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: (v) => formatMoeda(v) } },
+            // sem eixo lateral (os valores ficam sobre as barras): a área do gráfico ocupa toda a largura
+            y: { grid: { color: '#334155' }, border: { display: false }, ticks: { display: false } },
             x: { grid: { display: false }, ticks: { color: '#94a3b8' } }
-          }
+          },
+          layout: { padding: 0 }
         }
       });
     }

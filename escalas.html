@@ -3827,12 +3827,17 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       }
       return partes.join(' <BR> ');
     }
+    // Soma da "Qtd. de Atividade" dos períodos com local preenchido (home office não conta)
+    function qtdAtividadesCiclo(ciclo) {
+      return (Array.isArray(ciclo.escalasData) ? ciclo.escalasData : []).reduce((t, e) => t + totalAtividadesPorLocal(e), 0);
+    }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
       const ho = comAliquota(aliquotaIRDoCiclo(ciclo).pct, () => resumoEscalasHomeOffice(ciclo.escalasData));
       const linhaPerda = ho.ho > 0
         ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`

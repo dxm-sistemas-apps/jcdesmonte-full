@@ -888,7 +888,7 @@
 
       let linhasHTML = '';
       if (lista.length === 0) {
-        linhasHTML = `<tr><td colspan="10" class="py-6 text-slate-500 italic text-center">NENHUM LANÇAMENTO REGISTRADO PARA O ANO ${anoAtual}.</td></tr>`;
+        linhasHTML = `<tr><td colspan="11" class="py-6 text-slate-500 italic text-center">NENHUM LANÇAMENTO REGISTRADO PARA O ANO ${anoAtual}.</td></tr>`;
       } else {
         linhasHTML = lista.map((d, i) => {
           const st = getStatus(d.jetcontrol, d.contracheque);
@@ -906,6 +906,10 @@
               <td class="px-3 py-2.5 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
               <td class="px-3 py-2.5 font-black ${diffColor}">${formatMoeda(diff)}</td>
               <td class="px-3 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span></td>
+              <td class="px-3 py-2.5 whitespace-nowrap">
+                <button type="button" onclick="abrirEdicaoLancamento('${anoAtual}', ${i})" title="Editar lançamento" class="bg-brand-600/80 hover:bg-brand-500 text-white font-bold px-2.5 py-1 rounded-lg text-[10px] uppercase transition"><i class="fa-solid fa-pen mr-1"></i>Editar</button>
+                <button type="button" onclick="excluirLancamento('${anoAtual}', ${i})" title="Excluir lançamento" class="bg-slate-800 hover:bg-red-700 text-red-300 hover:text-white font-bold px-2.5 py-1 rounded-lg text-[10px] uppercase transition ml-1"><i class="fa-solid fa-trash-can"></i></button>
+              </td>
             </tr>
           `;
         }).join('');
@@ -932,6 +936,7 @@
                   <th class="px-3 py-3">JETON AUDITADO <BR>(DGAD)</th>
                   <th class="px-3 py-3">BALANÇO</th>
                   <th class="px-3 py-3">STATUS</th>
+                  <th class="px-3 py-3">AÇÕES</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800/60 bg-slate-900/40 font-medium">
@@ -948,6 +953,7 @@
                     <td class="px-3 py-3 text-amber-400 font-black">${formatMoeda(totais.dg)}</td>
                     <td class="px-3 py-3 font-black ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
                     <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${getStatusTotal(totais).cor}">${getStatusTotal(totais).texto}</span></td>
+                    <td class="px-3 py-3"></td>
                   </tr>
                 ` : ''}
               </tbody>
@@ -1145,6 +1151,118 @@
           </div>
         `;
       }).join('');
+    }
+
+    // ===== Edição / exclusão de lançamentos da tabela =====
+    function fecharEdicaoLancamento() {
+      const m = document.getElementById('modalEdicaoLancamento');
+      if (m) m.remove();
+    }
+    function escHtmlJV(t) { return String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    function abrirEdicaoLancamento(ano, idx) {
+      const banco = obterBancoDados();
+      const d = (banco[ano] || [])[idx];
+      if (!d) return;
+      fecharEdicaoLancamento();
+      const campoMoeda = (id, rotulo, valor) => `
+        <div>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">${rotulo}</label>
+          <input type="text" id="${id}" inputmode="numeric" autocomplete="off" value="${escHtmlJV(formatMoeda(valor))}"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-brand-500">
+        </div>`;
+      const fundo = document.createElement('div');
+      fundo.id = 'modalEdicaoLancamento';
+      fundo.className = 'fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4';
+      fundo.innerHTML = `
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+          <div class="flex items-center justify-between p-4 border-b border-slate-800">
+            <h3 class="text-sm font-black uppercase text-white"><i class="fa-solid fa-pen text-brand-500 mr-2"></i>Editar lançamento (${escHtmlJV(ano)})</h3>
+            <button type="button" id="btnFecharEdicaoLanc" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+          <div class="p-4 space-y-3 overflow-y-auto">
+            <div>
+              <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Ciclo</label>
+              <input type="text" id="edLancCiclo" value="${escHtmlJV(d.ciclo)}" autocomplete="off"
+                class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm uppercase focus:outline-none focus:border-brand-500">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Mês de recebimento</label>
+                <input type="text" id="edLancMes" value="${escHtmlJV(d.mesRecebimento || '')}" autocomplete="off"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm uppercase focus:outline-none focus:border-brand-500">
+              </div>
+              <div>
+                <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota IR (%)</label>
+                <input type="text" id="edLancIrpf" inputmode="decimal" autocomplete="off" placeholder="%" value="${escHtmlJV(String(d.irpf == null ? '' : d.irpf).replace('.', ','))}"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500">
+              </div>
+            </div>
+            ${campoMoeda('edLancJc', 'Jeton bruto (JETCONTROL)', d.jetcontrol)}
+            ${campoMoeda('edLancCc', 'Jeton bruto (Contracheque)', d.contracheque)}
+            ${campoMoeda('edLancDg', 'Jeton auditado (DGAD)', d.dgad)}
+          </div>
+          <div class="flex justify-end gap-2 p-4 border-t border-slate-800">
+            <button type="button" id="btnCancelarEdicaoLanc" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2 rounded-xl text-xs uppercase">Cancelar</button>
+            <button type="button" id="btnSalvarEdicaoLanc" class="bg-brand-600 hover:bg-brand-500 text-white font-bold px-4 py-2 rounded-xl text-xs uppercase"><i class="fa-solid fa-floppy-disk mr-1"></i>Salvar alterações</button>
+          </div>
+        </div>`;
+      document.body.appendChild(fundo);
+
+      ['edLancJc', 'edLancCc', 'edLancDg'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+          const limpo = e.target.value.replace(/\D/g, '');
+          e.target.value = limpo ? formatMoeda(parseFloat(limpo) / 100) : '';
+        });
+      });
+      // Alíquota: só dígitos e uma vírgula (sem arredondar)
+      document.getElementById('edLancIrpf').addEventListener('input', e => {
+        const t = e.target.value.replace(/\./g, ',').replace(/[^\d,]/g, '');
+        const i = t.indexOf(',');
+        e.target.value = i < 0 ? t : t.slice(0, i + 1) + t.slice(i + 1).replace(/,/g, '');
+      });
+
+      fundo.addEventListener('click', ev => { if (ev.target === fundo) fecharEdicaoLancamento(); });
+      document.getElementById('btnFecharEdicaoLanc').onclick = fecharEdicaoLancamento;
+      document.getElementById('btnCancelarEdicaoLanc').onclick = fecharEdicaoLancamento;
+      document.getElementById('btnSalvarEdicaoLanc').onclick = async () => {
+        const ciclo = document.getElementById('edLancCiclo').value.trim().toUpperCase();
+        if (!ciclo) {
+          if (window.JetAlerta) await JetAlerta.mostrar('PREENCHA O CAMPO CICLO.', 'Atenção'); else alert('PREENCHA O CAMPO CICLO.');
+          document.getElementById('edLancCiclo').focus();
+          return;
+        }
+        const b = obterBancoDados();
+        const lista = b[ano] || [];
+        if (!lista[idx]) { fecharEdicaoLancamento(); return; }
+        if (lista.some((x, k) => k !== idx && x.ciclo === ciclo && (x.mesRecebimento || '') === document.getElementById('edLancMes').value.trim().toUpperCase())) {
+          if (window.JetAlerta) await JetAlerta.mostrar('JÁ EXISTE OUTRO LANÇAMENTO COM ESTE CICLO E MÊS DE RECEBIMENTO.', 'Atenção'); else alert('JÁ EXISTE OUTRO LANÇAMENTO COM ESTE CICLO E MÊS DE RECEBIMENTO.');
+          return;
+        }
+        lista[idx] = {
+          ciclo,
+          mesRecebimento: document.getElementById('edLancMes').value.trim().toUpperCase(),
+          jetcontrol: desformatarMoeda(document.getElementById('edLancJc').value),
+          contracheque: desformatarMoeda(document.getElementById('edLancCc').value),
+          dgad: desformatarMoeda(document.getElementById('edLancDg').value),
+          irpf: document.getElementById('edLancIrpf').value.trim().replace(/,$/, '')
+        };
+        b[ano] = lista;
+        salvarBancoDados(b);
+        fecharEdicaoLancamento();
+        renderizarTabelaAno(); renderizarEstatisticasAno(); renderizarConsolidado();
+        if (window.JetAlerta) JetAlerta.mostrar('LANÇAMENTO ATUALIZADO COM SUCESSO!', 'Sucesso');
+      };
+    }
+
+    async function excluirLancamento(ano, idx) {
+      const msg = 'DESEJA REALMENTE EXCLUIR ESTE LANÇAMENTO?';
+      if (window.JetAlerta ? await JetAlerta.confirmar(msg, 'Atenção', { perigo: true, textoOk: 'Excluir' }) : confirm(msg)) {
+        const banco = obterBancoDados();
+        (banco[ano] || []).splice(idx, 1);
+        salvarBancoDados(banco);
+        renderizarTabelaAno(); renderizarEstatisticasAno(); renderizarConsolidado();
+      }
     }
 
     async function limparTabelaAno(ano) {

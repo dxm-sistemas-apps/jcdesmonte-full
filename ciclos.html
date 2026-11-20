@@ -419,12 +419,20 @@
       }
       return partes.join(' <BR> ');
     }
+    // Soma da "Qtd. de Atividade" dos períodos com local preenchido (home office não conta)
+    function qtdAtividadesCiclo(ciclo) {
+      return (Array.isArray(ciclo.escalasData) ? ciclo.escalasData : []).reduce((t, e) => {
+        if (!e || e.homeOffice === true) return t;
+        return t + ['Manha', 'Tarde', 'Noite'].reduce((a, P) => a + (e['local' + P] ? (parseInt(e['qtdAtividade' + P], 10) || 1) : 0), 0);
+      }, 0);
+    }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
       const ho = resumoEscalasHomeOffice(ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct);
       const linhaPerda = ho.ho > 0
         ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
+        + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`

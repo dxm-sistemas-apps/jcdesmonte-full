@@ -2465,6 +2465,74 @@
     }
 
     // ============================================================================
+    // ★ QUEBRA DE LINHA MANUAL NOS TEXTOS DOS GRÁFICOS  ★   (EDITE SOMENTE AQUI)
+    // Nenhum texto dos gráficos quebra sozinho: você decide onde quebrar escrevendo <br>.
+    // Como usar: coloque na lista abaixo   'TEXTO COMO APARECE HOJE': 'TEXTO COM<br>QUEBRA',
+    // (maiúsculas/minúsculas e espaços nas pontas não importam). Funciona nos rótulos de baixo (eixo X) de qualquer gráfico,
+    // por exemplo os nomes dos locais do gráfico "top 6 Locais Mais Fiscalizados".
+    // Também vale <br> escrito direto no texto/dado: 'DETRAN<br>CENTRO' vira duas linhas.
+    // Nos textos que são HTML (títulos dos cards, nomes dos KPIs, rótulos das caixas de informação) basta escrever <br>
+    // no próprio texto, no HTML ou no catálogo CAMPOS_INFO_CICLO / CAMPOS_INFO_ESCALA (campo "rotulo").
+    // ============================================================================
+    const QUEBRAS_DE_TEXTO = {
+      // 'NOME DO LOCAL MUITO GRANDE': 'NOME DO LOCAL<br>MUITO GRANDE',
+      // 'OUTRO LOCAL COMPRIDO': 'OUTRO<br>LOCAL<br>COMPRIDO',
+    };
+    function textoComQuebras(texto) {
+      if (typeof texto !== 'string') return texto;
+      const chave = texto.trim().toUpperCase();
+      let t = texto;
+      for (const k in QUEBRAS_DE_TEXTO) { if (k.trim().toUpperCase() === chave) { t = QUEBRAS_DE_TEXTO[k]; break; } }
+      const partes = t.split(/<br\s*\/?>/i);
+      return partes.length > 1 ? partes : t;
+    }
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'quebraManualBR',
+        beforeInit(chart) { // converte os rótulos do eixo X: <br> vira nova linha
+          const d = chart.config.data;
+          if (!d || !Array.isArray(d.labels)) return;
+          d.labels = d.labels.map(l => Array.isArray(l) ? [].concat(...l.map(x => { const r = textoComQuebras(x); return Array.isArray(r) ? r : [r]; })) : textoComQuebras(l));
+        }
+      });
+    }
+
+    // ============================================================================
+    // RÓTULOS COM 2+ PALAVRAS: uma palavra POR LINHA, centralizadas (como um <br> automático)
+    // Vale para os rótulos de baixo (eixo X) de TODOS os gráficos de barras/linhas, por exemplo
+    // "JETON BRUTO" vira "JETON" em cima e "BRUTO" embaixo. Rótulos que já vêm em várias linhas
+    // (ex.: datas dos ciclos, ou os que você quebrou com <br> acima) não são alterados.
+    // Para desligar tudo: "ativo: false". Para deixar um gráfico de fora: coloque o id dele em "exceto".
+    // ============================================================================
+    const ROTULOS_EM_LINHAS = { ativo: true, exceto: [] /* ex.: ['chartLocaisFiscalizados'] */ };
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'rotulosEmLinhas',
+        beforeInit(chart) { // registrado depois do <br> manual, então ele tem prioridade
+          if (!ROTULOS_EM_LINHAS.ativo) return;
+          const id = chart.canvas && chart.canvas.id;
+          if (ROTULOS_EM_LINHAS.exceto.includes(id)) return;
+          if (chart.config.type !== 'bar' && chart.config.type !== 'line') return;
+          const d = chart.config.data;
+          if (!d || !Array.isArray(d.labels)) return;
+          let alterou = false;
+          d.labels = d.labels.map(l => {
+            if (typeof l !== 'string') return l;
+            const p = l.trim().split(/\s+/);
+            if (p.length < 2) return l;
+            alterou = true;
+            return p;
+          });
+          if (alterou) {
+            const o = chart.config.options = chart.config.options || {};
+            o.scales = o.scales || {}; o.scales.x = o.scales.x || {};
+            o.scales.x.ticks = Object.assign({}, o.scales.x.ticks, { minRotation: 0, maxRotation: 0 });
+          }
+        }
+      });
+    }
+
+    // ============================================================================
     // ★ PADRÃO VISUAL DE TODOS OS GRÁFICOS DO DASHBOARD  ★   (EDITE SOMENTE AQUI)
     // Tudo abaixo vale para TODOS os gráficos e para as caixas de informação abaixo deles.
     // Para mudar só UM gráfico, use os blocos "porGrafico" mais abaixo (fonte do eixo X, valor diagonal etc.).
@@ -2485,9 +2553,9 @@
       larguraBarra: 0.94,
 
       // ---- TAMANHO DAS FONTES DOS GRÁFICOS (px) -------------------------------
-      fonteEixoY: 11,         // valores da esquerda (R$ 8.000,00 ...)
-      fonteLegenda: 11,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
-      fonteValor: 13,         // valor escrito (em diagonal) acima do indicador
+      fonteEixoY: 12,         // valores da esquerda (R$ 8.000,00 ...)
+      fonteLegenda: 12,       // legenda (RECEITA BRUTA / RECEITA LÍQUIDA ...)
+      fonteValor: 12,         // valor escrito (em diagonal) acima do indicador
       // fonte dos rótulos de baixo (eixo X): veja FONTE_ROTULOS_GRAFICOS logo abaixo
       // fonte do valor escrito acima do indicador: fonteValor, logo abaixo
 
@@ -2597,7 +2665,7 @@
     // a linha dele em "porGrafico" (a chave é o id do <canvas>) com o tamanho desejado.
     // ============================================================
     const FONTE_ROTULOS_GRAFICOS = {
-      padrao: 11,
+      padrao: 10,
       porGrafico: {
         // chartEvolucaoCiclos: 9,
         // chartTipologiaCarga: 9,
@@ -2745,7 +2813,7 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 65,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 60,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
@@ -3239,18 +3307,7 @@
       const ctx = document.getElementById('chartLocaisFiscalizados').getContext('2d');
       if (graficosExtras.locais) graficosExtras.locais.destroy();
 
-      // Nomes longos viram várias linhas (sem girar) para o rótulo não "empurrar" o gráfico para a direita.
-      // LARGURA_LINHA_LOCAL = máximo de caracteres por linha do nome; diminua se o nome ainda estiver largo demais.
-      const LARGURA_LINHA_LOCAL = 12;
-      const quebrarNome = (nome) => {
-        const linhas = []; let atual = '';
-        String(nome).split(/\s+/).forEach(p => {
-          if (atual && (atual + ' ' + p).length > LARGURA_LINHA_LOCAL) { linhas.push(atual); atual = p; } else atual = atual ? atual + ' ' + p : p;
-        });
-        if (atual) linhas.push(atual);
-        return linhas.length > 1 ? linhas : (linhas[0] || '');
-      };
-      const labels = topLocais.map(([nome]) => quebrarNome(nome));
+      const labels = topLocais.map(([nome]) => nome);
       const dados = topLocais.map(([, qtd]) => qtd);
 
       graficosExtras.locais = new Chart(ctx, {

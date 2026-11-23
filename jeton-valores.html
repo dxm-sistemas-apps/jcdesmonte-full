@@ -296,6 +296,14 @@
 
           <!-- CONTAINER: Ajustado para w-fit (encolhe até o tamanho do texto) e justify-start -->
           <div>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Base cálculo IRPF - Contracheque</label>
+            <input type="text" inputmode="numeric" autocomplete="off" id="formBaseIrpf" placeholder="R$ 0,00"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-brand-500 mb-3" />
+
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Imposto de renda - Contracheque</label>
+            <input type="text" inputmode="numeric" autocomplete="off" id="formImpostoIrpf" placeholder="R$ 0,00"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 mb-3" />
+
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Alíquota IR (%)</label>
 
             <!-- CONTAINER: Agora gerencia os cliques simples e duplos em toda a sua área -->
@@ -309,7 +317,7 @@
               <span class="text-red-400 font-bold text-sm select-none">%</span>
             </div>
 
-            <span class="text-[10px] text-slate-500 mt-1 block">Preencha quando receber o contracheque. Até lá, o sistema usa 22% (padrão) nos cálculos.</span>
+            <span class="text-[10px] text-slate-500 mt-1 block">Preencha a base e o imposto do contracheque: a alíquota é calculada sozinha (imposto ÷ base × 100, até 2 casas). Até lá, o sistema usa 22% (padrão) nos cálculos.</span>
           </div>
 
           <script>
@@ -781,6 +789,21 @@
       validarCamposFormulario();
     }
 
+    // Alíquota IR = (imposto de renda / base de cálculo) * 100, arredondada para até 2 casas decimais
+    function aliquotaCalculada(baseStr, impostoStr) {
+      const base = parseFloat(desformatarMoeda(baseStr));
+      const imposto = parseFloat(desformatarMoeda(impostoStr));
+      if (!(base > 0) || !String(impostoStr || '').trim()) return '';
+      const pct = Math.round((imposto / base) * 100 * 100) / 100;
+      return String(pct).replace('.', ',');
+    }
+    function atualizarAliquotaDoFormulario() {
+      const b = document.getElementById('formBaseIrpf').value, i = document.getElementById('formImpostoIrpf').value;
+      const r = aliquotaCalculada(b, i);
+      if (r !== '') document.getElementById('formIrpf').value = r;
+      validarCamposFormulario();
+    }
+
     function configurarMascaraMoeda(input) {
       if (!input) return;
       input.addEventListener('input', function (e) {
@@ -835,6 +858,8 @@
       const contracheque = desformatarMoeda(document.getElementById('formJetonContracheque').value);
       const dgad = desformatarMoeda(document.getElementById('formJetonDgad').value);
       const irpf = document.getElementById('formIrpf').value.trim();
+      const baseIrpf = document.getElementById('formBaseIrpf').value.trim() ? desformatarMoeda(document.getElementById('formBaseIrpf').value) : '';
+      const impostoIrpf = document.getElementById('formImpostoIrpf').value.trim() ? desformatarMoeda(document.getElementById('formImpostoIrpf').value) : '';
 
       if (!ciclo) {
         alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
@@ -845,7 +870,7 @@
       const listaAno = banco[anoAtual] || [];
       const indexExistente = listaAno.findIndex(item => item.ciclo === ciclo);
 
-      const novoItem = {ciclo, mesRecebimento, jetcontrol, contracheque, dgad, irpf};
+      const novoItem = {ciclo, mesRecebimento, jetcontrol, contracheque, dgad, irpf, baseIrpf, impostoIrpf};
 
       if (indexExistente !== -1) {
         listaAno[indexExistente] = novoItem;
@@ -862,6 +887,8 @@
       document.getElementById('formJetonContracheque').value = 'R$ 0,00';
       document.getElementById('formJetonDgad').value = 'R$ 0,00';
       document.getElementById('formIrpf').value = '';
+      document.getElementById('formBaseIrpf').value = '';
+      document.getElementById('formImpostoIrpf').value = '';
 
       validarCamposFormulario();
 
@@ -1171,6 +1198,12 @@
           <input type="text" id="${id}" inputmode="numeric" autocomplete="off" value="${escHtmlJV(formatMoeda(valor))}"
             class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-brand-500">
         </div>`;
+      const campoMoedaOpc = (id, rotulo, valor, cor) => `
+        <div>
+          <label class="block text-xs uppercase font-bold text-slate-400 mb-1">${rotulo}</label>
+          <input type="text" id="${id}" inputmode="numeric" autocomplete="off" placeholder="R$ 0,00" value="${(valor === undefined || valor === null || valor === '') ? '' : escHtmlJV(formatMoeda(valor))}"
+            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 ${cor} font-bold text-sm focus:outline-none focus:border-brand-500">
+        </div>`;
       const fundo = document.createElement('div');
       fundo.id = 'modalEdicaoLancamento';
       fundo.className = 'fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4';
@@ -1186,6 +1219,8 @@
               <input type="text" id="edLancCiclo" value="${escHtmlJV(d.ciclo)}" autocomplete="off"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm uppercase focus:outline-none focus:border-brand-500">
             </div>
+            ${campoMoedaOpc('edLancBase', 'Base cálculo IRPF - Contracheque', d.baseIrpf, 'text-white')}
+            ${campoMoedaOpc('edLancImposto', 'Imposto de renda - Contracheque', d.impostoIrpf, 'text-red-400')}
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Mês de recebimento</label>
@@ -1209,6 +1244,14 @@
         </div>`;
       document.body.appendChild(fundo);
 
+      ['edLancBase', 'edLancImposto'].forEach(id => {
+        document.getElementById(id).addEventListener('input', e => {
+          const limpo = e.target.value.replace(/\D/g, '');
+          e.target.value = limpo ? formatMoeda(parseFloat(limpo) / 100) : '';
+          const r = aliquotaCalculada(document.getElementById('edLancBase').value, document.getElementById('edLancImposto').value);
+          if (r !== '') document.getElementById('edLancIrpf').value = r;
+        });
+      });
       ['edLancJc', 'edLancCc', 'edLancDg'].forEach(id => {
         document.getElementById(id).addEventListener('input', e => {
           const limpo = e.target.value.replace(/\D/g, '');
@@ -1245,7 +1288,9 @@
           jetcontrol: desformatarMoeda(document.getElementById('edLancJc').value),
           contracheque: desformatarMoeda(document.getElementById('edLancCc').value),
           dgad: desformatarMoeda(document.getElementById('edLancDg').value),
-          irpf: document.getElementById('edLancIrpf').value.trim().replace(/,$/, '')
+          irpf: document.getElementById('edLancIrpf').value.trim().replace(/,$/, ''),
+          baseIrpf: document.getElementById('edLancBase').value.trim() ? desformatarMoeda(document.getElementById('edLancBase').value) : '',
+          impostoIrpf: document.getElementById('edLancImposto').value.trim() ? desformatarMoeda(document.getElementById('edLancImposto').value) : ''
         };
         b[ano] = lista;
         salvarBancoDados(b);
@@ -1524,6 +1569,9 @@
       configurarMascaraMoeda(document.getElementById('formJetonJetcontrol'));
       configurarMascaraMoeda(document.getElementById('formJetonContracheque'));
       configurarMascaraMoeda(document.getElementById('formJetonDgad'));
+      configurarMascaraMoeda(document.getElementById('formBaseIrpf'));
+      configurarMascaraMoeda(document.getElementById('formImpostoIrpf'));
+      ['formBaseIrpf', 'formImpostoIrpf'].forEach(id => document.getElementById(id).addEventListener('input', atualizarAliquotaDoFormulario));
 
       const mobileBtn = document.getElementById('mobile-menu-btn');
       const mobileMenu = document.getElementById('mobile-menu');

@@ -2539,6 +2539,25 @@
     }
 
     // ============================================================================
+    // LEGENDA ALINHADA COM OS CARDS DE INFORMAÇÃO
+    // A legenda passa a ocupar exatamente a mesma faixa horizontal da área do gráfico (a dos cards abaixo).
+    // Para outro gráfico usar o mesmo alinhamento, adicione o id dele na lista.
+    // ============================================================================
+    const LEGENDA_ALINHADA_COM_CARDS = ['chartGanhoCiclos'];
+    if (window.Chart && Chart.register) {
+      Chart.register({
+        id: 'legendaAlinhadaComCards',
+        afterLayout(chart) {
+          const id = chart.canvas && chart.canvas.id;
+          const lg = chart.legend, a = chart.chartArea;
+          if (!lg || !a || !LEGENDA_ALINHADA_COM_CARDS.includes(id) || !lg.options || lg.options.display === false) return;
+          lg.left = a.left;
+          lg.width = a.right - a.left;
+        }
+      });
+    }
+
+    // ============================================================================
     // ★ PADRÃO VISUAL DE TODOS OS GRÁFICOS DO DASHBOARD  ★   (EDITE SOMENTE AQUI)
     // Tudo abaixo vale para TODOS os gráficos e para as caixas de informação abaixo deles.
     // Para mudar só UM gráfico, use os blocos "porGrafico" mais abaixo (fonte do eixo X, valor diagonal etc.).
@@ -2673,6 +2692,7 @@
     const FONTE_ROTULOS_GRAFICOS = {
       padrao: 11,
       porGrafico: {
+        chartFuncoes: 9,   // Distribuição de Funções: 9 para os 4 nomes caberem retos no celular
         // chartEvolucaoCiclos: 9,
         // chartTipologiaCarga: 9,
         // chartLocaisFiscalizados: 9,
@@ -2819,7 +2839,7 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 63,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 65,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
@@ -3127,6 +3147,11 @@
       return [t.replace(/^\s*CICLO\s*-\s*/i, '').replace(/\(.*?\)/g, '').trim() || `${numFallback || ''}`];
     }
 
+    // Período em 3 linhas (abertura / À / fechamento) para os cards de informação; sem datas, texto simples
+    function rotuloPeriodoHtml(nome, numFallback) {
+      return rotuloPeriodo(nome, numFallback).map(l => escaparHtmlDash(l)).join('<br>');
+    }
+
     // Largura mínima de cada ciclo no gráfico de evolução (px). Quando os ciclos não cabem na tela, surge a rolagem horizontal.
     const LARGURA_MIN_POR_CICLO_EVOLUCAO = 190;
     function renderizarGraficoEvolucao(listaCiclos) {
@@ -3292,8 +3317,8 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
-            // descrições (AGENTE, RELATOR...): desenhadas pelo plugin "rotulosFuncoes" (abaixo); o eixo nativo só reserva o espaço
-            x: { grid: { display: false }, ticks: { color: 'transparent', autoSkip: false, minRotation: 0, maxRotation: 0, padding: 6, font: { size: 11 } } }, // transparente: só reserva o espaço
+            // descrições (AGENTE, RELATOR...) sempre na horizontal, abaixo da respectiva barra (tamanho: FONTE_ROTULOS_GRAFICOS.porGrafico.chartFuncoes)
+            x: { grid: { display: false }, ticks: { autoSkip: false, minRotation: 0, maxRotation: 0 } },
             y: {
               beginAtZero: true,
               // Deixa o Chart.js calcular o teto automaticamente com base no maior valor encontrado
@@ -3308,27 +3333,6 @@
             }
           }
         },
-        plugins: [{
-          // ===== DESCRIÇÕES SEMPRE NA HORIZONTAL, ABAIXO DO RESPECTIVO INDICADOR =====
-          // FONTE_DESCRICAO_FUNCOES: tamanho máximo da letra (px). Se o nome não couber na largura da barra,
-          // a letra diminui sozinha (até 7px) para ficar sempre reto e centralizado sob a barra.
-          id: 'rotulosFuncoes',
-          afterDraw(chart) {
-            const FONTE_DESCRICAO_FUNCOES = 11;
-            const meta = chart.getDatasetMeta(0), a = chart.chartArea, c = chart.ctx;
-            const labels = chart.data.labels || [];
-            const slot = meta.data.length > 1 ? Math.abs(meta.data[1].x - meta.data[0].x) : a.right - a.left;
-            c.save();
-            c.fillStyle = '#cbd5e1'; c.textAlign = 'center'; c.textBaseline = 'top';
-            meta.data.forEach((el, i) => {
-              let tam = FONTE_DESCRICAO_FUNCOES;
-              c.font = `bold ${tam}px sans-serif`;
-              while (tam > 7 && c.measureText(labels[i]).width > slot - 4) { tam--; c.font = `bold ${tam}px sans-serif`; }
-              c.fillText(labels[i], el.x, a.bottom + 6);
-            });
-            c.restore();
-          }
-        }]
       });
     }
 
@@ -3596,8 +3600,8 @@
       const comTitulo = cfg.campos.includes('ciclo');
       box.innerHTML = lista.map(item => {
         const titulo = !comTitulo ? '' : (cfg.tipo === 'escala'
-          ? `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(item.data)}</div><div style="color:#94a3b8;">${escaparHtmlDash(rotuloPeriodo(item.cicloNome).join(' '))}</div>`
-          : `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(rotuloPeriodo(item.nome, item.num).join(' '))}</div>`);
+          ? `<div style="font-weight:800;color:#f8fafc;">${escaparHtmlDash(item.data)}</div><div style="color:#94a3b8;">${rotuloPeriodoHtml(item.cicloNome)}</div>`
+          : `<div style="font-weight:800;color:#f8fafc;">${rotuloPeriodoHtml(item.nome, item.num)}</div>`);
         const linhaCampo = (c, obj) => `<div style="margin-top:6px;color:#94a3b8;">${c.rotulo}</div><div style="font-weight:700;${c.cor ? 'color:' + (typeof c.cor === 'function' ? c.cor(obj) : c.cor) + ';' : ''}">${escaparHtmlDash(c.valor(obj))}</div>`;
         let linhas = cfg.campos.filter(k => k !== 'ciclo' && catalogo[k]).map(k => linhaCampo(catalogo[k], item)).join('');
         if (cfg.tipo === 'escala' && cfg.camposCiclo && cfg.camposCiclo.length) {
@@ -3886,6 +3890,10 @@
       const tooltipOrig = optsOrig.plugins && optsOrig.plugins.tooltip;
       if (tooltipOrig && tooltipOrig.callbacks && tooltipOrig.callbacks.afterTitle) tooltipValor = tooltipOrig;
       if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks && optsOrig.scales.x.ticks.display === false) eixos.x.ticks.display = false;
+      // mantém do gráfico original a rotação/pulo dos rótulos do eixo X (ex.: descrições sempre na horizontal)
+      if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks) {
+        ['minRotation', 'maxRotation', 'autoSkip', 'align'].forEach(k => { if (optsOrig.scales.x.ticks[k] !== undefined) eixos.x.ticks[k] = optsOrig.scales.x.ticks[k]; });
+      }
       const eventosOrig = Object.assign({}, optsOrig.events ? { events: optsOrig.events } : {}, optsOrig.formatarValorIndicador ? { formatarValorIndicador: optsOrig.formatarValorIndicador } : {});
       const legendaMulti = snap.datasets.length > 1
         ? { display: true, position: 'bottom', labels: { color: '#f8fafc', padding: 15 } } : { display: false };

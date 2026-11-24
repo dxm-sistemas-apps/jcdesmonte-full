@@ -2289,11 +2289,14 @@
     }
 
     // Enquanto o Home Office não for decidido (joinha sim/não), todos os demais campos da escala ficam travados.
-    // Permanecem livres: joinhas/condição/motivo do Home Office, calendário da data e botões Salvar/Cancelar.
+    // Permanecem livres: joinhas/condição/motivo do Home Office e botões Salvar/Cancelar (a data também fica travada).
     function travarCamposAteDecidirHomeOffice(decidido) {
       const form = document.getElementById('formEscala');
       if (!form) return;
-      const livres = ['wrapperHomeOffice', 'wrapperHomeOfficeCondicao', 'calendarioFixoAtividade', 'bannerRotaHoje'];
+      const livres = ['wrapperHomeOffice', 'wrapperHomeOfficeCondicao', 'bannerRotaHoje'];
+      // calendário da data: não é input (é recriado ao navegar), então trava por CSS
+      const cal = document.getElementById('calendarioFixoAtividade');
+      if (cal) { cal.style.pointerEvents = decidido ? '' : 'none'; cal.style.opacity = decidido ? '' : '0.4'; cal.setAttribute('aria-disabled', decidido ? 'false' : 'true'); }
       const ehLivre = (el) => livres.some(id => { const c = document.getElementById(id); return c && c.contains(el); })
         || el.id === 'btnSalvarEscala' || el.id === 'btnCancelarEdicao' || el.type === 'hidden';
       if (decidido) {

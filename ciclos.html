@@ -607,7 +607,7 @@
     function nomeDoCiclo(ciclo, numeroFallback) {
       if (ciclo.nome) return String(ciclo.nome).replace(/^\s*CICLO\s*-\s*/i, '');
       if (ciclo.dataAbertura && ciclo.dataFechamento) {
-        return `${dataBR(ciclo.dataAbertura)} À ${dataBR(ciclo.dataFechamento)}`;
+        return `${dataBR(ciclo.dataAbertura)} A ${dataBR(ciclo.dataFechamento)}`;
       }
       return `CICLO ${numeroFallback}`;
     }

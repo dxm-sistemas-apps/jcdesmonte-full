@@ -3375,7 +3375,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
 
       const escalasAtuais = JSON.parse(localStorage.getItem(STORAGE_KEY_ESCALAS) || '[]');
       const nomeCiclo = String(cicloAtual.nomeCiclo ||
-        `${formatarDataBRPeriodo(cicloAtual.dataAbertura)} À ${formatarDataBRPeriodo(cicloAtual.dataFechamento)}`).replace(/^\s*CICLO\s*-\s*/i, '');
+        `${formatarDataBRPeriodo(cicloAtual.dataAbertura)} A ${formatarDataBRPeriodo(cicloAtual.dataFechamento)}`).replace(/^\s*CICLO\s*-\s*/i, '');
 
       const registro = {
         id: 'ciclo-' + Date.now(),
@@ -3847,7 +3847,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
 
     // Título do ciclo fechado: apenas o período (sem o termo "CICLO -"), mesmo para ciclos salvos com o prefixo
     function nomeDoCicloFechado(ciclo) {
-      const nome = ciclo.nome || `${formatarDataBRPeriodo(ciclo.dataAbertura)} À ${formatarDataBRPeriodo(ciclo.dataFechamento)}`;
+      const nome = ciclo.nome || `${formatarDataBRPeriodo(ciclo.dataAbertura)} A ${formatarDataBRPeriodo(ciclo.dataFechamento)}`;
       return String(nome).replace(/^\s*CICLO\s*-\s*/i, '');
     }
 

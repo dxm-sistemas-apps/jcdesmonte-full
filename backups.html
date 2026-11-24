@@ -419,7 +419,7 @@
         const semPrefixo = (t) => String(t || '').replace(/^\s*CICLO\s*-\s*/i, '');
         let nomeCiclo = '-', mes = '-';
         if (vigente && vigente.dataAbertura) {
-          nomeCiclo = semPrefixo(vigente.nomeCiclo || (fmt(vigente.dataAbertura) + (vigente.dataFechamento ? ' À ' + fmt(vigente.dataFechamento) : ''))) + ' (VIGENTE)';
+          nomeCiclo = semPrefixo(vigente.nomeCiclo || (fmt(vigente.dataAbertura) + (vigente.dataFechamento ? ' A ' + fmt(vigente.dataFechamento) : ''))) + ' (VIGENTE)';
           mes = vigente.recebimentoEm || '-';
         } else if (ultimoFechado) {
           nomeCiclo = semPrefixo(ultimoFechado.nome || ('CICLO ' + (ultimoFechado.numero || ''))) + ' (ÚLTIMO FECHADO)';

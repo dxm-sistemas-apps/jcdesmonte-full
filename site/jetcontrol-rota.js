@@ -209,14 +209,34 @@
     };
     const atualizar = () => {
       const r = hist()[dataIso()], t = document.getElementById('textoRotaHoje'), b = document.getElementById('btnUsarRota');
+      const ho = document.getElementById('chkHomeOffice');
+      if (ho && !(ho.dataset.decidido === '1' && !ho.checked)) { t.textContent = 'ROTA: MARQUE HOME OFFICE = NÃO PARA USAR (HOME OFFICE NÃO GERA LOGÍSTICA)'; b.disabled = true; b.classList.add('opacity-40'); return; }
       if (r) { t.textContent = `ROTA: SAÍDA ${r.saidaHora || '--'} KM ${r.saidaKm != null ? r.saidaKm : '--'} • CHEGADA ${r.chegadaHora || '--'} KM ${r.chegadaKm != null ? r.chegadaKm : '--'}`; b.disabled = false; b.classList.remove('opacity-40'); }
       else { t.textContent = 'SEM ROTA REGISTRADA NESTE DIA'; b.disabled = true; b.classList.add('opacity-40'); }
     };
     document.getElementById('btnUsarRota').onclick = () => {
-      const r = hist()[dataIso()]; if (!r) return;
+      const r = hist()[dataIso()]; if (!r || !hoNao()) return;
       const set = (id, v) => { const el = document.getElementById(id); if (el && v != null && v !== '') { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } };
       set('horarioSaida', r.saidaHora); set('kmInicial', r.saidaKm); set('horarioChegada', r.chegadaHora); set('kmFinal', r.chegadaKm);
     };
+    // Estado do Home Office: logística (horários/km) só existe quando a resposta é "NÃO" (decidido e desmarcado)
+    const hoNao = () => { const c = document.getElementById('chkHomeOffice'); return !!c && c.dataset.decidido === '1' && !c.checked; };
+    const campos = [['horarioSaida', 'saidaHora'], ['kmInicial', 'saidaKm'], ['horarioChegada', 'chegadaHora'], ['kmFinal', 'chegadaKm']];
+    // Preenchimento automático: só campos VAZIOS (nunca sobrescreve o que você digitou)
+    const autoPreencher = () => {
+      const r = hist()[dataIso()]; if (!r || !hoNao()) return;
+      campos.forEach(([id, k]) => {
+        const el = document.getElementById(id);
+        if (el && !el.disabled && el.value === '' && r[k] != null && r[k] !== '') {
+          el.value = r[k]; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+    };
+    let ultimaChave = '';
+    setInterval(() => {
+      const chave = dataIso() + '|' + hoNao() + '|' + JSON.stringify(hist()[dataIso()] || null);
+      if (chave !== ultimaChave) { ultimaChave = chave; atualizar(); autoPreencher(); }
+    }, 800);
     atualizar();
     const dt = document.getElementById('dataAtividade'); if (dt) { dt.addEventListener('change', atualizar); dt.addEventListener('input', atualizar); }
     window.addEventListener('focus', atualizar);

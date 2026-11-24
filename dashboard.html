@@ -2819,7 +2819,7 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 62,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 63,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
@@ -3292,6 +3292,8 @@
           responsive: true,
           maintainAspectRatio: false,
           scales: {
+            // descrições (AGENTE, RELATOR...) sempre na horizontal, abaixo do respectivo indicador
+            x: { ticks: { autoSkip: false, minRotation: 0, maxRotation: 0, font: { size: 10 } } },
             y: {
               beginAtZero: true,
               // Deixa o Chart.js calcular o teto automaticamente com base no maior valor encontrado

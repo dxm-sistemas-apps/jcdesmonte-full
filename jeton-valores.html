@@ -656,7 +656,7 @@
         impostoIr !== '';
 
       if (btn) {
-        btn.disabled = !todosPreenchidos;
+        btn.disabled = false; // o botão fica ativo: ao clicar com campo em branco, o primeiro vazio é selecionado
       }
     }
 
@@ -871,7 +871,9 @@
         alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
         return;
       }
-      for (const [id, nome] of [['formBaseIrpf', 'BASE CÁLCULO IRPF - CONTRACHEQUE'], ['formImpostoIrpf', 'IMPOSTO DE RENDA - CONTRACHEQUE']]) {
+      // Campos obrigatórios, na ordem de cima para baixo a partir de Base cálculo IRPF:
+      // seleciona o primeiro em branco e repete a cada salvamento até todos estarem preenchidos
+      for (const [id, nome] of [['formBaseIrpf', 'BASE CÁLCULO IRPF - CONTRACHEQUE'], ['formImpostoIrpf', 'IMPOSTO DE RENDA - CONTRACHEQUE'], ['formJetonDgad', 'JETON AUDITADO (DGAD)'], ['formJetonContracheque', 'JETON BRUTO (CONTRACHEQUE)']]) {
         const el = document.getElementById(id);
         if (!el.value.trim()) {
           if (window.JetAlerta) await JetAlerta.mostrar('PREENCHA O CAMPO ' + nome + '.', 'Atenção'); else alert('PREENCHA O CAMPO ' + nome + '.');
@@ -915,8 +917,8 @@
       document.getElementById('formCiclo').value = '';
       document.getElementById('formMesRecebimento').value = '';
       document.getElementById('formJetonJetcontrol').value = 'R$ 0,00';
-      document.getElementById('formJetonContracheque').value = 'R$ 0,00';
-      document.getElementById('formJetonDgad').value = 'R$ 0,00';
+      document.getElementById('formJetonContracheque').value = '';
+      document.getElementById('formJetonDgad').value = '';
       document.getElementById('formIrpf').value = '';
       document.getElementById('formBaseIrpf').value = '';
       document.getElementById('formImpostoIrpf').value = '';
@@ -1094,7 +1096,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR:</span>
-                <span class="text-red-400 font-black text-sm">
+                <span class="text-slate-300 font-black text-sm">
                   ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
@@ -1117,7 +1119,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA:</span>
-                <span class="text-red-400 font-black text-sm">${txtIrpfStat(() => Math.min(...irpf))}</span>
+                <span class="text-slate-300 font-black text-sm">${txtIrpfStat(() => Math.min(...irpf))}</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
@@ -1157,7 +1159,7 @@
           </div>
           <div class="p-3 text-center sm:border-r border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Menor Jeton Anual</p>
-            <p class="text-base font-black text-red-400 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
+            <p class="text-base font-black text-slate-300 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
           </div>
           <div class="p-3 text-center">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Média Geral Anual</p>
@@ -1446,7 +1448,9 @@
       doc.text(`JETCONTROL 2026 - RELATÓRIO DE VALORES DO JETON (${ano})`, 14, 15);
 
       const banco = obterBancoDados();
-      const lista = banco[ano] || [];
+      const lista = (banco[ano] || []).slice();
+      const numC = mapaNumeroCiclos(banco);
+      lista.sort((a, b) => (numC.get(b) || 0) - (numC.get(a) || 0)); // do último para o primeiro
 
       let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
       const body = lista.map(d => {
@@ -1460,7 +1464,7 @@
         totais.diff += getDiff(jc, cc);
 
         return [
-          d.ciclo, d.mesRecebimento || '-', textoIrpf(d.irpf),
+          `#${numC.get(d)}  ${d.ciclo}`, d.mesRecebimento || '-', textoIrpf(d.irpf),
           formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
           formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
           formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),
@@ -1507,11 +1511,12 @@
 
       const banco = obterBancoDados();
       const anos = Object.keys(banco).filter(y => Array.isArray(banco[y]) && banco[y].length > 0).sort();
+      const numC = mapaNumeroCiclos(banco);
 
       let startY = 24;
 
       anos.forEach((ano, idx) => {
-        const lista = banco[ano] || [];
+        const lista = (banco[ano] || []).slice().sort((a, b) => (numC.get(b) || 0) - (numC.get(a) || 0));
         if (startY > 175) {
           doc.addPage();
           startY = 20;
@@ -1533,7 +1538,7 @@
           totais.diff += getDiff(jc, cc);
 
           return [
-            d.ciclo, d.mesRecebimento || '-', textoIrpf(d.irpf),
+            `#${numC.get(d)}  ${d.ciclo}`, d.mesRecebimento || '-', textoIrpf(d.irpf),
             formatMoeda(jc), formatMoeda(calcLiq(jc, d.irpf)),
             formatMoeda(cc), formatMoeda(calcLiq(cc, d.irpf)),
             formatMoeda(d.dgad), formatMoeda(getDiff(jc, cc)),

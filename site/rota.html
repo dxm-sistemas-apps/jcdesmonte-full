@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JETCONTROL - Rota automática</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>body{background:#0f172a;color:#e2e8f0;font-family:system-ui,sans-serif;text-transform:uppercase}input,select{text-transform:none}</style>
+</head><body class="p-4 max-w-2xl mx-auto">
+<a href="index.html" class="text-xs text-slate-400"><i class="fa-solid fa-arrow-left"></i> VOLTAR</a>
+<h1 class="text-xl font-black mt-2 mb-1"><i class="fa-solid fa-route text-sky-400"></i> ROTA AUTOMÁTICA</h1>
+<p id="aviso" class="text-xs text-amber-400 mb-4"></p>
+
+<section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-4 space-y-3">
+  <label class="flex items-center justify-between font-bold text-sm">MONITORAMENTO ATIVO
+    <input type="checkbox" id="ativo" class="w-6 h-6"></label>
+  <div><div class="text-xs text-slate-400 mb-1">LOCAL DE SAÍDA (CASA)</div>
+    <div id="casaTxt" class="text-sm mb-2">NÃO DEFINIDO</div>
+    <button id="btnCasa" class="bg-sky-600 px-3 py-2 rounded-lg text-xs font-black">USAR MINHA POSIÇÃO ATUAL COMO CASA</button></div>
+  <div class="grid grid-cols-2 gap-3">
+    <label class="text-xs text-slate-400">RAIO (METROS)<input id="raio" type="number" min="30" max="500" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 mt-1"></label>
+    <label class="text-xs text-slate-400">KM ATUAL DO CARRO<input id="kmAtual" type="number" step="0.1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 mt-1"></label>
+    <label class="text-xs text-slate-400">FATOR DE CALIBRAÇÃO (PAINEL ÷ GPS)<input id="fatorKm" type="number" step="0.001" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 mt-1"></label>
+    <label class="text-xs text-slate-400">ESPERA (SEG) ANTES DE DISPARAR<input id="dwellSeg" type="number" min="30" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-slate-100 mt-1"></label>
+  </div>
+  <div><div class="text-xs text-slate-400 mb-1">DIAS EM QUE O APP PERGUNTA</div><div id="dias" class="flex gap-2 flex-wrap"></div></div>
+  <div class="flex gap-2 flex-wrap">
+    <button id="btnSalvar" class="bg-emerald-600 px-4 py-2 rounded-lg text-xs font-black">SALVAR</button>
+    <button id="btnTeste" class="bg-slate-700 px-4 py-2 rounded-lg text-xs font-black">TESTAR NOTIFICAÇÃO</button>
+  </div>
+  <p id="msg" class="text-xs text-emerald-400"></p>
+</section>
+
+<section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-4">
+  <h2 class="font-black text-sm mb-2">ESTADO ATUAL</h2><div id="estado" class="text-xs text-slate-300"></div>
+</section>
+
+<section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-4">
+  <h2 class="font-black text-sm mb-2">HISTÓRICO (EDITÁVEL)</h2>
+  <div id="lista" class="space-y-2 text-xs"></div>
+</section>
+
+<section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 text-xs text-slate-400 normal-case">
+  <b class="text-slate-200 uppercase">Para funcionar bem no Android:</b>
+  <ul class="list-disc ml-5 mt-1 space-y-1">
+    <li>Localização do app: <b>Permitir o tempo todo</b> (Config. &gt; Apps &gt; JETCONTROL &gt; Permissões).</li>
+    <li>Bateria do app: <b>Sem restrições</b> (senão o Android encerra o monitoramento).</li>
+    <li>Notificações: permitidas.</li>
+    <li>O km de chegada = km de saída + distância medida pelo GPS (costuma ficar 1–3% abaixo do hodômetro; ajuste o fator de calibração ou edite o km no histórico).</li>
+  </ul>
+</section>
+<script src="jetcontrol-rota.js"></script>
+<script>
+const J = window.JetRota, $ = id => document.getElementById(id);
+const NOMES = ['DOM','SEG','TER','QUA','QUI','SEX','SÁB'];
+function carregar(){
+  const c = J.cfg();
+  $('ativo').checked = c.ativo; $('raio').value = c.raio; $('kmAtual').value = c.kmAtual ?? '';
+  $('fatorKm').value = c.fatorKm; $('dwellSeg').value = c.dwellSeg;
+  $('casaTxt').textContent = c.home ? `${c.home.lat.toFixed(5)}, ${c.home.lon.toFixed(5)}` : 'NÃO DEFINIDO';
+  $('dias').innerHTML = NOMES.map((n,i)=>`<label class="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1"><input type="checkbox" data-d="${i}" ${c.dias.includes(i)?'checked':''}>${n}</label>`).join('');
+  $('aviso').textContent = J.nativo() ? '' : 'ABERTO NO NAVEGADOR: o monitoramento em segundo plano só funciona no app Android instalado.';
+  const e = J.estado();
+  $('estado').textContent = ({em_casa:'EM CASA / AGUARDANDO SAÍDA',aguardando:'SAIU - AGUARDANDO SUA RESPOSTA NA NOTIFICAÇÃO',monitorando:'MONITORANDO TRAJETO',ignorado:'HOJE NÃO (IGNORADO)'})[e.fase] || e.fase;
+  if (e.distM) $('estado').textContent += ` • ${(e.distM/1000).toFixed(1)} KM ATÉ AGORA`;
+  lista();
+}
+function lista(){
+  const h = J.hist(), ks = Object.keys(h).sort().reverse();
+  $('lista').innerHTML = ks.length ? ks.map(k=>{const r=h[k];return `<div class="bg-slate-900 border border-slate-700 rounded-lg p-2" data-k="${k}">
+   <div class="font-bold mb-1">${k.split('-').reverse().join('/')} <span class="text-slate-500">${r.status||''}</span></div>
+   <div class="grid grid-cols-4 gap-1 normal-case">
+    <input data-f="saidaHora" value="${r.saidaHora??''}" placeholder="saída" class="bg-slate-800 rounded p-1">
+    <input data-f="saidaKm" value="${r.saidaKm??''}" placeholder="km saída" class="bg-slate-800 rounded p-1">
+    <input data-f="chegadaHora" value="${r.chegadaHora??''}" placeholder="chegada" class="bg-slate-800 rounded p-1">
+    <input data-f="chegadaKm" value="${r.chegadaKm??''}" placeholder="km chegada" class="bg-slate-800 rounded p-1"></div>
+   <button data-del class="text-red-400 mt-1">EXCLUIR</button></div>`}).join('') : '<div class="text-slate-500">NENHUM TRAJETO AINDA</div>';
+}
+$('lista').addEventListener('change', ev=>{
+  const box = ev.target.closest('[data-k]'); if(!box||!ev.target.dataset.f) return;
+  const h = J.hist(), r = h[box.dataset.k]; let v = ev.target.value.trim().replace(',','.');
+  if (ev.target.dataset.f.endsWith('Km')) v = v===''?null:Number(v);
+  r[ev.target.dataset.f] = v; r.status='editado'; J.salvarHist(h);
+  if (ev.target.dataset.f==='chegadaKm' && v!=null && box.dataset.k===Object.keys(h).sort().pop()) J.salvarCfg({kmAtual:v});
+});
+$('lista').addEventListener('click', ev=>{ if(!ev.target.hasAttribute('data-del')) return;
+  const k = ev.target.closest('[data-k]').dataset.k; if(!confirm('Excluir este trajeto?')) return;
+  const h = J.hist(); delete h[k]; J.salvarHist(h); lista(); });
+$('btnCasa').onclick = ()=>{
+  $('msg').textContent='OBTENDO POSIÇÃO...';
+  navigator.geolocation.getCurrentPosition(p=>{ J.salvarCfg({home:{lat:p.coords.latitude,lon:p.coords.longitude}}); $('msg').textContent='CASA DEFINIDA (PRECISÃO ~'+Math.round(p.coords.accuracy)+' M)'; carregar(); },
+   e=>{$('msg').textContent='ERRO: '+e.message;},{enableHighAccuracy:true,timeout:30000});
+};
+$('btnSalvar').onclick = async ()=>{
+  const dias=[...document.querySelectorAll('#dias input:checked')].map(x=>+x.dataset.d);
+  const km = $('kmAtual').value===''?null:Number($('kmAtual').value);
+  J.salvarCfg({raio:+$('raio').value||100,kmAtual:km,fatorKm:+$('fatorKm').value||1,dwellSeg:+$('dwellSeg').value||90,dias});
+  if ($('ativo').checked && !J.cfg().home){ $('msg').textContent='DEFINA A CASA ANTES DE ATIVAR'; $('ativo').checked=false; return; }
+  await J.ativar($('ativo').checked); $('msg').textContent='SALVO'; carregar();
+};
+$('btnTeste').onclick = ()=>J.testarNotificacao();
+carregar(); setInterval(()=>{ if(!document.activeElement||document.activeElement.tagName!=='INPUT') carregar(); },15000);
+</script></body></html>

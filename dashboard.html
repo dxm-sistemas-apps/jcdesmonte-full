@@ -2839,9 +2839,19 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 67,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 70,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
+      // ESPAÇO NO TOPO (px) reservado para o valor inclinado não ser cortado:
+      //   espacoTopo ........ mínimo para todos os gráficos com valor em diagonal
+      //   espacoTopoPorGrafico . aumenta/diminui só em UM gráfico (ex.: chartComposicaoReceita: 90)
+      //   automatico ........ true = o espaço também cresce sozinho conforme o maior valor/ângulo/fonte
+      //                        (valores maiores = texto mais comprido = mais espaço), nunca menos que o mínimo acima
       espacoTopo: 64,
+      espacoTopoPorGrafico: {
+        // chartComposicaoReceita: 90,
+        // chartComposicaoReceitaLiquida: 90,
+      },
+      automatico: true,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
       //  use margemDireita em PADRAO_VISUAL.porGrafico. Aumente se o valor do último indicador for cortado.)
       espacoDireita: PADRAO_VISUAL.margemDireita,
@@ -2894,6 +2904,26 @@
       c.fillText(txt, 0, 0);
       c.restore();
     }
+    // Espaço superior do gráfico com valor em diagonal: o maior entre o mínimo configurado e o necessário para o maior valor
+    function espacoTopoDiagonal(chart) {
+      const id = chart.canvas && chart.canvas.id;
+      const minimo = (id && VALOR_DIAGONAL.espacoTopoPorGrafico[id] !== undefined) ? VALOR_DIAGONAL.espacoTopoPorGrafico[id] : VALOR_DIAGONAL.espacoTopo;
+      if (!VALOR_DIAGONAL.automatico) return minimo;
+      try {
+        const o = chart.config.options || {}, d = chart.config.data || {};
+        const fmt = typeof o.formatarValorIndicador === 'function' ? o.formatarValorIndicador
+          : (o.scales && o.scales.y && o.scales.y.ticks && typeof o.scales.y.ticks.callback === 'function' ? (v) => o.scales.y.ticks.callback(v, 0, []) : (v) => String(v));
+        let maior = 0;
+        (d.datasets || []).forEach(ds => (ds.data || []).forEach(v => { const n = (v !== null && typeof v === 'object') ? v.y : v; if (typeof n === 'number' && n > maior) maior = n; }));
+        const tam = visualDe(id, 'fonteValor') || 12;
+        const cx = document.createElement('canvas').getContext('2d');
+        cx.font = `bold ${tam}px sans-serif`;
+        const largura = cx.measureText(String(fmt(maior))).width;
+        const ang = VALOR_DIAGONAL.angulo * Math.PI / 180;
+        const preciso = Math.ceil(largura * Math.sin(ang) + tam * Math.cos(ang) + 12);
+        return Math.max(minimo, preciso);
+      } catch (_) { return minimo; }
+    }
     // Reserva folga no topo/direita dos gráficos com valor em diagonal
     if (window.Chart && Chart.register) {
       Chart.register({
@@ -2902,7 +2932,7 @@
           if (!valorDiagonalAtivo(chart)) return;
           const o = chart.config.options = chart.config.options || {};
           const base = (o.layout && o.layout.padding) || {};
-          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: VALOR_DIAGONAL.espacoTopo, right: visualDe(chart.canvas && chart.canvas.id, 'margemDireita'), bottom: visualDe(chart.canvas && chart.canvas.id, 'margemBaixo'), left: visualDe(chart.canvas && chart.canvas.id, 'margemEsquerda') }) });
+          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: espacoTopoDiagonal(chart), right: visualDe(chart.canvas && chart.canvas.id, 'margemDireita'), bottom: visualDe(chart.canvas && chart.canvas.id, 'margemBaixo'), left: visualDe(chart.canvas && chart.canvas.id, 'margemEsquerda') }) });
         }
       });
     }

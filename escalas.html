@@ -479,7 +479,7 @@
                 </div>
               </div>
             </div>
-            <input type="checkbox" id="chkHomeOffice" class="hidden" data-decidido="1">
+            <input type="checkbox" id="chkHomeOffice" class="hidden" data-decidido="0">
             <input type="checkbox" id="chkHaveraAtividade" class="hidden" data-decidido="0">
           </div>
         <div id="wrapperHomeOfficeCondicao" class="hidden">
@@ -2288,10 +2288,32 @@
       }
     }
 
+    // Enquanto o Home Office não for decidido (joinha sim/não), todos os demais campos da escala ficam travados.
+    // Permanecem livres: joinhas/condição/motivo do Home Office, calendário da data e botões Salvar/Cancelar.
+    function travarCamposAteDecidirHomeOffice(decidido) {
+      const form = document.getElementById('formEscala');
+      if (!form) return;
+      const livres = ['wrapperHomeOffice', 'wrapperHomeOfficeCondicao', 'calendarioFixoAtividade', 'bannerRotaHoje'];
+      const ehLivre = (el) => livres.some(id => { const c = document.getElementById(id); return c && c.contains(el); })
+        || el.id === 'btnSalvarEscala' || el.id === 'btnCancelarEdicao' || el.type === 'hidden';
+      if (decidido) {
+        form.querySelectorAll('[data-trava-ho]').forEach(el => { el.disabled = false; el.removeAttribute('data-trava-ho'); });
+        form.classList.remove('formulario-travado-ho');
+        return;
+      }
+      form.querySelectorAll('input, select, textarea, button').forEach(el => {
+        if (el.disabled || ehLivre(el)) return;
+        el.disabled = true; el.setAttribute('data-trava-ho', '1');
+      });
+      form.classList.add('formulario-travado-ho');
+    }
+
     function aplicarBloqueioCamposHomeOffice(prefixo) {
       const { chkId, condicaoInputId } = idsHomeOffice(prefixo);
       const chk = document.getElementById(chkId);
       if (!chk) return;
+      if (!prefixo) travarCamposAteDecidirHomeOffice(chk.dataset.decidido === '1');
+      if (!prefixo && chk.dataset.decidido !== '1') return; // sem decisão: nada mais a calcular
       const ehHomeOffice = chk.dataset.decidido === '1' && chk.checked === true;
       const condicaoInput = document.getElementById(condicaoInputId);
       const ehReuniao = ehHomeOffice && condicaoInput && condicaoInput.value === 'reuniao';
@@ -2673,6 +2695,10 @@
 
     document.getElementById('btnSalvarEscala').addEventListener('click', async function() {
       const data = document.getElementById('dataAtividade').value;
+      if (valorHomeOfficeParaSalvar('') === null) {
+        await alertarCampoObrigatorio('wrapperHomeOffice', 'MARQUE SE A ESCALA É HOME OFFICE (SIM OU NÃO) PARA LIBERAR OS DEMAIS CAMPOS.');
+        return;
+      }
       const horarioSaida = document.getElementById('horarioSaida').value;
       const horarioChegada = document.getElementById('horarioChegada').value;
       const percepcaoQuartoJeton = document.getElementById('percepcaoQuartoJeton').value;
@@ -3467,7 +3493,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       document.getElementById('btnCancelarEdicao').classList.add('hidden');
       localStorage.removeItem(STORAGE_KEY_RASCUNHO);
       ITENS_RECEBIVEIS.forEach(sufixo => definirEstadoRecebivel('', sufixo, false, false));
-      definirEstadoHomeOffice('', false, true, '');
+      definirEstadoHomeOffice('', false, false, ''); // começa SEM decisão: campos travados até marcar o joinha
       gerenciarCamposPernoite();
       calcularValoresEscala();
 
@@ -4551,6 +4577,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         renderizarCiclosFechados();
       });
     }
+    // Estado inicial: sem decisão de Home Office = campos travados
+    try { aplicarBloqueioCamposHomeOffice(""); } catch (e) { console.error(e); }
   </script>
 <script>
   // MENU SUPERIOR (TELEFONE): destaca no dropdown a página atual, sempre que o menu for reaberto
@@ -4573,5 +4601,6 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     window.addEventListener('pageshow', marcarMenuMobileAtivo);
   })();
 </script>
+<script src="jetcontrol-rota.js"></script>
 </body>
 </html>

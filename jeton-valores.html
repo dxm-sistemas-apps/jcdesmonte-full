@@ -280,7 +280,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Jeton BRUTO (JETCONTROL)</label>
-            <input type="text" readonly disabled id="formJetonJetcontrol"
+            <input type="text" inputmode="numeric" autocomplete="off" readonly id="formJetonJetcontrol"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-emerald-400 font-black text-sm focus:outline-none cursor-not-allowed focus:border-brand-500" />
             <span class="text-[10px] text-slate-500 mt-1 block">Preenchido com o total do sistema</span>
           </div>
@@ -676,6 +676,16 @@
       };
     }
 
+    // Libera/bloqueia a digitação manual do Jeton BRUTO (JETCONTROL): bloqueado quando vem do sistema, liberado quando é R$ 0,00
+    function jetcontrolEditavel(sim) {
+      const c = document.getElementById('formJetonJetcontrol');
+      c.readOnly = !sim; c.disabled = false;
+      c.classList.toggle('cursor-not-allowed', !sim);
+      c.classList.toggle('border-brand-500', sim);
+      const dica = c.parentElement.querySelector('span');
+      if (dica) dica.textContent = sim ? 'Sem valor no sistema: digite o valor manualmente' : 'Preenchido com o total do sistema';
+      if (sim) setTimeout(() => { c.scrollIntoView({ behavior: 'smooth', block: 'center' }); c.focus(); }, 150);
+    }
     function preencherFormularioLancamento(d, rotuloOrigem) {
       if (d.anoRecebimento) {
         anoAtual = d.anoRecebimento;
@@ -687,6 +697,7 @@
       document.getElementById('formCiclo').value = d.ciclo;
       document.getElementById('formMesRecebimento').value = d.mesRecebimento;
       document.getElementById('formJetonJetcontrol').value = formatMoeda(d.totalJeton);
+      jetcontrolEditavel(!(parseFloat(d.totalJeton) > 0)); // jeton R$ 0,00: libera a digitação manual
       document.getElementById('formIrpf').value = d.irpf;
       const hint = document.getElementById('hintCicloSistema');
       if (hint && d.ciclo) hint.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i> ${rotuloOrigem}: <strong>${d.ciclo}</strong>`;
@@ -958,6 +969,7 @@
       document.getElementById('formCiclo').value = '';
       document.getElementById('formMesRecebimento').value = '';
       document.getElementById('formJetonJetcontrol').value = 'R$ 0,00';
+      jetcontrolEditavel(false);
       document.getElementById('formJetonContracheque').value = '';
       document.getElementById('formJetonDgad').value = '';
       document.getElementById('formIrpf').value = '';
@@ -989,7 +1001,7 @@
     }
     // célula do ciclo: "#N" à esquerda, na mesma linha do texto do ciclo (26/01 A 25/02)
     function celulaCicloNumerado(num, ciclo) {
-      return `<span class="inline-flex items-center justify-center gap-2"><span class="text-brand-400 font-black">#${num}</span><span>${ciclo}</span></span>`;
+      return `<span class="inline-flex items-center justify-center gap-2"><span class="font-black">#${num}</span><span>${ciclo}</span></span>`;
     }
 
     function renderizarTabelaAno() {
@@ -1022,7 +1034,7 @@
           const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
           return `
             <tr class="hover:bg-slate-800/40 transition">
-              <td class="px-3 py-2.5 font-bold text-slate-200 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
+              <td class="px-3 py-2.5 font-bold text-blue-400 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
               <td class="px-3 py-2.5 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
@@ -1252,7 +1264,7 @@
           const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
           return `
                       <tr>
-                        <td class="p-2 font-bold text-slate-200 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
+                        <td class="p-2 font-bold text-blue-400 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
                         <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
                         <td class="p-2 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>

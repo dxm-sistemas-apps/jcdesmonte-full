@@ -614,9 +614,24 @@
       return '<span class="inline-block text-center leading-tight"><span class="block">' + e(m[1]) + '</span><span class="block">A</span><span class="block">' + e(m[2]) + '</span>' + (resto ? '<span class="block text-xs text-slate-400">' + e(resto) + '</span>' : '') + '</span>';
     }
 
+    // Remove a crase dos períodos exibidos ("26/03/2026 À 25/04/2026" -> "26/03/2026 A 25/04/2026"),
+    // inclusive nos ciclos antigos que guardaram o texto com crase
+    function semCrasePeriodosNaTela(raiz) {
+      const re = /(\d{2}\/\d{2}(?:\/\d{2,4})?)(\s*)À(\s*)(\d{2}\/\d{2})/g;
+      const w = document.createTreeWalker(raiz || document.body, NodeFilter.SHOW_TEXT);
+      let n;
+      while ((n = w.nextNode())) { if (n.nodeValue.indexOf('À') >= 0) { const t = n.nodeValue.replace(re, '$1$2A$3$4'); if (t !== n.nodeValue) n.nodeValue = t; } }
+    }
+    (function () {
+      let ag = false;
+      const varrer = () => { ag = false; semCrasePeriodosNaTela(document.body); };
+      const ini = () => { varrer(); new MutationObserver(() => { if (!ag) { ag = true; setTimeout(varrer, 50); } }).observe(document.body, { childList: true, subtree: true, characterData: true }); };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ini); else ini();
+    })();
+
     // Título do ciclo: apenas o período (sem o termo "CICLO -"), mesmo para ciclos salvos com o prefixo
     function nomeDoCiclo(ciclo, numeroFallback) {
-      if (ciclo.nome) return String(ciclo.nome).replace(/^\s*CICLO\s*-\s*/i, '');
+      if (ciclo.nome) return String(ciclo.nome).replace(/^\s*CICLO\s*-\s*/i, '').replace(/\s+À\s+/g, ' A ');
       if (ciclo.dataAbertura && ciclo.dataFechamento) {
         return `${dataBR(ciclo.dataAbertura)} A ${dataBR(ciclo.dataFechamento)}`;
       }
@@ -839,7 +854,7 @@ function centralizarCelulasOrganograma(html) {
               <div class="flex items-center gap-3">
                 <!-- Marcador (como "ESCALA #1"): ordem de fechamento do ciclo, #1 = primeiro ciclo fechado -->
                 <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg whitespace-nowrap">#${ciclos.length - ordem}</span>
-                <h2 class="text-xl font-black text-blue-400 uppercase">${periodoEmLinhasHtml(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
+                <h2 class="text-xl font-black text-blue-400 uppercase">${esc(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
               </div>
               <p class="text-sm text-slate-300 mt-1 uppercase font-semibold">
                 MÊS DE RECEBIMENTO: ${esc(ciclo.recebimentoEm || '')}

@@ -2544,15 +2544,39 @@
     // Para outro gráfico usar o mesmo alinhamento, adicione o id dele na lista.
     // ============================================================================
     const LEGENDA_ALINHADA_COM_CARDS = ['chartGanhoCiclos'];
+    const FONTE_LEGENDA_ALINHADA = 11; // tamanho máximo (px); diminui sozinho (até 7) se a legenda não couber na largura dos cards
     if (window.Chart && Chart.register) {
       Chart.register({
         id: 'legendaAlinhadaComCards',
-        afterLayout(chart) {
+        beforeInit(chart) {
           const id = chart.canvas && chart.canvas.id;
-          const lg = chart.legend, a = chart.chartArea;
-          if (!lg || !a || !LEGENDA_ALINHADA_COM_CARDS.includes(id) || !lg.options || lg.options.display === false) return;
-          lg.left = a.left;
-          lg.width = a.right - a.left;
+          if (!LEGENDA_ALINHADA_COM_CARDS.includes(id)) return;
+          const o = chart.config.options = chart.config.options || {};
+          o.plugins = o.plugins || {};
+          const lg = Object.assign({}, o.plugins.legend, { display: true, position: 'bottom', onClick: () => {} });
+          // legenda nativa só reserva o espaço (fica invisível); quem desenha é o plugin, alinhado com os cards
+          lg.labels = Object.assign({}, lg.labels, { boxWidth: 10, padding: 8, font: { size: 11 },
+            generateLabels: (ch) => Chart.defaults.plugins.legend.labels.generateLabels(ch).map(i => Object.assign(i, { fillStyle: 'transparent', strokeStyle: 'transparent', fontColor: 'transparent' })) });
+          o.plugins.legend = lg;
+        },
+        afterDraw(chart) {
+          const id = chart.canvas && chart.canvas.id;
+          if (!LEGENDA_ALINHADA_COM_CARDS.includes(id) || !chart.legend) return;
+          const a = chart.chartArea, c = chart.ctx, lg = chart.legend;
+          const itens = chart.data.datasets.map(ds => ({ nome: ds.label || '', cor: Array.isArray(ds.backgroundColor) ? ds.backgroundColor[0] : (ds.backgroundColor || ds.borderColor || '#3b82f6') }));
+          const larguraCards = a.right - a.left, box = 10, espBox = 6, espItem = 16;
+          let tam = FONTE_LEGENDA_ALINHADA, total = 0;
+          const medir = () => { c.font = `bold ${tam}px sans-serif`; return itens.reduce((s, i) => s + box + espBox + c.measureText(i.nome).width, 0) + espItem * (itens.length - 1); };
+          total = medir();
+          while (total > larguraCards && tam > 7) { tam--; total = medir(); }
+          let x = a.left + Math.max(0, (larguraCards - total) / 2);
+          const y = lg.top + lg.height / 2;
+          c.save(); c.textBaseline = 'middle'; c.textAlign = 'left'; c.font = `bold ${tam}px sans-serif`;
+          itens.forEach(i => {
+            c.fillStyle = i.cor; c.fillRect(x, y - box / 2, box, box); x += box + espBox;
+            c.fillStyle = '#f8fafc'; c.fillText(i.nome, x, y); x += c.measureText(i.nome).width + espItem;
+          });
+          c.restore();
         }
       });
     }
@@ -2841,7 +2865,17 @@
       padrao: false,
       angulo: 70,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
+      // ESPAÇO NO TOPO (px) reservado para o valor inclinado não ser cortado:
+      //   espacoTopo ........ mínimo para todos os gráficos com valor em diagonal
+      //   espacoTopoPorGrafico . aumenta/diminui só em UM gráfico (ex.: chartComposicaoReceita: 90)
+      //   automatico ........ true = o espaço também cresce sozinho conforme o maior valor/ângulo/fonte
+      //                        (valores maiores = texto mais comprido = mais espaço), nunca menos que o mínimo acima
       espacoTopo: 64,
+      espacoTopoPorGrafico: {
+        // chartComposicaoReceita: 90,
+        // chartComposicaoReceitaLiquida: 90,
+      },
+      automatico: true,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
       //  use margemDireita em PADRAO_VISUAL.porGrafico. Aumente se o valor do último indicador for cortado.)
       espacoDireita: PADRAO_VISUAL.margemDireita,
@@ -2894,6 +2928,26 @@
       c.fillText(txt, 0, 0);
       c.restore();
     }
+    // Espaço superior do gráfico com valor em diagonal: o maior entre o mínimo configurado e o necessário para o maior valor
+    function espacoTopoDiagonal(chart) {
+      const id = chart.canvas && chart.canvas.id;
+      const minimo = (id && VALOR_DIAGONAL.espacoTopoPorGrafico[id] !== undefined) ? VALOR_DIAGONAL.espacoTopoPorGrafico[id] : VALOR_DIAGONAL.espacoTopo;
+      if (!VALOR_DIAGONAL.automatico) return minimo;
+      try {
+        const o = chart.config.options || {}, d = chart.config.data || {};
+        const fmt = typeof o.formatarValorIndicador === 'function' ? o.formatarValorIndicador
+          : (o.scales && o.scales.y && o.scales.y.ticks && typeof o.scales.y.ticks.callback === 'function' ? (v) => o.scales.y.ticks.callback(v, 0, []) : (v) => String(v));
+        let maior = 0;
+        (d.datasets || []).forEach(ds => (ds.data || []).forEach(v => { const n = (v !== null && typeof v === 'object') ? v.y : v; if (typeof n === 'number' && n > maior) maior = n; }));
+        const tam = visualDe(id, 'fonteValor') || 12;
+        const cx = document.createElement('canvas').getContext('2d');
+        cx.font = `bold ${tam}px sans-serif`;
+        const largura = cx.measureText(String(fmt(maior))).width;
+        const ang = VALOR_DIAGONAL.angulo * Math.PI / 180;
+        const preciso = Math.ceil(largura * Math.sin(ang) + tam * Math.cos(ang) + 12);
+        return Math.max(minimo, preciso);
+      } catch (_) { return minimo; }
+    }
     // Reserva folga no topo/direita dos gráficos com valor em diagonal
     if (window.Chart && Chart.register) {
       Chart.register({
@@ -2902,7 +2956,7 @@
           if (!valorDiagonalAtivo(chart)) return;
           const o = chart.config.options = chart.config.options || {};
           const base = (o.layout && o.layout.padding) || {};
-          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: VALOR_DIAGONAL.espacoTopo, right: visualDe(chart.canvas && chart.canvas.id, 'margemDireita'), bottom: visualDe(chart.canvas && chart.canvas.id, 'margemBaixo'), left: visualDe(chart.canvas && chart.canvas.id, 'margemEsquerda') }) });
+          o.layout = Object.assign({}, o.layout, { padding: Object.assign({ top: PADRAO_VISUAL.margemTopo, right: PADRAO_VISUAL.margemDireita, bottom: PADRAO_VISUAL.margemBaixo, left: PADRAO_VISUAL.margemEsquerda }, base, { top: espacoTopoDiagonal(chart), right: visualDe(chart.canvas && chart.canvas.id, 'margemDireita'), bottom: visualDe(chart.canvas && chart.canvas.id, 'margemBaixo'), left: visualDe(chart.canvas && chart.canvas.id, 'margemEsquerda') }) });
         }
       });
     }
@@ -3142,7 +3196,7 @@
     function rotuloPeriodo(nome, numFallback) {
       const t = String(nome || '');
       const fmt = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) ? d.split('-').reverse().join('/') : d;
-      const m = t.match(/(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})\s*A\s*(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})/i);
+      const m = t.match(/(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})\s*[AÀ]\s*(\d{2}\/\d{2}\/\d{4}|\d{4}-\d{2}-\d{2})/i);
       if (m) return [fmt(m[1]), 'A', fmt(m[2])];
       return [t.replace(/^\s*CICLO\s*-\s*/i, '').replace(/\(.*?\)/g, '').trim() || `${numFallback || ''}`];
     }
@@ -3869,8 +3923,9 @@
       });
     }
 
-    // Gráficos cujas descrições do eixo X ficam SEMPRE retas (sem girar). Para incluir outro, adicione o id.
-    const GRAFICOS_ROTULOS_X_RETOS = ['chartFuncoes'];
+    // Descrições abaixo do indicador, na horizontal.
+    // Descrições do eixo X sempre retas (sem girar) em TODOS os gráficos, exceto os listados abaixo (comportamento automático).
+    const GRAFICOS_ROTULOS_X_AUTOMATICOS = ['chartLocaisFiscalizados'];
     function montarConfigGrafico(snap, tipo) {
       const rotuloPlano = (l) => Array.isArray(l) ? l.join(' ') : l;
       const optsOrig = snap.options || {};
@@ -3893,9 +3948,11 @@
       if (tooltipOrig && tooltipOrig.callbacks && tooltipOrig.callbacks.afterTitle) tooltipValor = tooltipOrig;
       if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks && optsOrig.scales.x.ticks.display === false) eixos.x.ticks.display = false;
       // mantém do gráfico original a rotação/pulo dos rótulos do eixo X (ex.: descrições sempre na horizontal)
-      // (só nos gráficos listados em GRAFICOS_ROTULOS_X_RETOS; os demais mantêm o comportamento automático)
-      if (GRAFICOS_ROTULOS_X_RETOS.includes(snap.id) && optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks) {
-        ['minRotation', 'maxRotation', 'autoSkip', 'align'].forEach(k => { if (optsOrig.scales.x.ticks[k] !== undefined) eixos.x.ticks[k] = optsOrig.scales.x.ticks[k]; });
+      // descrições do eixo X sempre na horizontal (exceto os gráficos de GRAFICOS_ROTULOS_X_AUTOMATICOS)
+      if (!GRAFICOS_ROTULOS_X_AUTOMATICOS.includes(snap.id)) {
+        eixos.x.ticks.minRotation = 0; eixos.x.ticks.maxRotation = 0;
+        const tk = optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks;
+        if (tk) ['autoSkip', 'align'].forEach(k => { if (tk[k] !== undefined) eixos.x.ticks[k] = tk[k]; });
       }
       const eventosOrig = Object.assign({}, optsOrig.events ? { events: optsOrig.events } : {}, optsOrig.formatarValorIndicador ? { formatarValorIndicador: optsOrig.formatarValorIndicador } : {});
       const legendaMulti = snap.datasets.length > 1

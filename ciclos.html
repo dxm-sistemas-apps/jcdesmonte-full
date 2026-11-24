@@ -603,6 +603,17 @@
       `;
     }
 
+    // Período em 3 linhas: data de abertura acima, "A" no meio e data de fechamento abaixo (sem crase).
+    // Se o texto não tiver duas datas, devolve o texto simples.
+    function periodoEmLinhasHtml(texto) {
+      const t = String(texto == null ? '' : texto).replace(/\s+À\s+/g, ' A ');
+      const m = t.match(/(\d{2}\/\d{2}\/\d{4})\s+A\s+(\d{2}\/\d{2}\/\d{4})(.*)$/i);
+      const e = (x) => String(x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      if (!m) return e(t);
+      const resto = (m[3] || '').trim();
+      return '<span class="inline-block text-center leading-tight"><span class="block">' + e(m[1]) + '</span><span class="block">A</span><span class="block">' + e(m[2]) + '</span>' + (resto ? '<span class="block text-xs text-slate-400">' + e(resto) + '</span>' : '') + '</span>';
+    }
+
     // Título do ciclo: apenas o período (sem o termo "CICLO -"), mesmo para ciclos salvos com o prefixo
     function nomeDoCiclo(ciclo, numeroFallback) {
       if (ciclo.nome) return String(ciclo.nome).replace(/^\s*CICLO\s*-\s*/i, '');
@@ -828,7 +839,7 @@ function centralizarCelulasOrganograma(html) {
               <div class="flex items-center gap-3">
                 <!-- Marcador (como "ESCALA #1"): ordem de fechamento do ciclo, #1 = primeiro ciclo fechado -->
                 <span class="bg-brand-600 text-white font-black text-xs px-3 py-1 rounded-lg whitespace-nowrap">#${ciclos.length - ordem}</span>
-                <h2 class="text-xl font-black text-blue-400 uppercase">${esc(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
+                <h2 class="text-xl font-black text-blue-400 uppercase">${periodoEmLinhasHtml(nomeDoCiclo(ciclo, numeroCiclo))}</h2>
               </div>
               <p class="text-sm text-slate-300 mt-1 uppercase font-semibold">
                 MÊS DE RECEBIMENTO: ${esc(ciclo.recebimentoEm || '')}

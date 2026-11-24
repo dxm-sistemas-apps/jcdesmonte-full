@@ -259,24 +259,15 @@
       <form id="formLancamentoJeton" class="space-y-4" onsubmit="event.preventDefault(); salvarLancamento();">
         <div>
           <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Ciclo *</label>
-          <input type="text" readonly disabled id="formCiclo" list="lista-ciclos-opcoes"
-            placeholder="SELECIONE OU DIGITE O CICLO"
-            class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none cursor-not-allowed focus:border-brand-500 uppercase"
-            required />
-          <datalist id="lista-ciclos-opcoes">
-            <option value="26/01 A 25/02"></option>
-            <option value="26/02 A 25/03"></option>
-            <option value="26/03 A 25/04"></option>
-            <option value="26/04 A 25/05"></option>
-            <option value="26/05 A 25/06"></option>
-            <option value="26/06 A 25/07"></option>
-            <option value="26/07 A 25/08"></option>
-            <option value="26/08 A 25/09"></option>
-            <option value="26/09 A 25/10"></option>
-            <option value="26/10 A 25/11"></option>
-            <option value="26/11 A 25/12"></option>
-            <option value="26/12 A 25/01"></option>
-          </datalist>
+          <!-- Toque no campo para ESCOLHER o ciclo numa lista (26/01 A 25/02 até 26/12 A 25/01):
+               o mês de recebimento correspondente (e o jeton bruto JETCONTROL, se houver dados) é carregado automaticamente -->
+          <div class="relative">
+            <input type="text" readonly id="formCiclo" onclick="abrirListaCiclosPadrao()"
+              placeholder="TOQUE PARA ESCOLHER O CICLO"
+              class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-4 pr-10 py-2.5 text-white text-sm focus:outline-none cursor-pointer focus:border-brand-500 uppercase"
+              required />
+            <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+          </div>
           <span id="hintCicloSistema" class="text-[10px] text-slate-500 mt-1 block font-mono"></span>
         </div>
 
@@ -707,6 +698,55 @@
       if (m) m.remove();
     }
 
+    // ===== Lista fixa de ciclos (26/01 A 25/02 ... 26/12 A 25/01) para escolher no campo Ciclo =====
+    function fecharListaCiclosPadrao() { const m = document.getElementById('menuCiclosPadrao'); if (m) m.remove(); }
+    function abrirListaCiclosPadrao() {
+      fecharListaCiclosPadrao();
+      let fechados = [];
+      try { fechados = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV) || '[]'); } catch (_) {}
+      const vigente = obterDadosSistema();
+      const banco = obterBancoDados();
+      // jeton bruto (JETCONTROL) do ciclo com este rótulo: o vigente ou o fechado mais recente
+      const dadosDoRotulo = (label) => {
+        if (vigente && vigente.ciclo === label) return { total: vigente.totalJeton, origem: 'VIGENTE' };
+        const c = fechados.slice().reverse().find(x => dadosDeCicloFechado(x).ciclo === label);
+        return c ? { total: dadosDeCicloFechado(c).totalJeton, origem: 'FECHADO' } : null;
+      };
+      const jaLancado = (c) => (banco[anoAtual] || []).some(i => i.ciclo === c.label && i.mesRecebimento === c.rec);
+      const atual = document.getElementById('formCiclo').value.trim();
+      const itens = LISTA_CICLOS_PADRAO.map((c, i) => {
+        const d = dadosDoRotulo(c.label);
+        return `<button type="button" data-i="${i}" class="item-ciclo-padrao w-full text-left ${c.label === atual ? 'bg-brand-600/20 border-brand-500' : 'bg-slate-900 border-slate-700'} hover:bg-slate-800 border rounded-xl p-3 transition">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-sm font-black text-blue-400 uppercase">${c.label}</span>
+            ${jaLancado(c) ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-400">Já lançado</span>' : ''}
+          </div>
+          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: <span class="text-white font-bold">${c.rec}</span>${d ? ` &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(d.total)}</span>` : ''}</div>
+        </button>`;
+      }).join('');
+      const fundo = document.createElement('div');
+      fundo.id = 'menuCiclosPadrao';
+      fundo.className = 'fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center p-4';
+      fundo.innerHTML = `<div class="bg-slate-950 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-slate-800">
+          <h3 class="text-sm font-black uppercase text-white"><i class="fa-solid fa-list text-brand-500 mr-2"></i>Escolher ciclo</h3>
+          <button type="button" id="btnFecharCiclosPadrao" class="text-slate-400 hover:text-white px-2"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="p-4 space-y-2 overflow-y-auto">${itens}</div>
+      </div>`;
+      document.body.appendChild(fundo);
+      fundo.addEventListener('click', (ev) => { if (ev.target === fundo) fecharListaCiclosPadrao(); });
+      fundo.querySelector('#btnFecharCiclosPadrao').onclick = fecharListaCiclosPadrao;
+      fundo.querySelectorAll('.item-ciclo-padrao').forEach(btn => {
+        btn.onclick = () => {
+          const c = LISTA_CICLOS_PADRAO[parseInt(btn.dataset.i, 10)];
+          const d = dadosDoRotulo(c.label);
+          preencherFormularioLancamento({ ciclo: c.label, mesRecebimento: c.rec, totalJeton: d ? d.total : 0, irpf: irpfLancadoDoCiclo(c.label) }, 'CICLO ESCOLHIDO');
+          fecharListaCiclosPadrao();
+        };
+      });
+    }
+
     function abrirMenuPuxarCiclo() {
       fecharMenuPuxarCiclo();
       let ciclos = [];
@@ -868,7 +908,8 @@
       const impostoIrpf = document.getElementById('formImpostoIrpf').value.trim() ? desformatarMoeda(document.getElementById('formImpostoIrpf').value) : '';
 
       if (!ciclo) {
-        alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
+        alert("ESCOLHA O CICLO NA LISTA.");
+        abrirListaCiclosPadrao();
         return;
       }
       // Campos obrigatórios, na ordem de cima para baixo a partir de Base cálculo IRPF:

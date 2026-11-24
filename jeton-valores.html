@@ -927,10 +927,35 @@
       mudarAba('tabela');
     }
 
+    // ===== Numeração dos ciclos (#1 = primeiro ciclo; as tabelas exibem do último para o primeiro) =====
+    const MESES_NUM_JV = ['JANEIRO', 'FEVEREIRO', 'MARÇO', 'ABRIL', 'MAIO', 'JUNHO', 'JULHO', 'AGOSTO', 'SETEMBRO', 'OUTUBRO', 'NOVEMBRO', 'DEZEMBRO'];
+    // chave cronológica do ciclo = ano/mês em que ele COMEÇA (deduzido do rótulo e do mês de recebimento)
+    function chaveCronologicaLancamento(ano, d) {
+      const m = parseInt(String(d.ciclo || '').slice(3, 5), 10) || 1;
+      const r = MESES_NUM_JV.indexOf(String(d.mesRecebimento || '').trim().toUpperCase()) + 1;
+      const anoInicio = (r > 0 && r < m) ? parseInt(ano, 10) - 1 : parseInt(ano, 10);
+      return anoInicio * 12 + m;
+    }
+    function mapaNumeroCiclos(banco) {
+      const todos = [];
+      Object.keys(banco).forEach(ano => (Array.isArray(banco[ano]) ? banco[ano] : []).forEach(d => todos.push({ ano, d, k: chaveCronologicaLancamento(ano, d) })));
+      todos.sort((a, b) => a.k - b.k);
+      const mapa = new Map();
+      todos.forEach((t, i) => mapa.set(t.d, i + 1));
+      return mapa;
+    }
+    // célula do ciclo: "#N" à esquerda, na mesma linha do texto do ciclo (26/01 A 25/02)
+    function celulaCicloNumerado(num, ciclo) {
+      return `<span class="inline-flex items-center justify-center gap-2"><span class="text-brand-400 font-black">#${num}</span><span>${ciclo}</span></span>`;
+    }
+
     function renderizarTabelaAno() {
       const container = document.getElementById('containerTabelaAno');
       const banco = obterBancoDados();
       const lista = banco[anoAtual] || [];
+      const numCiclos = mapaNumeroCiclos(banco);
+      // exibição do último ciclo para o primeiro (mantém o índice original para editar/excluir)
+      const exibicao = lista.map((d, i) => ({ d, i })).sort((a, b) => (numCiclos.get(b.d) || 0) - (numCiclos.get(a.d) || 0));
 
       let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
       lista.forEach(d => {
@@ -948,13 +973,13 @@
       if (lista.length === 0) {
         linhasHTML = `<tr><td colspan="11" class="py-6 text-slate-500 italic text-center">NENHUM LANÇAMENTO REGISTRADO PARA O ANO ${anoAtual}.</td></tr>`;
       } else {
-        linhasHTML = lista.map((d, i) => {
+        linhasHTML = exibicao.map(({ d, i }) => {
           const st = getStatus(d.jetcontrol, d.contracheque);
           const diff = getDiff(d.jetcontrol, d.contracheque);
           const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
           return `
             <tr class="hover:bg-slate-800/40 transition">
-              <td class="px-3 py-2.5 font-bold text-slate-200">${d.ciclo}</td>
+              <td class="px-3 py-2.5 font-bold text-slate-200 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
               <td class="px-3 py-2.5 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
               <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
@@ -1141,8 +1166,10 @@
         </div>
       `;
 
+      const numCiclos = mapaNumeroCiclos(banco);
       containerTabelas.innerHTML = anos.map(ano => {
         const lista = banco[ano] || [];
+        const listaExib = lista.slice().sort((a, b) => (numCiclos.get(b) || 0) - (numCiclos.get(a) || 0));
         let totais = {jc: 0, jcL: 0, cc: 0, ccL: 0, dg: 0, diff: 0};
         lista.forEach(d => {
           const jc = formatNumeroFloat(d.jetcontrol);
@@ -1176,13 +1203,13 @@
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50 bg-slate-900/20">
-                  ${lista.map(d => {
+                  ${listaExib.map(d => {
           const st = getStatus(d.jetcontrol, d.contracheque);
           const diff = getDiff(d.jetcontrol, d.contracheque);
           const diffColor = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
           return `
                       <tr>
-                        <td class="p-2 font-bold text-slate-200">${d.ciclo}</td>
+                        <td class="p-2 font-bold text-slate-200 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
                         <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
                         <td class="p-2 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
                         <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>

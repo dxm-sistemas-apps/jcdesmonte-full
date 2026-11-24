@@ -1096,7 +1096,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR:</span>
-                <span class="text-slate-300 font-black text-sm">
+                <span class="text-blue-400 font-black text-sm">
                   ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
@@ -1119,7 +1119,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MENOR ALÍQUOTA:</span>
-                <span class="text-slate-300 font-black text-sm">${txtIrpfStat(() => Math.min(...irpf))}</span>
+                <span class="text-blue-400 font-black text-sm">${txtIrpfStat(() => Math.min(...irpf))}</span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
@@ -1159,7 +1159,7 @@
           </div>
           <div class="p-3 text-center sm:border-r border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Menor Jeton Anual</p>
-            <p class="text-base font-black text-slate-300 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
+            <p class="text-base font-black text-blue-400 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
           </div>
           <div class="p-3 text-center">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Média Geral Anual</p>

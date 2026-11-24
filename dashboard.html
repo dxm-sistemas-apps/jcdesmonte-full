@@ -2692,7 +2692,7 @@
     const FONTE_ROTULOS_GRAFICOS = {
       padrao: 11,
       porGrafico: {
-        chartFuncoes: 10,   // Distribuição de Funções: 9 para os 4 nomes caberem retos no celular
+        chartFuncoes: 11,   // Distribuição de Funções: 9 para os 4 nomes caberem retos no celular
         // chartEvolucaoCiclos: 9,
         // chartTipologiaCarga: 9,
         // chartLocaisFiscalizados: 9,
@@ -2839,7 +2839,7 @@
     // ============================================================
     const VALOR_DIAGONAL = {
       padrao: false,
-      angulo: 67,             // inclinação do valor escrito acima do indicador (graus)
+      angulo: 63,             // inclinação do valor escrito acima do indicador (graus)
       // (tamanho da fonte do valor: PADRAO_VISUAL.fonteValor)
       espacoTopo: 64,
       // (a margem direita destes gráficos vem de PADRAO_VISUAL.margemDireita; para um gráfico específico,
@@ -3869,6 +3869,8 @@
       });
     }
 
+    // Gráficos cujas descrições do eixo X ficam SEMPRE retas (sem girar). Para incluir outro, adicione o id.
+    const GRAFICOS_ROTULOS_X_RETOS = ['chartFuncoes'];
     function montarConfigGrafico(snap, tipo) {
       const rotuloPlano = (l) => Array.isArray(l) ? l.join(' ') : l;
       const optsOrig = snap.options || {};
@@ -3891,7 +3893,8 @@
       if (tooltipOrig && tooltipOrig.callbacks && tooltipOrig.callbacks.afterTitle) tooltipValor = tooltipOrig;
       if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks && optsOrig.scales.x.ticks.display === false) eixos.x.ticks.display = false;
       // mantém do gráfico original a rotação/pulo dos rótulos do eixo X (ex.: descrições sempre na horizontal)
-      if (optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks) {
+      // (só nos gráficos listados em GRAFICOS_ROTULOS_X_RETOS; os demais mantêm o comportamento automático)
+      if (GRAFICOS_ROTULOS_X_RETOS.includes(snap.id) && optsOrig.scales && optsOrig.scales.x && optsOrig.scales.x.ticks) {
         ['minRotation', 'maxRotation', 'autoSkip', 'align'].forEach(k => { if (optsOrig.scales.x.ticks[k] !== undefined) eixos.x.ticks[k] = optsOrig.scales.x.ticks[k]; });
       }
       const eventosOrig = Object.assign({}, optsOrig.events ? { events: optsOrig.events } : {}, optsOrig.formatarValorIndicador ? { formatarValorIndicador: optsOrig.formatarValorIndicador } : {});
@@ -3970,6 +3973,7 @@
         if (!ch) return;
         const id = cv.id;
         snapshotsGraficos[id] = {
+          id,
           type: ch.config.type,
           labels: [...ch.config.data.labels],
           datasets: ch.config.data.datasets.map(d => ({ ...d, data: [...d.data] })),

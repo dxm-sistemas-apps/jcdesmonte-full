@@ -338,7 +338,7 @@
       } catch (_) { }
       return padrao;
     }
-    function formatarAliquotaIR(n) {return String(parseFloat(Number(n).toFixed(4))).replace('.', ',');}
+    function formatarAliquotaIR(n) { const v = parseFloat(Number(n).toFixed(4)); let s = String(v); const i = s.indexOf('.'); if (i >= 0 && s.length - i - 1 < 2) s = v.toFixed(2); return s.replace('.', ','); } // 21,1 => 21,10
     function rotuloAliquotaIR(info) {return formatarAliquotaIR(info.pct) + '%' + (info.informada ? '' : ' (PADRÃO)');}
 
     // Reaplica a alíquota atual do ciclo ao resumo de receitas guardado (só troca o desconto de IR e o que depende dele)
@@ -349,6 +349,12 @@
       ciclos.forEach(c => {
         if (!c || !c.receitas) return;
         const pct = aliquotaIRDoCiclo(c).pct;
+        if (c.aliqFmt !== 2) { // ajusta o cartão "Alíquota de IR" já guardado: vermelho e 2 casas (21,10%)
+          const t0 = document.createElement('div'); t0.innerHTML = c.receitas;
+          const a0 = t0.querySelector('#recAliqIR');
+          if (a0) { a0.textContent = formatarAliquotaIR(c.aliquotaIR != null ? c.aliquotaIR : pct) + '%'; a0.classList.remove('text-white'); a0.classList.add('text-red-400'); c.receitas = t0.innerHTML; }
+          c.aliqFmt = 2; mudou = true;
+        }
         if (c.aliquotaIR === pct) return;
         const temp = document.createElement('div');
         temp.innerHTML = c.receitas;
@@ -372,7 +378,7 @@
           const spans = novo.querySelectorAll('span');
           spans[0].textContent = 'Alíquota de IR';
           spans[1].id = 'recAliqIR';
-          spans[1].className = 'text-xl font-black text-white';
+          spans[1].className = 'text-xl font-black text-red-400';
           cardDesc.parentNode.insertBefore(novo, cardDesc);
           elAliq = spans[1];
         }
@@ -435,7 +441,7 @@
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
+        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }

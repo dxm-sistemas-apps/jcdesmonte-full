@@ -296,11 +296,11 @@
 
           <!-- CONTAINER: Ajustado para w-fit (encolhe até o tamanho do texto) e justify-start -->
           <div>
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Base cálculo IRPF - Contracheque</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Base cálculo IRPF - Contracheque *</label>
             <input type="text" inputmode="numeric" autocomplete="off" id="formBaseIrpf" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-brand-500 mb-3" />
 
-            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Imposto de renda - Contracheque</label>
+            <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Imposto de renda - Contracheque *</label>
             <input type="text" inputmode="numeric" autocomplete="off" id="formImpostoIrpf" placeholder="R$ 0,00"
               class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-red-400 font-bold text-sm focus:outline-none focus:border-brand-500 mb-3" />
 
@@ -540,12 +540,14 @@
     }
     function formatIrpf(n) {
       // exibe exatamente o valor (até 4 casas, sem zeros sobrando), com vírgula
-      return String(parseFloat(Number(n).toFixed(4))).replace('.', ',');
+      const v = parseFloat(Number(n).toFixed(4)); let t = String(v); const i = t.indexOf('.');
+      if (i >= 0 && t.length - i - 1 < 2) t = v.toFixed(2); // 21,1 => 21,10
+      return t.replace('.', ',');
     }
 
     // Alíquota ainda não informada => estimativa com 22% (padrão)
     function irpfEfetivo(irpf) { return String(irpf == null ? '' : irpf).trim() === '' ? 22 : parseIrpf(irpf); }
-    function textoIrpf(irpf) { return String(irpf == null ? '' : irpf).trim() === '' ? '—' : String(irpf).replace('.', ',') + '%'; }
+    function textoIrpf(irpf) { return String(irpf == null ? '' : irpf).trim() === '' ? '—' : formatIrpf(parseIrpf(irpf)) + '%'; }
     // Alíquota já lançada para o ciclo (para não apagar ao puxar dados do sistema de novo)
     function irpfLancadoDoCiclo(label) {
       try {
@@ -642,12 +644,16 @@
       const irpf = (document.getElementById('formIrpf')?.value || '').trim();
       const contracheque = (document.getElementById('formJetonContracheque')?.value || '').trim();
       const dgad = (document.getElementById('formJetonDgad')?.value || '').trim();
+      const baseIr = (document.getElementById('formBaseIrpf')?.value || '').trim();
+      const impostoIr = (document.getElementById('formImpostoIrpf')?.value || '').trim();
       const btn = document.getElementById('btnSalvarLancamento');
 
       const todosPreenchidos = ciclo !== '' &&
         jetcontrol !== '' &&
         contracheque !== '' &&
-        dgad !== '';
+        dgad !== '' &&
+        baseIr !== '' &&
+        impostoIr !== '';
 
       if (btn) {
         btn.disabled = !todosPreenchidos;
@@ -795,7 +801,7 @@
       const imposto = parseFloat(desformatarMoeda(impostoStr));
       if (!(base > 0) || !String(impostoStr || '').trim()) return '';
       const pct = Math.round((imposto / base) * 100 * 100) / 100;
-      return String(pct).replace('.', ',');
+      return formatIrpf(pct);
     }
     function atualizarAliquotaDoFormulario() {
       const b = document.getElementById('formBaseIrpf').value, i = document.getElementById('formImpostoIrpf').value;
@@ -851,7 +857,7 @@
       if (novaAba === 'ciclos') renderizarConsolidado();
     }
 
-    function salvarLancamento() {
+    async function salvarLancamento() {
       const ciclo = document.getElementById('formCiclo').value.trim().toUpperCase();
       const mesRecebimento = document.getElementById('formMesRecebimento').value.trim().toUpperCase();
       const jetcontrol = desformatarMoeda(document.getElementById('formJetonJetcontrol').value);
@@ -864,6 +870,31 @@
       if (!ciclo) {
         alert("PREENCHA TODOS OS CAMPOS OBRIGATÓRIOS DO CICLO!");
         return;
+      }
+      for (const [id, nome] of [['formBaseIrpf', 'BASE CÁLCULO IRPF - CONTRACHEQUE'], ['formImpostoIrpf', 'IMPOSTO DE RENDA - CONTRACHEQUE']]) {
+        const el = document.getElementById(id);
+        if (!el.value.trim()) {
+          if (window.JetAlerta) await JetAlerta.mostrar('PREENCHA O CAMPO ' + nome + '.', 'Atenção'); else alert('PREENCHA O CAMPO ' + nome + '.');
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => el.focus(), 300);
+          return;
+        }
+      }
+
+      // Campos com R$ 0,00: pede confirmação; se a resposta for "não", rola até o campo e ativa o cursor
+      const zerados = [
+        ['formJetonContracheque', 'JETON BRUTO (CONTRACHEQUE)'], ['formJetonDgad', 'JETON AUDITADO (DGAD)'],
+        ['formJetonJetcontrol', 'JETON BRUTO (JETCONTROL)'], ['formBaseIrpf', 'BASE CÁLCULO IRPF'], ['formImpostoIrpf', 'IMPOSTO DE RENDA']
+      ].filter(([id]) => { const v = document.getElementById(id).value.trim(); return v !== '' && parseFloat(desformatarMoeda(v)) === 0; });
+      if (zerados.length) {
+        const msg = `HÁ CAMPO(S) COM R$ 0,00: ${zerados.map(z => z[1]).join(', ')}.\nDESEJA SALVAR O LANÇAMENTO MESMO ASSIM?`;
+        const ok = window.JetAlerta ? await JetAlerta.confirmar(msg, 'Atenção', { textoOk: 'Sim, salvar', textoCancelar: 'Não' }) : confirm(msg);
+        if (!ok) {
+          const alvo = document.getElementById(zerados[0][0]);
+          alvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => { alvo.focus(); alvo.select && alvo.select(); }, 350);
+          return;
+        }
       }
 
       const banco = obterBancoDados();
@@ -1219,8 +1250,8 @@
               <input type="text" id="edLancCiclo" value="${escHtmlJV(d.ciclo)}" autocomplete="off"
                 class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white font-bold text-sm uppercase focus:outline-none focus:border-brand-500">
             </div>
-            ${campoMoedaOpc('edLancBase', 'Base cálculo IRPF - Contracheque', d.baseIrpf, 'text-white')}
-            ${campoMoedaOpc('edLancImposto', 'Imposto de renda - Contracheque', d.impostoIrpf, 'text-red-400')}
+            ${campoMoedaOpc('edLancBase', 'Base cálculo IRPF - Contracheque *', d.baseIrpf, 'text-white')}
+            ${campoMoedaOpc('edLancImposto', 'Imposto de renda - Contracheque *', d.impostoIrpf, 'text-red-400')}
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Mês de recebimento</label>
@@ -1274,6 +1305,15 @@
           if (window.JetAlerta) await JetAlerta.mostrar('PREENCHA O CAMPO CICLO.', 'Atenção'); else alert('PREENCHA O CAMPO CICLO.');
           document.getElementById('edLancCiclo').focus();
           return;
+        }
+        for (const [id, nome] of [['edLancBase', 'BASE CÁLCULO IRPF - CONTRACHEQUE'], ['edLancImposto', 'IMPOSTO DE RENDA - CONTRACHEQUE']]) {
+          const el = document.getElementById(id);
+          if (!el.value.trim()) {
+            if (window.JetAlerta) await JetAlerta.mostrar('PREENCHA O CAMPO ' + nome + '.', 'Atenção'); else alert('PREENCHA O CAMPO ' + nome + '.');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => el.focus(), 300);
+            return;
+          }
         }
         const b = obterBancoDados();
         const lista = b[ano] || [];

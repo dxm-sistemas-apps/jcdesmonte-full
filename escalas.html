@@ -2025,7 +2025,7 @@
       } catch (_) {}
       return padrao;
     }
-    function formatarAliquotaIR(n) { return String(parseFloat(Number(n).toFixed(4))).replace('.', ','); }
+    function formatarAliquotaIR(n) { const v = parseFloat(Number(n).toFixed(4)); let s = String(v); const i = s.indexOf('.'); if (i >= 0 && s.length - i - 1 < 2) s = v.toFixed(2); return s.replace('.', ','); } // 21,1 => 21,10
     function rotuloAliquotaIR(info) { return formatarAliquotaIR(info.pct) + '%' + (info.informada ? '' : ' (PADRÃO)'); }
     // Alíquota em uso nos cálculos (do ciclo vigente; trocada temporariamente ao montar ciclos fechados)
     let ALIQ_IR_PCT = 22;
@@ -3840,7 +3840,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
         + linhaPerda
-        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-white font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
+        + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
         + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
     }
@@ -3948,6 +3948,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         ciclo.receitas = construirReceitasHTML(v);
       });
       ciclo.aliquotaIR = pct;
+      ciclo.aliqFmt = 2; // marca: snapshot já no formato novo (alíquota em vermelho, 2 casas)
     }
     // Atualiza ciclos fechados quando a alíquota lançada em Jeton Valores mudou
     function atualizarCiclosFechadosComAliquota() {
@@ -3957,8 +3958,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       ciclos.forEach(c => {
         if (!c || !Array.isArray(c.escalasData) || !c.escalasData.length) return;
         const pct = aliquotaIRDoCiclo(c).pct;
-        if (c.aliquotaIR === pct) return;
-        if (c.aliquotaIR === undefined && pct === 22) { c.aliquotaIR = 22; mudou = true; return; }
+        if (c.aliquotaIR === pct && c.aliqFmt === 2) return;
         regerarSnapshotsCicloFechado(c); mudou = true;
       });
       if (mudou) localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(ciclos));
@@ -4108,7 +4108,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido dos Auxílios</span><span id="recValorRecebivelAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxiliosRecebivel)}">${formatarMoeda(v.valorAuxiliosRecebivel)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Alíquota de IR</span><span id="recAliqIR" class="text-xl font-black text-white">${formatarAliquotaIR(v.aliqIR != null ? v.aliqIR : 22)}%</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Alíquota de IR</span><span id="recAliqIR" class="text-xl font-black text-red-400">${formatarAliquotaIR(v.aliqIR != null ? v.aliqIR : 22)}%</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorRealJeton)}</span></div>
           </div>

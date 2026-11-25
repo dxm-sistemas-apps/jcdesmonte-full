@@ -795,7 +795,7 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">VTR</label>
-              <input type="text" id="notaVtr" list="vtr-historico" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaVtr" autocomplete="off" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Manhã</label>
@@ -1054,7 +1054,7 @@
         <hr class="border-slate-800">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="modalNotaVtr" list="vtr-historico" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalNotaVtr" autocomplete="off" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalManha" placeholder="Local - Manhã" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalTarde" placeholder="Local - Tarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalNoite" placeholder="Local - Noite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
@@ -2602,6 +2602,44 @@
       const el = document.getElementById(id);
       if (el) { el.addEventListener('blur', () => memorizarVtr(el.value)); el.addEventListener('change', () => memorizarVtr(el.value)); }
     });
+
+    // Sugestões próprias (o <datalist> não aparece no WebView do app Android, por isso a lista é desenhada aqui).
+    // Aparece enquanto você digita a placa (1ª palavra do campo); toque numa sugestão para completar.
+    function ativarSugestoesVtr(id) {
+      const el = document.getElementById(id);
+      if (!el || el.dataset.sugestoes) return;
+      el.dataset.sugestoes = '1';
+      const pai = el.parentElement;
+      if (getComputedStyle(pai).position === 'static') pai.style.position = 'relative';
+      const caixa = document.createElement('div');
+      caixa.className = 'hidden absolute left-0 right-0 z-50 mt-1 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl overflow-hidden';
+      caixa.style.top = el.offsetTop + el.offsetHeight + 'px';
+      pai.appendChild(caixa);
+      const fechar = () => caixa.classList.add('hidden');
+      const norm = (t) => t.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      const mostrar = () => {
+        const texto = el.value, primeiro = texto.trim().split(/\s+/)[0] || '';
+        const temResto = /\s/.test(texto.trim());
+        const chave = norm(primeiro);
+        if (!chave || temResto) return fechar();
+        const achadas = obterVtrsHistorico().filter(v => norm(v).startsWith(chave) && norm(v) !== chave).slice(0, 6);
+        if (!achadas.length) return fechar();
+        caixa.style.top = el.offsetTop + el.offsetHeight + 'px';
+        caixa.innerHTML = achadas.map(v => `<button type="button" data-v="${v}" class="block w-full text-left px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700 border-b border-slate-800 last:border-0">${v}</button>`).join('');
+        caixa.classList.remove('hidden');
+      };
+      // pointerdown/mousedown: seleciona antes do campo perder o foco
+      caixa.addEventListener('mousedown', ev => ev.preventDefault());
+      caixa.addEventListener('click', ev => {
+        const b = ev.target.closest('[data-v]'); if (!b) return;
+        el.value = b.dataset.v; fechar();
+        el.dispatchEvent(new Event('input', { bubbles: true })); el.focus();
+      });
+      el.addEventListener('input', mostrar);
+      el.addEventListener('focus', mostrar);
+      el.addEventListener('blur', () => setTimeout(fechar, 150));
+    }
+    ['notaVtr', 'modalNotaVtr'].forEach(ativarSugestoesVtr);
 
     function atualizarDatalistLocais() {
       atualizarDatalistVtr();

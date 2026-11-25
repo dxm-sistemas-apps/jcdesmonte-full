@@ -794,7 +794,7 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">VTR</label>
-              <input type="text" id="notaVtr" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaVtr" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Manhã</label>
@@ -1053,7 +1053,7 @@
         <hr class="border-slate-800">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="modalNotaVtr" placeholder="VTR" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalNotaVtr" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalManha" placeholder="Local - Manhã" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalTarde" placeholder="Local - Tarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalNoite" placeholder="Local - Noite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
@@ -1517,7 +1517,7 @@
         document.querySelectorAll('input[name="funcaoTarde"]').forEach(cb => { cb.checked = esc.funcaoTarde?.includes(cb.value); });
         document.querySelectorAll('input[name="funcaoNoite"]').forEach(cb => { cb.checked = esc.funcaoNoite?.includes(cb.value); });
 
-        document.getElementById('notaVtr').value = esc.notaVtr || '';
+        document.getElementById('notaVtr').value = mascaraVtr(esc.notaVtr || '');
         document.getElementById('notaLocalManha').value = esc.notaLocalManha || '';
         document.getElementById('notaLocalTarde').value = esc.notaLocalTarde || '';
         document.getElementById('notaLocalNoite').value = esc.notaLocalNoite || '';
@@ -3486,6 +3486,22 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       cont.innerHTML = html;
     }
 
+    // ===== MÁSCARA DA VTR: XXX-XXXX (3 caracteres, hífen, 4 caracteres; maiúsculas) =====
+    // Vale para digitação, colagem e autopreenchimento do navegador (evento "input").
+    function mascaraVtr(valor) {
+      const v = String(valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
+      return v.length > 3 ? v.slice(0, 3) + '-' + v.slice(3) : v;
+    }
+    ['notaVtr', 'modalNotaVtr'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const aplicar = () => { const m = mascaraVtr(el.value); if (el.value !== m) el.value = m; };
+      el.addEventListener('input', aplicar);
+      el.addEventListener('change', aplicar);
+      el.addEventListener('blur', aplicar);
+      aplicar();
+    });
+
     function resetarFormularioEscala() {
       document.getElementById('formEscala').reset();
       document.getElementById('dataAtividade').value = ''; // campo oculto não é limpo pelo reset(); limpa também o texto exibido
@@ -3554,7 +3570,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
 
       gerenciarCamposPernoite();
 
-      document.getElementById('notaVtr').value = esc.anotacoes?.notaVtr || '';
+      document.getElementById('notaVtr').value = mascaraVtr(esc.anotacoes?.notaVtr || '');
       document.getElementById('notaLocalManha').value = esc.anotacoes?.notaLocalManha || '';
       document.getElementById('notaLocalTarde').value = esc.anotacoes?.notaLocalTarde || '';
       document.getElementById('notaLocalNoite').value = esc.anotacoes?.notaLocalNoite || '';
@@ -4286,7 +4302,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       document.querySelectorAll('input[name="modalFuncaoTarde"]').forEach(cb => { cb.checked = esc.funcaoTarde?.includes(cb.value); });
       document.querySelectorAll('input[name="modalFuncaoNoite"]').forEach(cb => { cb.checked = esc.funcaoNoite?.includes(cb.value); });
 
-      document.getElementById('modalNotaVtr').value = esc.anotacoes?.notaVtr || '';
+      document.getElementById('modalNotaVtr').value = mascaraVtr(esc.anotacoes?.notaVtr || '');
       document.getElementById('modalNotaLocalManha').value = esc.anotacoes?.notaLocalManha || '';
       document.getElementById('modalNotaLocalTarde').value = esc.anotacoes?.notaLocalTarde || '';
       document.getElementById('modalNotaLocalNoite').value = esc.anotacoes?.notaLocalNoite || '';

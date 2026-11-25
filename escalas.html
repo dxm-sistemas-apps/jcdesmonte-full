@@ -795,7 +795,7 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">VTR</label>
-              <input type="text" id="notaVtr" list="vtr-historico" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaVtr" list="vtr-historico" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Manhã</label>
@@ -1054,7 +1054,7 @@
         <hr class="border-slate-800">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="modalNotaVtr" list="vtr-historico" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalNotaVtr" list="vtr-historico" placeholder="XXX-XXXX (E OBSERVAÇÕES)" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalManha" placeholder="Local - Manhã" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalTarde" placeholder="Local - Tarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalNoite" placeholder="Local - Noite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
@@ -2576,8 +2576,8 @@
     const STORAGE_KEY_VTR_HIST = 'jetcontrol_vtr_historico';
     function coletarVtrsEmObjeto(obj, saida, nivel) {
       if (!obj || typeof obj !== 'object' || nivel > 8) return;
-      if (obj.anotacoes && typeof obj.anotacoes.notaVtr === 'string') saida.add(mascaraVtr(obj.anotacoes.notaVtr));
-      if (typeof obj.notaVtr === 'string') saida.add(mascaraVtr(obj.notaVtr));
+      if (obj.anotacoes && typeof obj.anotacoes.notaVtr === 'string') { const pl = placaDoTextoVtr(obj.anotacoes.notaVtr); if (pl) saida.add(pl); }
+      if (typeof obj.notaVtr === 'string') { const pl = placaDoTextoVtr(obj.notaVtr); if (pl) saida.add(pl); }
       (Array.isArray(obj) ? obj : Object.values(obj)).forEach(v => coletarVtrsEmObjeto(v, saida, nivel + 1));
     }
     function lerJsonSeguro(chave, padrao) { try { const v = JSON.parse(localStorage.getItem(chave)); return v == null ? padrao : v; } catch (e) { return padrao; } }
@@ -2588,8 +2588,8 @@
       return Array.from(set).filter(v => v && v.length >= 3).sort();
     }
     function memorizarVtr(valor) {
-      const v = mascaraVtr(valor);
-      if (v.length < 7) return; // só guarda placa completa (XXX-XXXX)
+      const v = placaDoTextoVtr(valor);
+      if (!v) return; // só guarda a placa completa (XXX-XXXX) que estiver no início do texto
       const lista = lerJsonSeguro(STORAGE_KEY_VTR_HIST, []);
       if (!lista.includes(v)) { lista.push(v); try { localStorage.setItem(STORAGE_KEY_VTR_HIST, JSON.stringify(lista)); } catch (e) {} }
       atualizarDatalistVtr();
@@ -3520,16 +3520,30 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       cont.innerHTML = html;
     }
 
-    // ===== MÁSCARA DA VTR: XXX-XXXX (3 caracteres, hífen, 4 caracteres; maiúsculas) =====
-    // Vale para digitação, colagem e autopreenchimento do navegador (evento "input").
+    // ===== MÁSCARA DA VTR =====
+    // Sem limite de caracteres (aceita observações/narrativa). Só o INÍCIO do texto, quando parece uma placa
+    // (3 letras + número), é formatado como XXX-XXXX em maiúsculas; o restante fica exatamente como digitado.
+    const REGEX_INICIO_PLACA = /^(\s*)([A-Za-z]{3})-?(\d[A-Za-z0-9]{0,3})/;
     function mascaraVtr(valor) {
-      const v = String(valor || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
-      return v.length > 3 ? v.slice(0, 3) + '-' + v.slice(3) : v;
+      return String(valor == null ? '' : valor).replace(REGEX_INICIO_PLACA, (m, esp, letras, resto) => esp + letras.toUpperCase() + '-' + resto.toUpperCase());
+    }
+    // Extrai a placa completa no início do texto (XXX-XXXX), se houver
+    function placaDoTextoVtr(valor) {
+      const m = mascaraVtr(valor).match(/^\s*([A-Z]{3}-\d[A-Z0-9]\d{2})(?![A-Za-z0-9])/);
+      return m ? m[1] : '';
     }
     ['notaVtr', 'modalNotaVtr'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
-      const aplicar = () => { const m = mascaraVtr(el.value); if (el.value !== m) el.value = m; };
+      const aplicar = () => {
+        const m = mascaraVtr(el.value);
+        if (el.value === m) return;
+        const antes = el.value.length, pos = el.selectionStart;
+        const fim = pos === antes; // preserva o cursor quando edita no meio do texto
+        el.value = m;
+        const novaPos = fim ? m.length : Math.min(m.length, pos + (m.length - antes));
+        try { el.setSelectionRange(novaPos, novaPos); } catch (e) {}
+      };
       el.addEventListener('input', aplicar);
       el.addEventListener('change', aplicar);
       el.addEventListener('blur', aplicar);

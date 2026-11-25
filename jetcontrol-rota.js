@@ -37,6 +37,12 @@
   const diaChave = (t) => { const d = new Date(t); return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`; };
   const hhmm = (t) => { const d = new Date(t); return `${dois(d.getHours())}:${dois(d.getMinutes())}`; };
   const arred1 = (n) => Math.round(n * 10) / 10;
+  // Diagnóstico: últimas 40 linhas, visíveis na tela "Rota automática"
+  const K_DIAG = 'jetrota_diag';
+  function log(msg) {
+    const l = ler(K_DIAG, []); l.push(new Date().toLocaleTimeString('pt-BR') + ' ' + msg);
+    gravar(K_DIAG, l.slice(-40));
+  }
   const nativo = () => !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 
   function haversine(a, b) {
@@ -59,11 +65,12 @@
         { id: 'ROTA_PENDENTE', actions: [{ id: 'registrar', title: 'REGISTRAR' }, { id: 'descartar', title: 'DESCARTAR' }] }
       ] });
       LN.addListener('localNotificationActionPerformed', (ev) => acao(ev.actionId, ev.notification && ev.notification.extra));
-    } catch (e) { console.warn('JetRota: notificações indisponíveis', e); }
+    } catch (e) { console.warn('JetRota: notificações indisponíveis', e); log('FALHA nas notificações: ' + (e && e.message || e)); }
   }
   async function notificar(titulo, corpo, tipo, extra) {
     if (!LN) { console.log('[JetRota]', titulo, corpo); return; }
     try {
+      log('enviando notificação: ' + titulo);
       await LN.schedule({ notifications: [{ id: Math.floor(Date.now() % 2147483000), title: titulo, body: corpo, actionTypeId: tipo, extra: extra || {}, schedule: { at: new Date(Date.now() + 300) } }] });
     } catch (e) { console.warn(e); }
   }
@@ -73,7 +80,10 @@
   function processar(p) {
     const c = cfg();
     if (!c.ativo || !c.home) return;
-    if (p.acc != null && p.acc > c.precisaoMax) return;
+    const _d = haversine(c.home, p);
+    const _ag = Date.now();
+    if (!processar._ult || _ag - processar._ult > 60000) { processar._ult = _ag; log(`GPS ok: ${Math.round(_d)} m de casa, precisão ${p.acc != null ? Math.round(p.acc) : '?'} m`); }
+    if (p.acc != null && p.acc > c.precisaoMax) { log('ponto descartado: precisão ruim'); return; }
     const e = estado();
     const t = p.t || Date.now();
     const d = haversine(c.home, p);
@@ -151,7 +161,9 @@
   // ---------------- GPS em segundo plano ----------------
   async function iniciar() {
     const c = cfg();
-    if (!nativo() || !c.ativo || !c.home) return;
+    if (!nativo()) { log('não está no app nativo (aberto no navegador?)'); return; }
+    if (!c.ativo || !c.home) { log('inativo ou sem casa definida'); return; }
+    log('iniciando monitoramento...');
     await prepararNotificacoes();
     try {
       const BG = Capacitor.registerPlugin('BackgroundGeolocation');
@@ -162,11 +174,12 @@
         backgroundMessage: 'Monitorando saída e chegada de casa',
         requestPermissions: true, stale: false, distanceFilter: DISTANCIA_FILTRO
       }, (loc, erro) => {
-        if (erro) { console.warn('JetRota GPS', erro); return; }
+        if (erro) { console.warn('JetRota GPS', erro); log('ERRO GPS: ' + (erro.message || erro.code || JSON.stringify(erro))); return; }
         if (loc) processar({ lat: loc.latitude, lon: loc.longitude, acc: loc.accuracy, t: loc.time || Date.now() });
       });
       gravar(K.wid, id);
-    } catch (e) { console.warn('JetRota: GPS em segundo plano indisponível', e); }
+      log('monitoramento INICIADO (watcher ' + id + ')');
+    } catch (e) { console.warn('JetRota: GPS em segundo plano indisponível', e); log('FALHA ao iniciar GPS: ' + (e && e.message || e)); }
   }
   async function parar() {
     const id = ler(K.wid, null);
@@ -177,6 +190,7 @@
 
   // ---------------- API para a página rota.html ----------------
   window.JetRota = {
+    diag: () => ler(K_DIAG, []), limparDiag: () => gravar(K_DIAG, []),
     PADRAO, cfg, estado, hist, nativo, haversine,
     salvarCfg(novo) { gravar(K.cfg, Object.assign(cfg(), novo)); },
     salvarHist(h) { gravar(K.dias, h); },
@@ -242,6 +256,8 @@
     window.addEventListener('focus', atualizar);
   }
 
-  function ini() { integrarEscalas(); iniciar(); }
+  // Esconde a tela de abertura assim que a página do site está pronta (não espera o tempo fixo)
+  function esconderSplash() { try { if (nativo()) Capacitor.registerPlugin('SplashScreen').hide({ fadeOutDuration: 150 }); } catch (e) {} }
+  function ini() { esconderSplash(); integrarEscalas(); iniciar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ini); else ini();
 })();

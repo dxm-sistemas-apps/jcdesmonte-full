@@ -34,6 +34,16 @@
 </section>
 
 <section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-4">
+  <h2 class="font-black text-sm mb-2">DIAGNÓSTICO</h2>
+  <div id="diagInfo" class="text-xs text-slate-300 mb-2 normal-case"></div>
+  <div class="flex gap-2 mb-2 flex-wrap">
+    <button id="btnReiniciar" class="bg-amber-600 px-3 py-2 rounded-lg text-xs font-black">REINICIAR MONITORAMENTO</button>
+    <button id="btnLimparDiag" class="bg-slate-700 px-3 py-2 rounded-lg text-xs font-black">LIMPAR LOG</button>
+  </div>
+  <pre id="diagLog" class="text-[11px] text-slate-400 normal-case whitespace-pre-wrap max-h-56 overflow-auto bg-slate-900 rounded-lg p-2"></pre>
+</section>
+
+<section class="bg-slate-800/60 border border-slate-700 rounded-xl p-4 mb-4">
   <h2 class="font-black text-sm mb-2">HISTÓRICO (EDITÁVEL)</h2>
   <div id="lista" class="space-y-2 text-xs"></div>
 </section>
@@ -97,5 +107,12 @@ $('btnSalvar').onclick = async ()=>{
   await J.ativar($('ativo').checked); $('msg').textContent='SALVO'; carregar();
 };
 $('btnTeste').onclick = ()=>J.testarNotificacao();
-carregar(); setInterval(()=>{ if(!document.activeElement||document.activeElement.tagName!=='INPUT') carregar(); },15000);
+function diag(){
+  const c=J.cfg();
+  $('diagInfo').textContent = 'App nativo: '+(J.nativo()?'sim':'NÃO (navegador)')+' • Monitoramento: '+(c.ativo?'ativo':'desligado')+' • Casa: '+(c.home?'definida':'NÃO definida')+' • Raio: '+c.raio+' m';
+  $('diagLog').textContent = J.diag().join('\n') || '(sem registros ainda)';
+}
+$('btnReiniciar').onclick = async()=>{ await J.ativar(true); setTimeout(diag,1500); };
+$('btnLimparDiag').onclick = ()=>{ J.limparDiag(); diag(); };
+carregar(); diag(); setInterval(diag, 4000); setInterval(()=>{ if(!document.activeElement||document.activeElement.tagName!=='INPUT') carregar(); },15000);
 </script></body></html>

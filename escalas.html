@@ -234,6 +234,7 @@
       </div>
     </section>
     <datalist id="locais-historico"></datalist>
+    <datalist id="vtr-historico"></datalist>
 
     <!-- ESTATÍSTICA DO CICLO -->
     <section id="secaoEstatisticaCiclo" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
@@ -794,7 +795,7 @@
           <div class="space-y-3">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">VTR</label>
-              <input type="text" id="notaVtr" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
+              <input type="text" id="notaVtr" list="vtr-historico" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm text-justify focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local - Manhã</label>
@@ -1053,7 +1054,7 @@
         <hr class="border-slate-800">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <input type="text" id="modalNotaVtr" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalNotaVtr" list="vtr-historico" maxlength="8" placeholder="XXX-XXXX" autocomplete="off" autocapitalize="characters" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalManha" placeholder="Local - Manhã" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalTarde" placeholder="Local - Tarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <input type="text" id="modalNotaLocalNoite" placeholder="Local - Noite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
@@ -2570,7 +2571,40 @@
       }
     });
 
+    // ===== HISTÓRICO DE VTR (autopreenchimento conforme a digitação) =====
+    // Junta: (1) VTRs guardadas neste aparelho, (2) VTRs de todas as escalas do ciclo atual e dos ciclos fechados.
+    const STORAGE_KEY_VTR_HIST = 'jetcontrol_vtr_historico';
+    function coletarVtrsEmObjeto(obj, saida, nivel) {
+      if (!obj || typeof obj !== 'object' || nivel > 8) return;
+      if (obj.anotacoes && typeof obj.anotacoes.notaVtr === 'string') saida.add(mascaraVtr(obj.anotacoes.notaVtr));
+      if (typeof obj.notaVtr === 'string') saida.add(mascaraVtr(obj.notaVtr));
+      (Array.isArray(obj) ? obj : Object.values(obj)).forEach(v => coletarVtrsEmObjeto(v, saida, nivel + 1));
+    }
+    function lerJsonSeguro(chave, padrao) { try { const v = JSON.parse(localStorage.getItem(chave)); return v == null ? padrao : v; } catch (e) { return padrao; } }
+    function obterVtrsHistorico() {
+      const set = new Set(lerJsonSeguro(STORAGE_KEY_VTR_HIST, []));
+      coletarVtrsEmObjeto(lerJsonSeguro(STORAGE_KEY_ESCALAS, []), set, 0);
+      coletarVtrsEmObjeto(lerJsonSeguro('jetcontrol_ciclos_fechados', []), set, 0);
+      return Array.from(set).filter(v => v && v.length >= 3).sort();
+    }
+    function memorizarVtr(valor) {
+      const v = mascaraVtr(valor);
+      if (v.length < 7) return; // só guarda placa completa (XXX-XXXX)
+      const lista = lerJsonSeguro(STORAGE_KEY_VTR_HIST, []);
+      if (!lista.includes(v)) { lista.push(v); try { localStorage.setItem(STORAGE_KEY_VTR_HIST, JSON.stringify(lista)); } catch (e) {} }
+      atualizarDatalistVtr();
+    }
+    function atualizarDatalistVtr() {
+      const dl = document.getElementById('vtr-historico');
+      if (dl) dl.innerHTML = obterVtrsHistorico().map(v => `<option value="${v}">`).join('');
+    }
+    ['notaVtr', 'modalNotaVtr'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.addEventListener('blur', () => memorizarVtr(el.value)); el.addEventListener('change', () => memorizarVtr(el.value)); }
+    });
+
     function atualizarDatalistLocais() {
+      atualizarDatalistVtr();
       invalidarCatalogoLocais();
       const datalist = document.getElementById('locais-historico');
       if (!datalist) return;
@@ -4596,6 +4630,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         renderizarCiclosFechados();
       });
     }
+    atualizarDatalistVtr();
     // Estado inicial: sem decisão de Home Office = campos travados
     try { aplicarBloqueioCamposHomeOffice(""); } catch (e) { console.error(e); }
   </script>

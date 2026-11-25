@@ -43,6 +43,14 @@
     const l = ler(K_DIAG, []); l.push(new Date().toLocaleTimeString('pt-BR') + ' ' + msg);
     gravar(K_DIAG, l.slice(-40));
   }
+  // Em páginas remotas (server.url) o Capacitor injeta só a ponte nativa: não existe registerPlugin, mas os plugins
+  // instalados ficam em Capacitor.Plugins. Usa o que existir.
+  const plug = (nome) => {
+    const C = window.Capacitor || {};
+    if (typeof C.registerPlugin === 'function') return C.registerPlugin(nome);
+    if (C.Plugins && C.Plugins[nome]) return C.Plugins[nome];
+    throw new Error('plugin nativo ' + nome + ' não encontrado (Capacitor.Plugins: ' + Object.keys(C.Plugins || {}).join(',') + ')');
+  };
   const nativo = () => !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
 
   function haversine(a, b) {
@@ -57,7 +65,7 @@
   async function prepararNotificacoes() {
     if (!nativo() || LN) return;
     try {
-      LN = Capacitor.registerPlugin('LocalNotifications');
+      LN = plug('LocalNotifications');
       await LN.requestPermissions();
       await LN.registerActionTypes({ types: [
         { id: 'ROTA_SAIDA', actions: [{ id: 'sim', title: 'MONITORAR' }, { id: 'nao', title: 'HOJE NÃO' }] },
@@ -166,7 +174,7 @@
     log('iniciando monitoramento...');
     await prepararNotificacoes();
     try {
-      const BG = Capacitor.registerPlugin('BackgroundGeolocation');
+      const BG = plug('BackgroundGeolocation');
       const antigo = ler(K.wid, null);
       if (antigo) { try { await BG.removeWatcher({ id: antigo }); } catch (e) {} }
       const id = await BG.addWatcher({
@@ -184,7 +192,7 @@
   async function parar() {
     const id = ler(K.wid, null);
     if (!nativo() || !id) return;
-    try { await Capacitor.registerPlugin('BackgroundGeolocation').removeWatcher({ id }); } catch (e) {}
+    try { await plug('BackgroundGeolocation').removeWatcher({ id }); } catch (e) {}
     gravar(K.wid, null);
   }
 
@@ -257,7 +265,7 @@
   }
 
   // Esconde a tela de abertura assim que a página do site está pronta (não espera o tempo fixo)
-  function esconderSplash() { try { if (nativo()) Capacitor.registerPlugin('SplashScreen').hide({ fadeOutDuration: 150 }); } catch (e) {} }
+  function esconderSplash() { try { if (nativo()) plug('SplashScreen').hide({ fadeOutDuration: 150 }); } catch (e) {} }
   function ini() { esconderSplash(); integrarEscalas(); iniciar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ini); else ini();
 })();

@@ -266,6 +266,19 @@
 
   // Esconde a tela de abertura assim que a página do site está pronta (não espera o tempo fixo)
   function esconderSplash() { try { if (nativo()) plug('SplashScreen').hide({ fadeOutDuration: 150 }); } catch (e) {} }
-  function ini() { esconderSplash(); integrarEscalas(); iniciar(); }
+  // Botão VOLTAR nativo do Android: em qualquer página volta para ESCALAS; estando em Escalas, fecha o app.
+  // (precisa do plugin @capacitor/app no APK; sem ele, o Android mantém o comportamento padrão)
+  function botaoVoltar() {
+    try {
+      if (!nativo() || window.__jcVoltar) return;
+      const App = plug('App'); window.__jcVoltar = true;
+      App.addListener('backButton', () => {
+        const noEscalas = /\/escalas\.html$/i.test(location.pathname);
+        if (!noEscalas) location.href = 'escalas.html';
+        else if (App.exitApp) App.exitApp();
+      });
+    } catch (e) { log('voltar nativo indisponível: ' + (e && e.message || e)); }
+  }
+  function ini() { esconderSplash(); botaoVoltar(); integrarEscalas(); iniciar(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ini); else ini();
 })();

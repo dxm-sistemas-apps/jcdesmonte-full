@@ -82,6 +82,9 @@
         const idToken = r && r.credential && r.credential.idToken;
         if (!idToken) throw new Error('Google não devolveu o token');
         await auth.signInWithCredential(firebase.auth.GoogleAuthProvider.credential(idToken));
+      } else if (nativo()) {
+        // No app, popup/redirect do Google não funciona (tela branca). Exige o plugin nativo no APK.
+        throw new Error('o APK não tem o plugin de login Google (FirebaseAuthentication). Gere o APK de novo com o google-services.json.');
       } else {
         const prov = new firebase.auth.GoogleAuthProvider(); prov.setCustomParameters({ prompt: 'select_account' });
         await auth.signInWithPopup(prov);

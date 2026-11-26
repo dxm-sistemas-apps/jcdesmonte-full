@@ -30,6 +30,15 @@
     '/databases/(default)/documents/jetcontrol_sync/' +
     encodeURIComponent(SYNC_SECRET) + '/dados';
 
+  // ---- LOGIN GOOGLE: toda chamada ao Firestore leva o token do dono (jetcontrol-auth.js) ----
+  // As regras do Firestore recusam qualquer pedido sem esse token.
+  function cabecalhos(extra) {
+    var h = extra || {};
+    var tok = (typeof window.JetAuthTokenAtual === 'function') ? window.JetAuthTokenAtual() : null;
+    if (tok) h['Authorization'] = 'Bearer ' + tok;
+    return h;
+  }
+
   var originalSetItem = Storage.prototype.setItem;
   var originalRemoveItem = Storage.prototype.removeItem;
   var originalGetItem = Storage.prototype.getItem;
@@ -178,7 +187,7 @@
 
     return fetch(URL_BASE + '/' + encodeURIComponent(chave) + mascara, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: cabecalhos({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ fields: campos }),
       keepalive: !!keepalive
     }).then(function (resposta) {
@@ -204,7 +213,7 @@
     acumulado = acumulado || [];
     var url = URL_BASE + '?pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
 
-    return fetch(url).then(function (resposta) {
+    return fetch(url, { headers: cabecalhos() }).then(function (resposta) {
       if (!resposta.ok) throw new Error('Firestore respondeu ' + resposta.status);
       return resposta.json();
     }).then(function (dados) {
@@ -326,7 +335,8 @@
     });
   }
 
-  window.JetSyncReady = sincronizarUmaVez();
+  // só sincroniza depois do login (jetcontrol-auth.js); sem login nada é lido nem gravado na nuvem
+  window.JetSyncReady = (window.JetAuthPronto || Promise.resolve()).then(sincronizarUmaVez);
 
   window.JetSyncStatus = function () {
     return configurado

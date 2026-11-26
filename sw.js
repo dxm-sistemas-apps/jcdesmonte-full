@@ -1,7 +1,7 @@
 /* JETCONTROL — service worker (app instalável + uso offline).
    Os dados continuam no localStorage; a sincronização com a nuvem
    (Firestore) NUNCA passa pelo cache. */
-const VERSAO = 'jetcontrol-v6';
+const VERSAO = 'jetcontrol-v5';
 const SHELL = [
   './',
   'index.html',
@@ -12,10 +12,6 @@ const SHELL = [
   'dashboard.html',
   'backups.html',
   'resetar-dados.html',
-  'rota.html',
-  'jetcontrol-auth.js',
-  'jetcontrol-alertas.js',
-  'jetcontrol-rota.js',
   'jetcontrol-sync.js',
   'jetcontrol-backup.js',
   'pwa.js',
@@ -46,8 +42,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (!/^https?:$/.test(url.protocol)) return;
   // Nuvem de sincronização: sempre direto na rede.
-  // (o SDK do login em gstatic.com/firebasejs FICA no cache para o app abrir offline)
-  if (/firestore\.googleapis\.com|googleapis\.com\/identitytoolkit|securetoken\.googleapis\.com|firebaseio\.com|firebaseapp\.com/.test(url.hostname + url.pathname)) return;
+  if (/firestore\.googleapis\.com|firebase|googleapis\.com\/identitytoolkit/.test(url.hostname + url.pathname)) return;
 
   const mesmaOrigem = url.origin === self.location.origin;
 

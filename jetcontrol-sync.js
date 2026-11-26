@@ -14,7 +14,7 @@
   var CHAVE_RESET_APLICADO = 'jetcontrol_reset_aplicado_em';
   // Chaves que ficam SOMENTE neste aparelho (rascunho do formulário). Não vão para a nuvem:
   // evita a nuvem devolver/apagar um rascunho em andamento e evita o aviso de "pendente" a cada tecla.
-  var CHAVES_SOMENTE_LOCAIS = {};
+  var CHAVES_SOMENTE_LOCAIS = { 'jetcontrol_escala_rascunho': true };
   var ATRASO_ENVIO_MS = 700;
   var TEMPO_LIMITE_MS = 8000;
 
@@ -29,6 +29,15 @@
     encodeURIComponent(FIREBASE_PROJECT_ID) +
     '/databases/(default)/documents/jetcontrol_sync/' +
     encodeURIComponent(SYNC_SECRET) + '/dados';
+
+  // ---- LOGIN GOOGLE: toda chamada ao Firestore leva o token do dono (jetcontrol-auth.js) ----
+  // As regras do Firestore recusam qualquer pedido sem esse token.
+  function cabecalhos(extra) {
+    var h = extra || {};
+    var tok = (typeof window.JetAuthTokenAtual === 'function') ? window.JetAuthTokenAtual() : null;
+    if (tok) h['Authorization'] = 'Bearer ' + tok;
+    return h;
+  }
 
   var originalSetItem = Storage.prototype.setItem;
   var originalRemoveItem = Storage.prototype.removeItem;
@@ -178,7 +187,7 @@
 
     return fetch(URL_BASE + '/' + encodeURIComponent(chave) + mascara, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: cabecalhos({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ fields: campos }),
       keepalive: !!keepalive
     }).then(function (resposta) {
@@ -204,7 +213,7 @@
     acumulado = acumulado || [];
     var url = URL_BASE + '?pageSize=300' + (pageToken ? '&pageToken=' + encodeURIComponent(pageToken) : '');
 
-    return fetch(url).then(function (resposta) {
+    return fetch(url, { headers: cabecalhos() }).then(function (resposta) {
       if (!resposta.ok) throw new Error('Firestore respondeu ' + resposta.status);
       return resposta.json();
     }).then(function (dados) {
@@ -326,7 +335,8 @@
     });
   }
 
-  window.JetSyncReady = sincronizarUmaVez();
+  // só sincroniza depois do login (jetcontrol-auth.js); sem login nada é lido nem gravado na nuvem
+  window.JetSyncReady = (window.JetAuthPronto || Promise.resolve()).then(sincronizarUmaVez);
 
   window.JetSyncStatus = function () {
     return configurado

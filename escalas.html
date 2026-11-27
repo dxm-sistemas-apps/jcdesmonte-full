@@ -45,7 +45,7 @@
 
   /* Campos bloqueados quando a escala é marcada como Home Office (ver
      aplicarBloqueioCamposHomeOffice() no script) ficam visualmente apagados. */
-  input:disabled, select:disabled { opacity: 0.4; cursor: not-allowed; }
+  input:disabled, select:disabled, textarea:disabled { opacity: 0.4; cursor: not-allowed; }
 
   /* TODO o texto exibido na página (rótulos, cards, campos, placeholders)
      aparece em maiúsculas. O que o usuário digita também é convertido para
@@ -234,7 +234,6 @@
 
       </div>
     </section>
-    <datalist id="locais-historico"></datalist>
 
     <!-- ESTATÍSTICA DO CICLO -->
     <section id="secaoEstatisticaCiclo" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
@@ -546,7 +545,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalManha" class="lg:col-span-6">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Manha"></span></label>
-              <input type="text" id="localManha" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
+              <input type="text" id="localManha" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE MANHÃ (CONDICIONAL) -->
             <div id="wrapperPernoiteManha" class="lg:col-span-6 hidden">
@@ -598,7 +597,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalTarde" class="lg:col-span-6">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Tarde"></span></label>
-              <input type="text" id="localTarde" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
+              <input type="text" id="localTarde" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE TARDE (CONDICIONAL) -->
             <div id="wrapperPernoiteTarde" class="lg:col-span-6 hidden">
@@ -650,7 +649,7 @@
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
             <div id="wrapperLocalNoite" class="lg:col-span-6">
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade<span class="rotulo-ativ-Noite"></span></label>
-              <input type="text" id="localNoite" list="locais-historico" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
+              <input type="text" id="localNoite" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500" oninput="gerenciarCamposPernoite()">
             </div>
             <!-- CAMPO PERNOITE NOITE (CONDICIONAL) -->
             <div id="wrapperPernoiteNoite" class="lg:col-span-6 hidden">
@@ -945,7 +944,7 @@
           <!-- MANHÃ -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-brand-500 uppercase flex items-center gap-1"><i class="fa-solid fa-sun"></i> Manhã</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeManha" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Manha')" onchange="renderizarExtrasModal('Manha')"></label></div>
-            <input type="text" id="modalLocalManha" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalManha" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteManha" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
@@ -963,7 +962,7 @@
           <!-- TARDE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-amber-500 uppercase flex items-center gap-1"><i class="fa-solid fa-cloud-sun"></i> Tarde</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeTarde" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Tarde')" onchange="renderizarExtrasModal('Tarde')"></label></div>
-            <input type="text" id="modalLocalTarde" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalTarde" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteTarde" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
@@ -981,7 +980,7 @@
           <!-- NOITE -->
           <div class="bg-slate-900/50 p-3 rounded-xl border border-slate-800/80 space-y-2">
             <div class="flex items-center justify-between gap-2"><h4 class="text-xs font-black text-indigo-400 uppercase flex items-center gap-1"><i class="fa-solid fa-moon"></i> Noite</h4><label class="flex items-center gap-1 text-[10px] uppercase font-bold text-slate-400">Qtd. de Atividade <input type="number" id="modalQtdAtividadeNoite" min="1" max="4" value="1" class="w-14 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs text-center" oninput="renderizarExtrasModal('Noite')" onchange="renderizarExtrasModal('Noite')"></label></div>
-            <input type="text" id="modalLocalNoite" list="locais-historico" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+            <input type="text" id="modalLocalNoite" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" placeholder="Local" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
             <select id="modalPernoiteNoite" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
               <option value="">PERNOITE: N/A</option><option value="SIM">PERNOITE: SIM</option><option value="NAO">PERNOITE: NÃO</option>
             </select>
@@ -1284,6 +1283,9 @@
       form.classList.toggle('opacity-60', bloquear);
       form.classList.toggle('grayscale', bloquear);
       form.classList.toggle('pointer-events-none', bloquear);
+      if (!bloquear && typeof aplicarBloqueioCamposHomeOffice === 'function') {
+        aplicarBloqueioCamposHomeOffice('');
+      }
     }
 
     // Menu Mobile
@@ -1620,7 +1622,7 @@
           <div class="space-y-3 pt-3 border-t border-slate-800/80">
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Local da Atividade - ${nome} (${i}ª ATIVIDADE)</label>
-              <input type="text" id="localExtra${P}_${i}" list="locais-historico" value="${localEsc}" oninput="gerenciarCamposPernoite()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
+              <input type="text" id="localExtra${P}_${i}" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" value="${localEsc}" oninput="gerenciarCamposPernoite()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-white text-sm focus:outline-none focus:border-brand-500">
             </div>
             <div>
               <label class="block text-xs uppercase font-bold text-slate-400 mb-1">Função - ${nome} (${i}ª ATIVIDADE)</label>
@@ -2306,7 +2308,7 @@
         return;
       }
       form.querySelectorAll('input, select, textarea, button').forEach(el => {
-        if (el.disabled || ehLivre(el)) return;
+        if (ehLivre(el)) return;
         el.disabled = true; el.setAttribute('data-trava-ho', '1');
       });
       form.classList.add('formulario-travado-ho');
@@ -2317,7 +2319,7 @@
       const chk = document.getElementById(chkId);
       if (!chk) return;
       if (!prefixo) travarCamposAteDecidirHomeOffice(chk.dataset.decidido === '1');
-      if (!prefixo && chk.dataset.decidido !== '1') return; // sem decisão: nada mais a calcular
+      if (!prefixo && chk.dataset.decidido !== '1') return; // sem decisão: mantém todos os campos travados
       const ehHomeOffice = chk.dataset.decidido === '1' && chk.checked === true;
       const condicaoInput = document.getElementById(condicaoInputId);
       const ehReuniao = ehHomeOffice && condicaoInput && condicaoInput.value === 'reuniao';
@@ -2330,6 +2332,16 @@
       namesFuncao.forEach(name => {
         document.getElementsByName(name).forEach(el => definirCampoBloqueado(el, ehHomeOffice));
       });
+      if (!prefixo && !ehHomeOffice) {
+        ['Manha', 'Tarde', 'Noite'].forEach(P => {
+          const loc = document.getElementById('local' + P);
+          const jet = document.getElementById('jeton' + P);
+          if (loc && jet && !loc.value.trim()) {
+            jet.disabled = true;
+            jet.classList.add('jeton-sem-local');
+          }
+        });
+      }
       // Home office: qtd. volta a 1 e as atividades extras (2ª a 4ª) somem do formulário
       if (!prefixo && ehHomeOffice && !aplicarBloqueioCamposHomeOffice.__rodando
           && document.querySelector('[id^="localExtra"]')) {
@@ -2504,18 +2516,23 @@
     }
 
     const ID_CAMPO_LOCAL = /^(modal)?[lL]ocal(Extra)?(Manha|Tarde|Noite)(_\d+)?$/;
-    // Autopreenchimento estilo Excel: completa o texto enquanto digita (texto sugerido fica selecionado)
+    // Autopreenchimento estilo Excel: completa o texto enquanto digita (texto sugerido fica selecionado),
+    // compatível com Web e teclado Android (sem abrir lista dropdown de <datalist>)
     document.addEventListener('input', function (ev) {
       const el = ev.target;
-      if (!el || el.tagName !== 'INPUT' || !ID_CAMPO_LOCAL.test(el.id || '') || ev.isComposing) return;
+      if (!el || el.tagName !== 'INPUT' || !ID_CAMPO_LOCAL.test(el.id || '')) return;
       const maiusc = el.value.toUpperCase();
       if (maiusc !== el.value) {
         const pos = el.selectionStart;
         el.value = maiusc;
         try { el.setSelectionRange(pos, pos); } catch (_) {}
       }
-      const semCompletar = /^delete/.test(ev.inputType || '') || ev.inputType === 'insertReplacementText';
       const digitado = el.value;
+      const anterior = el.dataset.ultimoDigitadoLocal || '';
+      const apagando = /^delete/.test(ev.inputType || '') || digitado.length <= anterior.length;
+      const semCompletar = apagando || ev.inputType === 'insertReplacementText';
+      el.dataset.ultimoDigitadoLocal = digitado;
+
       if (!semCompletar && digitado && el.selectionStart === digitado.length && el.selectionEnd === digitado.length) {
         const chave = semAcento(digitado);
         const cat = obterCatalogoLocais();
@@ -2529,6 +2546,12 @@
       aplicarJetonDoLocal(el);
       if (typeof gerenciarCamposPernoite === 'function' && !/^modal/.test(el.id)) gerenciarCamposPernoite();
       if (typeof salvarRascunhoForm === 'function' && !/^modal/.test(el.id)) salvarRascunhoForm();
+    });
+    document.addEventListener('focusin', function (ev) {
+      const el = ev.target;
+      if (el && el.tagName === 'INPUT' && ID_CAMPO_LOCAL.test(el.id || '')) {
+        el.dataset.ultimoDigitadoLocal = el.value || '';
+      }
     });
     // Após preencher o local da MANHÃ (ou da TARDE, se digitado manualmente), pergunta se o local do período seguinte é o mesmo
     // e, se a resposta for SIM, já preenche o campo seguinte. Só pergunta quando o campo seguinte está vazio.
@@ -3540,7 +3563,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         const a = atuais[i - 2] || { local: '', funcao: [], jeton: '' };
         const v = String(a.local || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
         html += `<div class="pt-2 border-t border-slate-800/80 space-y-1">
-          <input type="text" id="modalLocalExtra${P}_${i}" list="locais-historico" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
+          <input type="text" id="modalLocalExtra${P}_${i}" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" value="${v}" placeholder="Local (${i}ª atividade)" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">
           <div class="flex flex-wrap gap-2 text-[11px] text-slate-300">${FUNCOES_ATIV.map(f => `<label class="flex items-center gap-1"><input type="checkbox" name="modalFuncaoExtra${P}_${i}" value="${f}" ${(a.funcao || []).includes(f) ? 'checked' : ''}>${f}</label>`).join('')}</div>
           <select id="modalJetonExtra${P}_${i}" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs">${htmlOpcoesJeton(a.jeton).replace('ESCOLHA O VALOR', 'Jeton (' + i + 'ª atividade)')}</select>
         </div>`;
@@ -3922,13 +3945,22 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const lerEl = (id) => { const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0; };
       const temJeton = !!temp.querySelector('#recValorTotalJeton');
       const jeton = lerEl('recValorTotalJeton');
+      const diarias = lerEl('recValorDiarias');
+      const diariasNaoRec = lerEl('recBalancoDiarias');
       const diariasRec = lerEl('recValorRecebivelDiarias');
       const auxiliosRec = lerEl('recValorRecebivelAuxilios');
       const desconto = lerEl('recValorDescontoIR');
       const liquida = temJeton
         ? ((jeton - desconto) + diariasRec + auxiliosRec)
         : lerEl('recValorRealJeton');
-      return { bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto), desconto, liquida };
+      return {
+        bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto),
+        diarias,
+        diariasNaoRec,
+        diariasRec,
+        desconto,
+        liquida
+      };
     }
     // Separa escalas de atividade de home office (e os 3 modos de home office) e soma a perda de rendimento
     function resumoEscalasHomeOffice(escalasArr) {
@@ -3999,8 +4031,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       else if (diff === 0) st = { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
       else st = { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
       return separador
-        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-white font-black">${formatarMoedaBR(jc)}</span>`)
-        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-white font-black">${formatarMoedaBR(cc)}</span>`)
+        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(jc)}</span>`)
+        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(cc)}</span>`)
         + linha('JETON AUDITADO (DGAD)', `<span class="text-amber-400 font-black">${formatarMoedaBR(dg)}</span>`)
         + linha('BALANÇO', `<span class="${corDiff} font-black">${formatarMoedaBR(diff)}</span>`)
         + linha('STATUS', `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span>`);
@@ -4013,6 +4045,9 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diarias)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="text-red-400 font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
@@ -4754,6 +4789,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         atualizarEstatisticasEReceitasCiclo();
         carregarDescricaoPeriodoEscalas();
         gerenciarCamposPernoite();
+        verificarDataDeFechamentoExistente();
+        aplicarBloqueioCamposHomeOffice('');
         renderizarCiclosFechados();
       };
       if (window.JetSyncReady && typeof window.JetSyncReady.finally === 'function') {

@@ -407,13 +407,22 @@
       const lerEl = (id) => {const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0;};
       const temJeton = !!temp.querySelector('#recValorTotalJeton');
       const jeton = lerEl('recValorTotalJeton');
+      const diarias = lerEl('recValorDiarias');
+      const diariasNaoRec = lerEl('recBalancoDiarias');
       const diariasRec = lerEl('recValorRecebivelDiarias');
       const auxiliosRec = lerEl('recValorRecebivelAuxilios');
       const desconto = lerEl('recValorDescontoIR');
       const liquida = temJeton
         ? ((jeton - desconto) + diariasRec + auxiliosRec)
         : lerEl('recValorRealJeton');
-      return {bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto), desconto, liquida};
+      return {
+        bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto),
+        diarias,
+        diariasNaoRec,
+        diariasRec,
+        desconto,
+        liquida
+      };
     }
     // Perda de rendimento padrão do home office (média entre jeton dobrado e quádruplo, já sem IR) — igual ao de Escalas
     const perdaMediaHO = (aliqPct) => ((220 + 440) / 2) * (1 - aliqPct / 100);
@@ -490,8 +499,8 @@
       else if (diff === 0) st = { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
       else st = { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
       return separador
-        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-white font-black">${formatarMoedaBR(jc)}</span>`)
-        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-white font-black">${formatarMoedaBR(cc)}</span>`)
+        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(jc)}</span>`)
+        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(cc)}</span>`)
         + linha('JETON AUDITADO (DGAD)', `<span class="text-amber-400 font-black">${formatarMoedaBR(dg)}</span>`)
         + linha('BALANÇO', `<span class="${corDiff} font-black">${formatarMoedaBR(diff)}</span>`)
         + linha('STATUS', `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span>`);
@@ -504,6 +513,9 @@
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
         + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diarias)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="text-red-400 font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`

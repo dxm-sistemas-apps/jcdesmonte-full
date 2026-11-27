@@ -27,11 +27,20 @@
   window.JetAuthTokenAtual = () => tokenAtual;
   window.JetAuthSair = async () => { try { await firebase.auth().signOut(); } catch (e) {} tokenAtual = null; location.reload(); };
 
-  // Esconde tudo até autorizar
-  const css = document.createElement('style');
-  css.id = 'jcAuthCss';
-  css.textContent = 'body>*:not(#jcLogin){display:none!important}body{background:#0f172a!important}';
-  (document.head || document.documentElement).appendChild(css);
+  // Aparelho já autorizado antes ("lembrado"): a página abre na hora, sem tela de verificação; o login é conferido em segundo plano.
+  // (Só esconde a interface; a proteção real dos dados na nuvem são as regras do Firestore.)
+  const CHAVE_OK = 'jcauth_ok'; // sem o prefixo "jetcontrol_" para não ser enviada à nuvem
+  const lerOk = () => { try { return localStorage.getItem(CHAVE_OK) === EMAIL_DONO.toLowerCase(); } catch (e) { return false; } };
+  const gravarOk = (sim) => { try { if (sim) localStorage.setItem(CHAVE_OK, EMAIL_DONO.toLowerCase()); else localStorage.removeItem(CHAVE_OK); } catch (e) {} };
+  const lembrado = lerOk();
+  function esconder() {
+    if (document.getElementById('jcAuthCss')) return;
+    const css = document.createElement('style');
+    css.id = 'jcAuthCss';
+    css.textContent = 'body>*:not(#jcLogin){display:none!important}body{background:#0f172a!important}';
+    (document.head || document.documentElement).appendChild(css);
+  }
+  if (!lembrado) esconder();
 
   const nativo = () => !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform());
   const plugNativo = () => { const C = window.Capacitor || {}; return typeof C.registerPlugin === 'function' ? C.registerPlugin('FirebaseAuthentication') : (C.Plugins || {}).FirebaseAuthentication; };
@@ -97,7 +106,7 @@
 
   async function iniciar() {
     if (FIREBASE_CONFIG.apiKey.indexOf('COLOQUE') === 0 || EMAIL_DONO.indexOf('COLOQUE') === 0) { tela('LOGIN NÃO CONFIGURADO: PREENCHA O jetcontrol-auth.js', false); return; }
-    tela('VERIFICANDO ACESSO...', false);
+    if (!lembrado) tela('VERIFICANDO ACESSO...', false);
     try {
       await carregarScript(SDK + 'firebase-app-compat.js');
       await carregarScript(SDK + 'firebase-auth-compat.js');
@@ -108,15 +117,15 @@
           google.accounts.id.initialize({ client_id: GOOGLE_WEB_CLIENT_ID, callback: entrarComCredencialGoogle, auto_select: false, use_fedcm_for_prompt: true });
         } catch (e) { console.warn('JetAuth: Google Identity Services indisponível, usando popup', e); }
       }
-    } catch (e) { tela('SEM CONEXÃO COM O LOGIN. VERIFIQUE A INTERNET.', false); return; }
+    } catch (e) { if (lembrado) { liberar(); return; } tela('SEM CONEXÃO COM O LOGIN. VERIFIQUE A INTERNET.', false); return; }
     const auth = firebase.auth();
     auth.onAuthStateChanged(async (u) => {
-      if (!u) { tokenAtual = null; tela('ACESSO RESTRITO', true); return; }
+      if (!u) { tokenAtual = null; gravarOk(false); esconder(); tela('ACESSO RESTRITO', true); return; }
       if ((u.email || '').toLowerCase() !== EMAIL_DONO.toLowerCase() || !u.emailVerified) {
-        await auth.signOut(); tela('CONTA NÃO AUTORIZADA: ' + (u.email || ''), true); return;
+        await auth.signOut(); gravarOk(false); esconder(); tela('CONTA NÃO AUTORIZADA: ' + (u.email || ''), true); return;
       }
       try { tokenAtual = await u.getIdToken(); } catch (e) { tokenAtual = null; } // offline: abre com os dados do aparelho
-      liberarPagina(); liberar();
+      gravarOk(true); liberarPagina(); liberar();
     });
     auth.onIdTokenChanged(async (u) => { if (u) { try { tokenAtual = await u.getIdToken(); } catch (e) {} } });
     setInterval(async () => { const u = auth.currentUser; if (u) { try { tokenAtual = await u.getIdToken(true); } catch (e) {} } }, 45 * 60 * 1000);

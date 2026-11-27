@@ -275,6 +275,7 @@
       }
 
       // 2. Processamento dos Documentos da Nuvem
+      var filaAtual = lerFila();
       documentos.forEach(function (doc) {
         var partesDoNome = doc.name.split('/');
         var chave = partesDoNome[partesDoNome.length - 1];
@@ -283,30 +284,48 @@
         chavesQueAJaEstaoNaNuvem[chave] = true;
 
         var info = decodificarDocumento(doc.fields);
-        var carimboLocal = meta[chave] || 0;
+        var itemFila = filaAtual[chave] || pendentes[chave] || null;
+        var carimboLocal = Math.max(meta[chave] || 0, itemFila ? (itemFila.carimbo || 0) : 0);
         var valorAntesDaAtualizacao = originalGetItem.call(localStorage, chave);
 
+        // Se há alteração local ainda na fila/pendente mais recente (ou igual) ao que está na nuvem,
+        // preserva o dado local até que o envio à nuvem seja concluído.
+        if (itemFila && info.atualizadoEm <= (itemFila.carimbo || 0)) {
+          return;
+        }
+
         // REGRA DE PROTEÇÃO: Se o documento na nuvem foi gerado antes ou durante o reset,
-        // ele é um resíduo descartado. Não pode ser restaurado no navegador!
+        // ele é um resíduo descartado. Só apaga o dado local se ele também for anterior ao reset;
+        // se o dado local foi criado APÓS o reset, mantém e reenvia para atualizar a nuvem.
         if (corteReset > 0 && info.atualizadoEm <= corteReset) {
+          if (carimboLocal > corteReset && valorAntesDaAtualizacao !== null) {
+            if (!itemFila) agendarEnvio(chave, valorAntesDaAtualizacao, false);
+            return;
+          }
           if (valorAntesDaAtualizacao !== null) {
             originalRemoveItem.call(localStorage, chave);
             houveMudancaReal = true;
           }
-          meta[chave] = corteReset;
+          meta[chave] = Math.max(carimboLocal, corteReset);
           return;
         }
 
+        // Só aplica exclusão vinda da nuvem se ela for ESTRITAMENTE mais recente que o dado local.
+        // Evita apagar escalas recém-salvas quando a nuvem ainda tem "deleted: true" de um ciclo anterior.
         if (info.apagado) {
-          if (valorAntesDaAtualizacao !== null) {
-            originalRemoveItem.call(localStorage, chave);
-            houveMudancaReal = true;
+          if (info.atualizadoEm > carimboLocal) {
+            if (valorAntesDaAtualizacao !== null) {
+              originalRemoveItem.call(localStorage, chave);
+              houveMudancaReal = true;
+            }
+            meta[chave] = info.atualizadoEm;
+          } else if (valorAntesDaAtualizacao !== null && !itemFila) {
+            agendarEnvio(chave, valorAntesDaAtualizacao, false);
           }
-          meta[chave] = info.atualizadoEm;
           return;
         }
 
-        if (info.valor !== null && info.atualizadoEm >= carimboLocal) {
+        if (info.valor !== null && (info.atualizadoEm > carimboLocal || (carimboLocal === 0 && valorAntesDaAtualizacao === null))) {
           if (info.valor !== valorAntesDaAtualizacao) {
             originalSetItem.call(localStorage, chave, info.valor);
             houveMudancaReal = true;
@@ -335,8 +354,17 @@
     });
   }
 
+  // Em iframes ocultos (ex.: cotas-extras.html aberto por escalas.html), não executa pull nem polling
+  // para não competir com o envio pendente da janela principal.
+  var emIframe = (window.parent !== window);
+
   // só sincroniza depois do login (jetcontrol-auth.js); sem login nada é lido nem gravado na nuvem
-  window.JetSyncReady = (window.JetAuthPronto || Promise.resolve()).then(sincronizarUmaVez);
+  // Reenvia pendências locais ANTES de puxar da nuvem para não sobrescrever edições recém-salvas.
+  window.JetSyncReady = emIframe
+    ? Promise.resolve(false)
+    : (window.JetAuthPronto || Promise.resolve())
+        .then(function () { return reenviarFila(); }, function () {})
+        .then(sincronizarUmaVez);
 
   window.JetSyncStatus = function () {
     return configurado
@@ -377,7 +405,7 @@
     cicloAgendado = setTimeout(cicloDeVerificacao, INTERVALO_VERIFICACAO_MS);
   }
 
-  if (configurado) {
+  if (configurado && !emIframe) {
     agendarProximoCiclo();
     window.JetSyncReady.then(function () { return reenviarFila(); }, function () {});
 

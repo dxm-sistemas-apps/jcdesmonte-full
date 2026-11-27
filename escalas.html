@@ -3951,6 +3951,53 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     function qtdAtividadesCiclo(ciclo) {
       return (Array.isArray(ciclo.escalasData) ? ciclo.escalasData : []).reduce((t, e) => t + totalAtividadesPorLocal(e), 0);
     }
+
+    // ===== Dados de "Jeton Valores" do ciclo (mostrados nos cards dos ciclos fechados, abaixo da receita líquida) =====
+    // Mesma busca da alíquota de IR: pelo rótulo do ciclo (DD/MM A DD/MM) + mês/ano de recebimento.
+    function lancamentoJetonDoCiclo(c) {
+      try {
+        if (!c || !c.dataAbertura || !c.dataFechamento) return null;
+        const pA = String(c.dataAbertura).split('-'), pF = String(c.dataFechamento).split('-');
+        if (pA.length !== 3 || pF.length !== 3) return null;
+        const label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+        const banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {};
+        const partes = String(c.recebimentoEm || '').split('/');
+        const mes = (partes[0] || '').trim().toUpperCase(), ano = (partes[1] || '').trim();
+        const achados = [];
+        Object.keys(banco).forEach(a => (banco[a] || []).forEach(i => { if (i && i.ciclo === label) achados.push({ a, i }); }));
+        const alvo = achados.find(x => x.a === ano && (!mes || x.i.mesRecebimento === mes)) || achados.find(x => x.a === ano)
+          || achados.find(x => !mes || x.i.mesRecebimento === mes) || achados[0];
+        return alvo ? alvo.i : null;
+      } catch (_) { return null; }
+    }
+    // Mesma regra de BALANÇO/STATUS da página Jeton Valores (balanço = contracheque - JETCONTROL)
+    function htmlJetonValoresCiclo(ciclo) {
+      const d = lancamentoJetonDoCiclo(ciclo);
+      const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      const linha = (rotulo, valorHtml) => `<span class="block text-sm text-slate-300">${rotulo}: ${valorHtml}</span>`;
+      const separador = '<span class="block border-t border-slate-700 my-2"></span>';
+      if (!d) {
+        return separador + linha('JETON BRUTO (JETCONTROL)', '<span class="text-slate-500 font-black">-</span>')
+          + linha('JETON BRUTO (CONTRACHEQUE)', '<span class="text-slate-500 font-black">-</span>')
+          + linha('JETON AUDITADO (DGAD)', '<span class="text-slate-500 font-black">-</span>')
+          + linha('BALANÇO', '<span class="text-slate-500 font-black">-</span>')
+          + linha('STATUS', '<span class="px-2 py-0.5 rounded text-[10px] font-bold text-slate-400 bg-slate-800">NÃO LANÇADO EM JETON VALORES</span>');
+      }
+      const jc = num(d.jetcontrol), cc = num(d.contracheque), dg = num(d.dgad);
+      const diff = cc - jc;
+      const corDiff = diff < 0 ? 'text-red-400' : diff > 0 ? 'text-cyan-400' : 'text-slate-300';
+      let st;
+      if (jc === 0 && cc === 0) st = { texto: 'SEM JETON', cor: 'text-slate-400 bg-slate-800' };
+      else if (diff < 0) st = { texto: 'JETON EM DÉFICIT', cor: 'text-red-400 bg-red-950/60 border border-red-800' };
+      else if (diff === 0) st = { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
+      else st = { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
+      return separador
+        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-white font-black">${formatarMoedaBR(jc)}</span>`)
+        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-white font-black">${formatarMoedaBR(cc)}</span>`)
+        + linha('JETON AUDITADO (DGAD)', `<span class="text-amber-400 font-black">${formatarMoedaBR(dg)}</span>`)
+        + linha('BALANÇO', `<span class="${corDiff} font-black">${formatarMoedaBR(diff)}</span>`)
+        + linha('STATUS', `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span>`);
+    }
     function htmlResumoReceitasCiclo(ciclo) {
       const r = receitasResumoCiclo(ciclo);
       const ho = comAliquota(aliquotaIRDoCiclo(ciclo).pct, () => resumoEscalasHomeOffice(ciclo.escalasData));
@@ -3962,7 +4009,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
         + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`;
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`
+        + htmlJetonValoresCiclo(ciclo);
     }
 
     // Período em 3 linhas: data de abertura acima, "A" no meio e data de fechamento abaixo (sem crase).

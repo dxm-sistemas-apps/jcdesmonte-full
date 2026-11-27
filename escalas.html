@@ -1249,24 +1249,38 @@
       focarCampo(id);
     }
 
-    // Cor dos valores de diárias/auxílios: vermelho se negativo; amber-400 se zero ou positivo.
+    // Qualquer valor igual a R$ 0,00 usa text-slate-300 (mesma cor do balanço zerado)
+    function corValorMoeda(v, corPadrao) {
+      const n = Number(v) || 0;
+      return Math.abs(n) < 0.005 ? 'text-slate-300' : corPadrao;
+    }
+
+    function aplicarCorValorMoeda(el, v, corPadrao) {
+      if (!el) return;
+      el.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400', 'text-cyan-400', 'text-white', 'text-slate-300');
+      el.classList.add(corValorMoeda(v, corPadrao));
+    }
+
+    // Cor dos valores de diárias/auxílios: vermelho se negativo; slate-300 se zero; amber-400 se positivo.
     function classeCorValorDiariaAux(v) {
       const n = Number(v) || 0;
-      if (Math.abs(n) < 0.005) return 'text-white';
+      if (Math.abs(n) < 0.005) return 'text-slate-300';
       return n < 0 ? 'text-red-400' : 'text-amber-400';
     }
 
     function classeCorItemJornada(v, recebivel) {
+      if (Math.abs(Number(v) || 0) < 0.005) return 'text-slate-300';
       return recebivel ? classeCorValorDiariaAux(v) : 'text-red-400';
     }
 
-    function classeCorItemStatus(status) {
-      return status === 'rec' ? 'text-amber-400' : (status === 'nao' ? 'text-red-400' : 'text-white');
+    function classeCorItemStatus(status, v) {
+      if (v !== undefined && Math.abs(Number(v) || 0) < 0.005) return 'text-slate-300';
+      return status === 'rec' ? 'text-amber-400' : (status === 'nao' ? 'text-red-400' : 'text-slate-300');
     }
 
     function aplicarCorValorDiariaAux(el, v) {
       if (!el) return;
-      el.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400', 'text-white');
+      el.classList.remove('text-red-400', 'text-amber-400', 'text-emerald-400', 'text-cyan-400', 'text-white', 'text-slate-300');
       el.classList.add(classeCorValorDiariaAux(v));
     }
 
@@ -2726,6 +2740,7 @@
       document.getElementById('statTotalKms').innerText = formatarKmNumero(totalKms) + ' km';
 
       document.getElementById('recValorTotalJeton').innerText = formatarMoeda(valorTotalJeton);
+      aplicarCorValorMoeda(document.getElementById('recValorTotalJeton'), valorTotalJeton, 'text-emerald-400');
 
       const qtdEscalas = escalasSalvas.filter(e => e.homeOffice !== true).length;
       const somaAtividades = totalSimples + totalDobradas + totalTriplas + totalQuadruplas;
@@ -2759,19 +2774,24 @@
       const aliqIR = ALIQ_IR_PCT;
       const valorDescontoIR = valorTotalJeton * (aliqIR / 100);
       document.getElementById('recValorDescontoIR').innerText = formatarMoeda(valorDescontoIR);
+      aplicarCorValorMoeda(document.getElementById('recValorDescontoIR'), valorDescontoIR, 'text-red-400');
 
       const valorJetonAposIR = valorTotalJeton - valorDescontoIR;
       const valorRealJeton = valorJetonAposIR + valorDiariasRecebivel + valorAuxiliosRecebivel;
       document.getElementById('recValorRealJeton').innerText = formatarMoeda(valorRealJeton);
+      aplicarCorValorMoeda(document.getElementById('recValorRealJeton'), valorRealJeton, 'text-emerald-400');
 
       const valorMedioEscala = qtdEscalas > 0 ? valorRealJeton / qtdEscalas : 0;
       document.getElementById('recValorMedioEscala').innerText = formatarMoeda(valorMedioEscala);
+      aplicarCorValorMoeda(document.getElementById('recValorMedioEscala'), valorMedioEscala, 'text-emerald-400');
 
       const valorMedioAtividade = somaAtividades > 0 ? valorRealJeton / somaAtividades : 0;
       document.getElementById('recValorMedioAtividade').innerText = formatarMoeda(valorMedioAtividade);
+      aplicarCorValorMoeda(document.getElementById('recValorMedioAtividade'), valorMedioAtividade, 'text-emerald-400');
 
       const valorMedioHora = totalHorasNumerico > 0 ? valorRealJeton / totalHorasNumerico : 0;
       document.getElementById('recValorMedioHora').innerText = `${formatarMoeda(valorMedioHora)} /H`;
+      aplicarCorValorMoeda(document.getElementById('recValorMedioHora'), valorMedioHora, 'text-emerald-400');
     }
 
     ['pernoiteManha', 'pernoiteTarde', 'pernoiteNoite'].forEach(id => {
@@ -3895,23 +3915,23 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
                 <div class="space-y-2">
                 ${esc.homeOffice === true ? `
                   ${esc.homeOfficeCondicao === 'reuniao' ? `<div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>` : ''}
-                  <div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(perdaRendimentoEscala(esc))}</span></div>
+                  <div><strong>PERDA DE RENDIMENTO (HOME OFFICE):</strong> <span class="${corValorMoeda(perdaRendimentoEscala(esc), 'text-red-400')} font-black text-sm">${formatarMoeda(perdaRendimentoEscala(esc))}</span></div>
                 ` : `
-                  <div><strong>VALOR DIÁRIO DO JETON:</strong> <span class="text-emerald-400 font-bold">${formatarMoeda(jetonCard)}</span></div>
-                  <div class="pt-1"><strong>DIÁRIA DE ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.diariaAlimentacao)} font-bold">${formatarMoeda(valorItemCard('diariaAlimentacao'))}</span>${badgeStatus(stCard.diariaAlimentacao)}</div>
-                  <div><strong>DIÁRIA DE PERNOITE:</strong> <span class="${classeCorItemStatus(stCard.diariaPernoite)} font-bold">${formatarMoeda(valorItemCard('diariaPernoite'))}</span>${badgeStatus(stCard.diariaPernoite)}</div>
-                  <div><strong>DIÁRIA DE TRASLADO:</strong> <span class="${classeCorItemStatus(stCard.diariaTraslado)} font-bold">${formatarMoeda(valorItemCard('diariaTraslado'))}</span>${badgeStatus(stCard.diariaTraslado)}</div>
-                  <div><strong>AUXÍLIO ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.auxAlimentacao)} font-bold">${formatarMoeda(valorItemCard('auxAlimentacao'))}</span>${badgeStatus(stCard.auxAlimentacao)}</div>
-                  <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte)} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
+                  <div><strong>VALOR DIÁRIO DO JETON:</strong> <span class="${corValorMoeda(jetonCard, 'text-emerald-400')} font-bold">${formatarMoeda(jetonCard)}</span></div>
+                  <div class="pt-1"><strong>DIÁRIA DE ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.diariaAlimentacao, valorItemCard('diariaAlimentacao'))} font-bold">${formatarMoeda(valorItemCard('diariaAlimentacao'))}</span>${badgeStatus(stCard.diariaAlimentacao)}</div>
+                  <div><strong>DIÁRIA DE PERNOITE:</strong> <span class="${classeCorItemStatus(stCard.diariaPernoite, valorItemCard('diariaPernoite'))} font-bold">${formatarMoeda(valorItemCard('diariaPernoite'))}</span>${badgeStatus(stCard.diariaPernoite)}</div>
+                  <div><strong>DIÁRIA DE TRASLADO:</strong> <span class="${classeCorItemStatus(stCard.diariaTraslado, valorItemCard('diariaTraslado'))} font-bold">${formatarMoeda(valorItemCard('diariaTraslado'))}</span>${badgeStatus(stCard.diariaTraslado)}</div>
+                  <div><strong>AUXÍLIO ALIMENTAÇÃO:</strong> <span class="${classeCorItemStatus(stCard.auxAlimentacao, valorItemCard('auxAlimentacao'))} font-bold">${formatarMoeda(valorItemCard('auxAlimentacao'))}</span>${badgeStatus(stCard.auxAlimentacao)}</div>
+                  <div><strong>AUXÍLIO TRANSPORTE:</strong> <span class="${classeCorItemStatus(stCard.auxTransporte, valorItemCard('auxTransporte'))} font-bold">${formatarMoeda(valorItemCard('auxTransporte'))}</span>${badgeStatus(stCard.auxTransporte)}</div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DOS AUXÍLIOS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoAuxilios)} font-bold">${formatarMoeda(totalDecididoAuxilios)}</span></div>
                   <div><strong>VALOR DIÁRIO PERCEPTÍVEL DAS DIÁRIAS:</strong> <span class="${classeCorValorDiariaAux(totalDecididoDiarias)} font-bold">${formatarMoeda(totalDecididoDiarias)}</span></div>
                   <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>QTD. DE ATIVIDADES:</strong> <span class="text-white font-bold">${esc.homeOffice === true ? 0 : (totalAtividadesEscala(esc) || 1)}</span></div>
                   <div><strong>QTD. DE HORAS TRABALHADAS:</strong> <span class="text-white font-bold">${formatarHorasDecimal(horasDecimalDaEscala(esc))}</span></div>
-                  <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="text-white font-bold">${valorHoraStrCorrigido}</span></div>
+                  <div><strong>VALOR POR HORA TRABALHADA:</strong> <span class="${corValorMoeda(horasTrabalhadasNumCard > 0 ? (valorDiarioRealAposIR / horasTrabalhadasNumCard) : 0, 'text-white')} font-bold">${valorHoraStrCorrigido}</span></div>
                   <div><strong>LOGÍSTICA/DESLOCAMENTO:</strong> <span class="text-white font-bold">${formatarKmRodados(kmRodadosEscala(esc))}</span></div>
-                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
-                  <div><strong>VALOR DIÁRIO DO DESCONTO IR:</strong> <span class="text-red-400 font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
-                  <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="text-emerald-400 font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
+                  <div class="pt-2 mt-2 border-t-4 border-slate-600"><strong>VALOR DIÁRIO TOTAL:</strong> <span class="${corValorMoeda(valorDiarioTotal, 'text-emerald-400')} font-black text-sm">${formatarMoeda(valorDiarioTotal)}</span></div>
+                  <div><strong>VALOR DIÁRIO DO DESCONTO IR:</strong> <span class="${corValorMoeda(valorDescontoIR, 'text-red-400')} font-black text-sm">${formatarMoeda(valorDescontoIR)}</span></div>
+                  <div><strong>VALOR DIÁRIO REAL APÓS IR:</strong> <span class="${corValorMoeda(valorDiarioRealAposIR, 'text-emerald-400')} font-black text-sm">${formatarMoeda(valorDiarioRealAposIR)}</span></div>
                 `}
                 </div>
               </div>
@@ -4031,9 +4051,9 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       else if (diff === 0) st = { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
       else st = { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
       return separador
-        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(jc)}</span>`)
-        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(cc)}</span>`)
-        + linha('JETON AUDITADO (DGAD)', `<span class="text-amber-400 font-black">${formatarMoedaBR(dg)}</span>`)
+        + linha('JETON BRUTO (JETCONTROL)', `<span class="${corValorMoeda(jc, 'text-emerald-400')} font-black">${formatarMoedaBR(jc)}</span>`)
+        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="${corValorMoeda(cc, 'text-emerald-400')} font-black">${formatarMoedaBR(cc)}</span>`)
+        + linha('JETON AUDITADO (DGAD)', `<span class="${corValorMoeda(dg, 'text-amber-400')} font-black">${formatarMoedaBR(dg)}</span>`)
         + linha('BALANÇO', `<span class="${corDiff} font-black">${formatarMoedaBR(diff)}</span>`)
         + linha('STATUS', `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span>`);
     }
@@ -4041,17 +4061,17 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const r = receitasResumoCiclo(ciclo);
       const ho = comAliquota(aliquotaIRDoCiclo(ciclo).pct, () => resumoEscalasHomeOffice(ciclo.escalasData));
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="${corValorMoeda(ho.perda, 'text-red-400')} font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
-        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diarias)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="text-red-400 font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
+        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="${corValorMoeda(r.bruta, 'text-emerald-400')} font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="${corValorMoeda(r.diarias, 'text-amber-400')} font-black">${formatarMoedaBR(r.diarias)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="${corValorMoeda(r.diariasNaoRec, 'text-red-400')} font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="${corValorMoeda(r.diariasRec, 'text-amber-400')} font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
-        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`
+        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="${corValorMoeda(r.desconto, 'text-red-400')} font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="${corValorMoeda(r.liquida, 'text-emerald-400')} font-black">${formatarMoedaBR(r.liquida)}</span></span>`
         + htmlJetonValoresCiclo(ciclo);
     }
 
@@ -4335,10 +4355,10 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
             <h2 class="text-lg font-bold uppercase tracking-wide text-white">Receitas do Ciclo</h2>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Total de Jeton</span><span id="recValorTotalJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorTotalJeton)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Escala</span><span id="recValorMedioEscala" class="text-xl font-black text-white">${formatarMoeda(v.valorMedioEscala)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Atividade</span><span id="recValorMedioAtividade" class="text-xl font-black text-white">${formatarMoeda(v.valorMedioAtividade)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Hora Trabalhada</span><span id="recValorMedioHora" class="text-xl font-black text-white">${formatarMoeda(v.valorMedioHora)} /H</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Total de Jeton</span><span id="recValorTotalJeton" class="text-xl font-black ${corValorMoeda(v.valorTotalJeton, 'text-emerald-400')}">${formatarMoeda(v.valorTotalJeton)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Escala</span><span id="recValorMedioEscala" class="text-xl font-black ${corValorMoeda(v.valorMedioEscala, 'text-white')}">${formatarMoeda(v.valorMedioEscala)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Atividade</span><span id="recValorMedioAtividade" class="text-xl font-black ${corValorMoeda(v.valorMedioAtividade, 'text-white')}">${formatarMoeda(v.valorMedioAtividade)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Médio por Hora Trabalhada</span><span id="recValorMedioHora" class="text-xl font-black ${corValorMoeda(v.valorMedioHora, 'text-white')}">${formatarMoeda(v.valorMedioHora)} /H</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor das Diárias</span><span id="recValorDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.valorDiarias)}">${formatarMoeda(v.valorDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor dos Auxílios</span><span id="recValorAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.valorAuxilios)}">${formatarMoeda(v.valorAuxilios)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Recebido das Diárias</span><span id="recValorRecebivelDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.valorDiariasRecebivel)}">${formatarMoeda(v.valorDiariasRecebivel)}</span></div>
@@ -4346,8 +4366,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido das Diárias</span><span id="recBalancoDiarias" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoDiarias)}">${formatarMoeda(v.balancoDiarias)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Não Recebido dos Auxílios</span><span id="recBalancoAuxilios" class="text-xl font-black ${classeCorValorDiariaAux(v.balancoAuxilios)}">${formatarMoeda(v.balancoAuxilios)}</span></div>
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Alíquota de IR</span><span id="recAliqIR" class="text-xl font-black text-red-400">${formatarAliquotaIR(v.aliqIR != null ? v.aliqIR : 22)}%</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR</span><span id="recValorDescontoIR" class="text-xl font-black text-red-400">${formatarMoeda(v.valorDescontoIR)}</span></div>
-            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black text-emerald-400">${formatarMoeda(v.valorRealJeton)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Desconto IR</span><span id="recValorDescontoIR" class="text-xl font-black ${corValorMoeda(v.valorDescontoIR, 'text-red-400')}">${formatarMoeda(v.valorDescontoIR)}</span></div>
+            <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Real de Jeton</span><span id="recValorRealJeton" class="text-xl font-black ${corValorMoeda(v.valorRealJeton, 'text-emerald-400')}">${formatarMoeda(v.valorRealJeton)}</span></div>
           </div>
         </section>
       `;

@@ -477,6 +477,26 @@
         return alvo ? alvo.i : null;
       } catch (_) { return null; }
     }
+    // Qualquer valor igual a R$ 0,00 usa text-slate-300 (mesma cor do balanço zerado)
+    function corValorMoeda(v, corPadrao) {
+      const n = Number(v) || 0;
+      return Math.abs(n) < 0.005 ? 'text-slate-300' : corPadrao;
+    }
+    // Reaplica text-slate-300 a qualquer valor R$ 0,00 (ou R$ 0,00 /H) dentro de snapshots salvos
+    function recolorirValoresZerados(html) {
+      if (!html) return html;
+      const t = document.createElement('div');
+      t.innerHTML = html;
+      t.querySelectorAll('span, td').forEach(el => {
+        if (el.children.length) return;
+        const txt = el.textContent.trim();
+        if (/^-?R\$\s*0,00(\s*\/H)?$/i.test(txt)) {
+          el.classList.remove('text-amber-400', 'text-red-400', 'text-emerald-400', 'text-cyan-400', 'text-white');
+          el.classList.add('text-slate-300');
+        }
+      });
+      return t.innerHTML;
+    }
     // Mesma regra de BALANÇO/STATUS da página Jeton Valores (balanço = contracheque - JETCONTROL)
     function htmlJetonValoresCiclo(ciclo) {
       const d = lancamentoJetonDoCiclo(ciclo);
@@ -499,9 +519,9 @@
       else if (diff === 0) st = { texto: 'JETON CORRETO', cor: 'text-emerald-400 bg-emerald-950/60 border border-emerald-800' };
       else st = { texto: 'JETON EM SUPERÁVIT', cor: 'text-cyan-400 bg-cyan-950/60 border border-cyan-800' };
       return separador
-        + linha('JETON BRUTO (JETCONTROL)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(jc)}</span>`)
-        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="text-emerald-400 font-black">${formatarMoedaBR(cc)}</span>`)
-        + linha('JETON AUDITADO (DGAD)', `<span class="text-amber-400 font-black">${formatarMoedaBR(dg)}</span>`)
+        + linha('JETON BRUTO (JETCONTROL)', `<span class="${corValorMoeda(jc, 'text-emerald-400')} font-black">${formatarMoedaBR(jc)}</span>`)
+        + linha('JETON BRUTO (CONTRACHEQUE)', `<span class="${corValorMoeda(cc, 'text-emerald-400')} font-black">${formatarMoedaBR(cc)}</span>`)
+        + linha('JETON AUDITADO (DGAD)', `<span class="${corValorMoeda(dg, 'text-amber-400')} font-black">${formatarMoedaBR(dg)}</span>`)
         + linha('BALANÇO', `<span class="${corDiff} font-black">${formatarMoedaBR(diff)}</span>`)
         + linha('STATUS', `<span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span>`);
     }
@@ -509,17 +529,17 @@
       const r = receitasResumoCiclo(ciclo);
       const ho = resumoEscalasHomeOffice(ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct);
       const linhaPerda = ho.ho > 0
-        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="text-red-400 font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
+        ? `<span class="block text-sm text-slate-300">PERDA DE RENDIMENTO (HOME OFFICE): <span class="${corValorMoeda(ho.perda, 'text-red-400')} font-black">${formatarMoedaBR(ho.perda)}</span></span>` : '';
       return `<span class="block text-sm mt-1 text-slate-300">${textoEscalasHomeOffice(ho)}</span>`
         + `<span class="block text-sm mt-1 text-slate-300">QTD. DE ATIVIDADES: <span class="text-white font-black">${qtdAtividadesCiclo(ciclo)}</span></span>`
-        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.bruta)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diarias)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="text-red-400 font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
-        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="text-amber-400 font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
+        + `<span class="block text-sm mt-1 text-slate-300">RECEITA BRUTA: <span class="${corValorMoeda(r.bruta, 'text-emerald-400')} font-black">${formatarMoedaBR(r.bruta)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR DAS DIÁRIAS: <span class="${corValorMoeda(r.diarias, 'text-amber-400')} font-black">${formatarMoedaBR(r.diarias)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR NÃO RECEBIDO DAS DIÁRIAS: <span class="${corValorMoeda(r.diariasNaoRec, 'text-red-400')} font-black">${formatarMoedaBR(r.diariasNaoRec)}</span></span>`
+        + `<span class="block text-sm text-slate-300">VALOR RECEBIDO DAS DIÁRIAS: <span class="${corValorMoeda(r.diariasRec, 'text-amber-400')} font-black">${formatarMoedaBR(r.diariasRec)}</span></span>`
         + linhaPerda
         + `<span class="block text-sm text-slate-300">ALÍQUOTA IR: <span class="text-red-400 font-black">${rotuloAliquotaIR(aliquotaIRDoCiclo(ciclo))}</span></span>`
-        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="text-red-400 font-black">${formatarMoedaBR(r.desconto)}</span></span>`
-        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="text-emerald-400 font-black">${formatarMoedaBR(r.liquida)}</span></span>`
+        + `<span class="block text-sm text-slate-300">DESCONTO IR: <span class="${corValorMoeda(r.desconto, 'text-red-400')} font-black">${formatarMoedaBR(r.desconto)}</span></span>`
+        + `<span class="block text-sm text-slate-300">RECEITA LÍQUIDA: <span class="${corValorMoeda(r.liquida, 'text-emerald-400')} font-black">${formatarMoedaBR(r.liquida)}</span></span>`
         + htmlJetonValoresCiclo(ciclo);
     }
 
@@ -967,9 +987,9 @@ function centralizarCelulasOrganograma(html) {
               <tbody class="divide-y divide-slate-800">
                 <tr><td class="px-4 py-4 align-top font-black text-amber-400 uppercase">1. Organograma das Diárias</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlDiarias)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-emerald-400 uppercase">2. Organograma dos Auxílios</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlAuxilios)))}</td></tr>
-                <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. Receitas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas))}</td></tr>
+                <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. Receitas do Ciclo</td><td class="p-4 align-top">${recolorirValoresZerados(desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-indigo-400 uppercase">4. Estatísticas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.estatisticas))}</td></tr>
-                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct)}</td></tr>
+                <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${recolorirValoresZerados(sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct))}</td></tr>
               </tbody>
             </table>
           </div>

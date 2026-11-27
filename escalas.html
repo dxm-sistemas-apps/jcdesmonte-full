@@ -2737,7 +2737,8 @@
       const valorDescontoIR = valorTotalJeton * (aliqIR / 100);
       document.getElementById('recValorDescontoIR').innerText = formatarMoeda(valorDescontoIR);
 
-      const valorRealJeton = (valorTotalJeton + valorDiariasRecebivel + valorAuxiliosRecebivel) - valorDescontoIR;
+      const valorJetonAposIR = valorTotalJeton - valorDescontoIR;
+      const valorRealJeton = valorJetonAposIR + valorDiariasRecebivel + valorAuxiliosRecebivel;
       document.getElementById('recValorRealJeton').innerText = formatarMoeda(valorRealJeton);
 
       const valorMedioEscala = qtdEscalas > 0 ? valorRealJeton / qtdEscalas : 0;
@@ -3766,8 +3767,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const totalDecididoAuxilios = somaDecididos.rec.auxilios + somaDecididos.nao.auxilios;
       const jetonCard = (parseFloat(esc.jetonManha) || 0) + (parseFloat(esc.jetonTarde) || 0) + ((parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1));
       const valorDiarioTotal = jetonCard + diariasComputadas + auxiliosComputados;
-      const valorDiarioRealAposIR = jetonCard * fatorLiquidoIR() + diariasComputadas + auxiliosComputados;
-      const valorDescontoIR = valorDiarioTotal - valorDiarioRealAposIR;
+      const valorDescontoIR = jetonCard * (ALIQ_IR_PCT / 100);
+      const valorDiarioRealAposIR = (jetonCard - valorDescontoIR) + diariasComputadas + auxiliosComputados;
 
       let horasTrabalhadasNumCard = 0;
       if (esc.horarioSaida && esc.horarioChegada) {
@@ -3919,9 +3920,15 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       const temp = document.createElement('div');
       temp.innerHTML = ciclo.receitas || '';
       const lerEl = (id) => { const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0; };
-      const liquida = lerEl('recValorRealJeton');
+      const temJeton = !!temp.querySelector('#recValorTotalJeton');
+      const jeton = lerEl('recValorTotalJeton');
+      const diariasRec = lerEl('recValorRecebivelDiarias');
+      const auxiliosRec = lerEl('recValorRecebivelAuxilios');
       const desconto = lerEl('recValorDescontoIR');
-      return { bruta: liquida + desconto, desconto, liquida };
+      const liquida = temJeton
+        ? ((jeton - desconto) + diariasRec + auxiliosRec)
+        : lerEl('recValorRealJeton');
+      return { bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto), desconto, liquida };
     }
     // Separa escalas de atividade de home office (e os 3 modos de home office) e soma a perda de rendimento
     function resumoEscalasHomeOffice(escalasArr) {
@@ -4241,7 +4248,8 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
 
       const aliqIR = ALIQ_IR_PCT;
       const valorDescontoIR = valorTotalJeton * (aliqIR / 100);
-      const valorRealJeton = (valorTotalJeton + valorDiariasRecebivel + valorAuxiliosRecebivel) - valorDescontoIR;
+      const valorJetonAposIR = valorTotalJeton - valorDescontoIR;
+      const valorRealJeton = valorJetonAposIR + valorDiariasRecebivel + valorAuxiliosRecebivel;
       const balancoDiarias = -valorDiariasNaoRec;
       const balancoAuxilios = -valorAuxiliosNaoRec;
 
@@ -4442,6 +4450,67 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       if (conteudoModal) conteudoModal.scrollTop = 0;
     };
 
+    // Atualiza automaticamente o lançamento correspondente em Jeton Valores ao editar/refechar um ciclo fechado
+    function sincronizarLancamentoJetonValores(ciclo) {
+      try {
+        if (!ciclo || !ciclo.dataAbertura || !ciclo.dataFechamento) return false;
+        const pA = String(ciclo.dataAbertura).split('-');
+        const pF = String(ciclo.dataFechamento).split('-');
+        if (pA.length !== 3 || pF.length !== 3) return false;
+
+        const label = `${pA[2]}/${pA[1]} A ${pF[2]}/${pF[1]}`;
+        const partes = String(ciclo.recebimentoEm || '').split('/');
+        const mes = (partes[0] || '').trim().toUpperCase();
+        const ano = (partes[1] || '').trim() || String(ciclo.dataFechamento).slice(0, 4);
+
+        const escalas = Array.isArray(ciclo.escalasData) ? ciclo.escalasData : [];
+        let totalJeton = 0;
+        escalas.forEach(esc => {
+          totalJeton += (parseFloat(esc.jetonManha) || 0)
+            + (parseFloat(esc.jetonTarde) || 0)
+            + ((parseFloat(esc.jetonNoite) || 0) * (esc.percepcaoQuartoJeton === 'SIM' ? 2 : 1));
+        });
+        const novoJetonStr = totalJeton.toFixed(2);
+
+        const bruto = localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData');
+        if (!bruto) return false;
+        const banco = JSON.parse(bruto) || {};
+
+        const achados = [];
+        Object.keys(banco).forEach(a => {
+          (Array.isArray(banco[a]) ? banco[a] : []).forEach((item, idx) => {
+            if (item && item.ciclo === label) achados.push({ a, idx, item });
+          });
+        });
+
+        const alvo = achados.find(x => x.a === ano && (!mes || x.item.mesRecebimento === mes))
+          || achados.find(x => x.a === ano)
+          || achados.find(x => !mes || x.item.mesRecebimento === mes)
+          || achados[0];
+
+        if (!alvo) return false;
+
+        let mudou = false;
+        if (String(alvo.item.jetcontrol) !== novoJetonStr) {
+          alvo.item.jetcontrol = novoJetonStr;
+          mudou = true;
+        }
+        if (mes && alvo.item.mesRecebimento !== mes) {
+          alvo.item.mesRecebimento = mes;
+          mudou = true;
+        }
+
+        if (mudou) {
+          const json = JSON.stringify(banco);
+          localStorage.setItem('jetcontrol_jeton_valores', json);
+          localStorage.setItem('jetonData', json);
+        }
+        return mudou;
+      } catch (_) {
+        return false;
+      }
+    }
+
     window.fecharCicloEditado = async function(cicloId) {
       const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS) || '[]');
       const ciclo = ciclos.find(c => c.id === cicloId);
@@ -4459,6 +4528,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       c.organogramaAuxilios = '';
       delete c.aguardandoFechamento;
       localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(fresh));
+      sincronizarLancamentoJetonValores(c);
       renderizarCiclosFechados();
       await mostrarAlertaEstilizado('CICLO FECHADO NOVAMENTE: O CICLO CORRESPONDENTE FOI SUBSTITUÍDO EM ESCALAS E NA PÁGINA CICLOS.', 'FECHAMENTO DE CICLO');
     };
@@ -4644,6 +4714,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
       else delete ciclo.aguardandoFechamento;
 
       localStorage.setItem(STORAGE_KEY_CICLOS_FECHADOS, JSON.stringify(ciclos));
+      sincronizarLancamentoJetonValores(ciclo);
 
       fecharModalEdicaoCicloFechado();
       renderizarCiclosFechados();

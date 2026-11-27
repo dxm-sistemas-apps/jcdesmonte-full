@@ -1384,7 +1384,7 @@
           kmRodados,
           horas,
           valorHora,
-          valorRealJeton: jetonBruto * (1 - aliq),
+          valorRealJeton: valorRealAposIR,
           jetonBruto,
           atividades,
           periodoAtiv,
@@ -1823,13 +1823,9 @@
         let jetonBrutoCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorTotalJeton'));
         let diariasCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorDiarias'));
         let auxiliosCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorAuxilios'));
-        let receitaLiquidaCicloDireta = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorRealJeton'));
-        // O resumo guardado pode ter sido calculado com outra alíquota: reaplica a alíquota atual do ciclo
-        const descontoIRSnapshot = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorDescontoIR'));
+        const receitaLiquidaSnapshot = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorRealJeton'));
+        // IR incide somente sobre o jeton bruto; diárias e auxílios recebidos entram após o IR, sem duplicidade
         const descontoIRCicloNovo = jetonBrutoCiclo * aliqCiclo;
-        const fatorRealCiclo = (receitaLiquidaCicloDireta > 0)
-          ? ((receitaLiquidaCicloDireta + descontoIRSnapshot - descontoIRCicloNovo) / receitaLiquidaCicloDireta) : 1;
-        if (receitaLiquidaCicloDireta > 0) receitaLiquidaCicloDireta = receitaLiquidaCicloDireta + descontoIRSnapshot - descontoIRCicloNovo;
         acumuladoGeral.descontoIR += descontoIRCicloNovo;
         
         let diariasRecebivelCiclo = (ciclo.receitas && ciclo.receitas.indexOf('recValorRecebivelDiarias') !== -1)
@@ -1917,9 +1913,11 @@
         acumuladoGeral.auxiliosNaoRecebivel += naoAuxiliosCiclo;
 
         const totalBrutoCiclo = jetonBrutoCiclo + diariasRecebivelCiclo + auxiliosRecebivelCiclo; // só diárias/auxílios RECEBIDOS
-        const receitaLiquidaCiclo = receitaLiquidaCicloDireta > 0
-          ? receitaLiquidaCicloDireta
-          : (jetonBrutoCiclo * (1 - aliqCiclo)) + diariasCiclo + auxiliosCiclo;
+        const receitaLiquidaCiclo = (jetonBrutoCiclo > 0 || diariasRecebivelCiclo > 0 || auxiliosRecebivelCiclo > 0)
+          ? ((jetonBrutoCiclo - descontoIRCicloNovo) + diariasRecebivelCiclo + auxiliosRecebivelCiclo)
+          : receitaLiquidaSnapshot;
+        const fatorRealCiclo = (receitaLiquidaSnapshot > 0 && receitaLiquidaCiclo > 0)
+          ? (receitaLiquidaCiclo / receitaLiquidaSnapshot) : 1;
         const rendimentoHoraCiclo = metricasEscalas.horasTrabalhadas > 0
           ? (receitaLiquidaCiclo / metricasEscalas.horasTrabalhadas)
           : 0;
@@ -1956,7 +1954,7 @@
         const valorMedioEscalaCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioEscala')) * fatorRealCiclo;
         const valorMedioAtividadeCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioAtividade')) * fatorRealCiclo;
         const valorMedioHoraCiclo = parseMoeda(extrairTextoHtml(ciclo.receitas, '#recValorMedioHora')) * fatorRealCiclo;
-        const valorRealDeJetonCiclo = jetonBrutoCiclo * (1 - aliqCiclo);
+        const valorRealDeJetonCiclo = (jetonBrutoCiclo - descontoIRCicloNovo) + diariasRecebivelCiclo + auxiliosRecebivelCiclo;
 
         listaCiclosProcessados.push({
           num: ciclo.numero || (idx + 1),
@@ -2080,7 +2078,7 @@
           kmRodados: (escala.kmRodados != null && escala.kmRodados !== '') ? (parseFloat(escala.kmRodados) || 0) : ((parseFloat(escala.kmFinal) >= parseFloat(escala.kmInicial)) ? (parseFloat(escala.kmFinal) - parseFloat(escala.kmInicial)) : 0),
           horas: horasDetalhe,
           valorHora: horasDetalhe > 0 ? (valorRealAposIRDetalhe / horasDetalhe) : 0,
-          valorRealJeton: jetonBrutoDetalhe * (1 - aliqVig),
+          valorRealJeton: valorRealAposIRDetalhe,
           jetonBruto: jetonBrutoDetalhe,
           atividades: maxAtividadesPeriodoDash(escala).max,
           periodoAtiv: maxAtividadesPeriodoDash(escala).per,
@@ -2311,7 +2309,7 @@
       const valorMedioEscalaVigente = qtdEscalasVigentesSemHO > 0 ? (receitaLiquidaVigente / qtdEscalasVigentesSemHO) : 0;
       const valorMedioAtividadeVigente = somaAtividadesVigente > 0 ? (receitaLiquidaVigente / somaAtividadesVigente) : 0;
       const valorMedioHoraVigente = rendimentoHoraVigente;
-      const valorRealDeJetonVigente = jetonBrutoVigente * (1 - aliqVig);
+      const valorRealDeJetonVigente = (jetonBrutoVigente - valorDescontoIRVigente) + diariasRecebivelVigente + auxiliosRecebivelVigente;
 
       listaCiclosProcessados.push({
         num: (ciclosFechados.length + 1) + ' (Aberto)',

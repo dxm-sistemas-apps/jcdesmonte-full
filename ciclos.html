@@ -356,14 +356,24 @@
           if (a0) { a0.textContent = formatarAliquotaIR(c.aliquotaIR != null ? c.aliquotaIR : pct) + '%'; a0.classList.remove('text-white'); a0.classList.add('text-red-400'); c.receitas = t0.innerHTML; }
           c.aliqFmt = 2; mudou = true;
         }
-        if (c.aliquotaIR === pct) return;
         const temp = document.createElement('div');
         temp.innerHTML = c.receitas;
         const el = id => temp.querySelector('#' + id);
         const elJeton = el('recValorTotalJeton'), elDesc = el('recValorDescontoIR'), elReal = el('recValorRealJeton');
-        if (!elJeton || !elDesc || !elReal) {c.aliquotaIR = pct; mudou = true; return;}
-        const jeton = moedaParaNumero(elJeton.textContent), descAntigo = moedaParaNumero(elDesc.textContent), realAntigo = moedaParaNumero(elReal.textContent);
-        const descNovo = jeton * pct / 100, realNovo = realAntigo + descAntigo - descNovo;
+        if (!elJeton || !elDesc || !elReal) {
+          if (c.aliquotaIR !== pct) { c.aliquotaIR = pct; mudou = true; }
+          return;
+        }
+        const jeton = moedaParaNumero(elJeton.textContent);
+        const descAntigo = moedaParaNumero(elDesc.textContent);
+        const realAntigo = moedaParaNumero(elReal.textContent);
+        const elDiariasRec = el('recValorRecebivelDiarias');
+        const elAuxiliosRec = el('recValorRecebivelAuxilios');
+        const diariasRec = elDiariasRec ? moedaParaNumero(elDiariasRec.textContent) : 0;
+        const auxiliosRec = elAuxiliosRec ? moedaParaNumero(elAuxiliosRec.textContent) : 0;
+        const descNovo = jeton * (pct / 100);
+        const realNovo = (jeton - descNovo) + diariasRec + auxiliosRec;
+        if (c.aliquotaIR === pct && Math.abs(descAntigo - descNovo) < 0.01 && Math.abs(realAntigo - realNovo) < 0.01) return;
         const fator = realAntigo > 0 ? realNovo / realAntigo : 1;
         elDesc.textContent = formatarMoedaBR(descNovo);
         elReal.textContent = formatarMoedaBR(realNovo);
@@ -395,9 +405,15 @@
       const temp = document.createElement('div');
       temp.innerHTML = ciclo.receitas || '';
       const lerEl = (id) => {const el = temp.querySelector('#' + id); return el ? moedaParaNumero(el.textContent) : 0;};
-      const liquida = lerEl('recValorRealJeton');
+      const temJeton = !!temp.querySelector('#recValorTotalJeton');
+      const jeton = lerEl('recValorTotalJeton');
+      const diariasRec = lerEl('recValorRecebivelDiarias');
+      const auxiliosRec = lerEl('recValorRecebivelAuxilios');
       const desconto = lerEl('recValorDescontoIR');
-      return {bruta: liquida + desconto, desconto, liquida};
+      const liquida = temJeton
+        ? ((jeton - desconto) + diariasRec + auxiliosRec)
+        : lerEl('recValorRealJeton');
+      return {bruta: temJeton ? (jeton + diariasRec + auxiliosRec) : (liquida + desconto), desconto, liquida};
     }
     // Perda de rendimento padrão do home office (média entre jeton dobrado e quádruplo, já sem IR) — igual ao de Escalas
     const perdaMediaHO = (aliqPct) => ((220 + 440) / 2) * (1 - aliqPct / 100);

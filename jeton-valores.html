@@ -655,6 +655,47 @@
     // ===== Puxar dados de ciclos já fechados =====
     const STORAGE_KEY_CICLOS_FECHADOS_JV = 'jetcontrol_ciclos_fechados';
 
+    // Mantém os lançamentos da tabela sincronizados com eventuais edições em ciclos fechados
+    function sincronizarLancamentosComCiclosFechados() {
+      try {
+        const ciclos = JSON.parse(localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV) || '[]');
+        if (!Array.isArray(ciclos) || !ciclos.length) return false;
+        const banco = obterBancoDados();
+        let mudou = false;
+
+        ciclos.forEach(c => {
+          const d = dadosDeCicloFechado(c);
+          if (!d.ciclo) return;
+          const achados = [];
+          Object.keys(banco).forEach(a => {
+            (Array.isArray(banco[a]) ? banco[a] : []).forEach(item => {
+              if (item && item.ciclo === d.ciclo) achados.push({ a, item });
+            });
+          });
+          const alvo = achados.find(x => x.a === d.anoRecebimento && (!d.mesRecebimento || x.item.mesRecebimento === d.mesRecebimento))
+            || achados.find(x => x.a === d.anoRecebimento)
+            || achados.find(x => !d.mesRecebimento || x.item.mesRecebimento === d.mesRecebimento)
+            || achados[0];
+
+          if (alvo) {
+            if (String(alvo.item.jetcontrol) !== String(d.totalJeton)) {
+              alvo.item.jetcontrol = d.totalJeton;
+              mudou = true;
+            }
+            if (d.mesRecebimento && alvo.item.mesRecebimento !== d.mesRecebimento) {
+              alvo.item.mesRecebimento = d.mesRecebimento;
+              mudou = true;
+            }
+          }
+        });
+
+        if (mudou) salvarBancoDados(banco);
+        return mudou;
+      } catch (_) {
+        return false;
+      }
+    }
+
     function dadosDeCicloFechado(c) {
       const escalas = Array.isArray(c.escalasData) ? c.escalasData : [];
       let total = 0;
@@ -1710,6 +1751,7 @@
       document.getElementById('formCiclo').addEventListener('input', validarCamposFormulario);
       document.getElementById('formIrpf').addEventListener('input', validarCamposFormulario);
       document.getElementById('tituloFormularioAno').textContent = `Lançamento de Ciclo (${anoAtual})`;
+      sincronizarLancamentosComCiclosFechados();
       puxarDadosDoSistema(false);
       mudarAba(abaAtiva);
       validarCamposFormulario();
@@ -1787,19 +1829,39 @@
 
     let assinaturaJV = null;
     function assinaturaDadosJV() {
-      return [localStorage.getItem(STORAGE_KEY_JETON_VALORES), localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO), anoAtual, abaAtiva].join('|');
+      return [
+        localStorage.getItem(STORAGE_KEY_JETON_VALORES),
+        localStorage.getItem(STORAGE_KEY_SISTEMA_CICLO),
+        localStorage.getItem(STORAGE_KEY_CICLOS_FECHADOS_JV),
+        anoAtual,
+        abaAtiva
+      ].join('|');
     }
+
+    function atualizarJetonValoresSeMudou() {
+      const mudouCiclo = sincronizarLancamentosComCiclosFechados();
+      const atual = assinaturaDadosJV();
+      if (!mudouCiclo && atual === assinaturaJV) return;
+      assinaturaJV = atual;
+      puxarDadosDoSistema(false);
+      if (abaAtiva === 'tabela') renderizarTabelaAno();
+      if (abaAtiva === 'dashboard') renderizarEstatisticasAno();
+      if (abaAtiva === 'ciclos') renderizarConsolidado();
+    }
+
+    window.addEventListener('focus', atualizarJetonValoresSeMudou);
+    window.addEventListener('pageshow', atualizarJetonValoresSeMudou);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) atualizarJetonValoresSeMudou(); });
+    window.addEventListener('storage', (e) => {
+      if (!e.key || e.key === STORAGE_KEY_CICLOS_FECHADOS_JV || e.key === STORAGE_KEY_JETON_VALORES || e.key === STORAGE_KEY_LEGACY) {
+        atualizarJetonValoresSeMudou();
+      }
+    });
 
     if (window.JetSyncOnChange) {
       window.JetSyncOnChange(function () {
         // A sincronização avisa a cada poucos segundos: só redesenha se algo realmente mudou
-        const atual = assinaturaDadosJV();
-        if (atual === assinaturaJV) return;
-        assinaturaJV = atual;
-        puxarDadosDoSistema(false);
-        if (abaAtiva === 'tabela') renderizarTabelaAno();
-        if (abaAtiva === 'dashboard') renderizarEstatisticasAno();
-        if (abaAtiva === 'ciclos') renderizarConsolidado();
+        atualizarJetonValoresSeMudou();
       });
     }
   </script>

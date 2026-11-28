@@ -149,14 +149,14 @@
 
     #kpi-receita-bruta, #tc-kpi-receita-bruta,
     #kpi-receita-liquida, #tc-kpi-receita-liquida {
-      color: #34d399 !important;
+      color: #34d399;
     }
 
-    #kpi-rendimento-hora, #tc-kpi-rendimento-hora { color: #34d399 !important; }
+    #kpi-rendimento-hora, #tc-kpi-rendimento-hora { color: #34d399; }
 
     #kpi-perda-rendimento, #tc-kpi-perda-rendimento,
     #kpi-total-desconto-ir, #tc-kpi-total-desconto-ir {
-      color: #f87171 !important;
+      color: #f87171;
     }
 
     .kpi-subtext {
@@ -1471,9 +1471,14 @@
       mapaLocais[chave] = (mapaLocais[chave] || 0) + 1;
     }
 
+    function corMoedaDash(v, corPadrao) {
+      const n = Number(v) || 0;
+      return Math.abs(n) < 0.005 ? '#cbd5e1' : corPadrao;
+    }
+
     function corDiariaAuxiliar(v) {
       const n = Number(v) || 0;
-      if (Math.abs(n) < 0.005) return '#ffffff';
+      if (Math.abs(n) < 0.005) return '#cbd5e1';
       return n < 0 ? '#f87171' : '#fbbf24';
     }
 
@@ -1744,8 +1749,10 @@
       let banco = {};
       try { banco = JSON.parse(localStorage.getItem('jetcontrol_jeton_valores') || localStorage.getItem('jetonData') || '{}') || {}; } catch (_) {}
       const anos = Object.keys(banco).filter(a => Array.isArray(banco[a]) && banco[a].length > 0).sort();
+      const setCor = (id, v, cor) => { const el = document.getElementById(id); if (el) el.style.color = corMoedaDash(v, cor); };
       if (!anos.length) {
         set('jh-maior', moeda(0)); set('jh-menor', moeda(0)); set('jh-media', moeda(0));
+        setCor('jh-maior', 0, '#34d399'); setCor('jh-menor', 0, '#f87171'); setCor('jh-media', 0, '#f8fafc');
         set('jh-maior-sub', 'Nenhum ciclo lançado'); set('jh-menor-sub', 'Nenhum ciclo lançado'); set('jh-media-sub', 'Nenhum ciclo lançado');
         return;
       }
@@ -1754,9 +1761,9 @@
       const menor = totais.reduce((p, c) => (c.soma < p.soma ? c : p), totais[0]);
       const media = totais.reduce((t, c) => t + c.soma, 0) / totais.length;
       const totalCiclos = totais.reduce((t, c) => t + c.ciclos, 0);
-      set('jh-maior', moeda(maior.soma)); set('jh-maior-sub', `Ano ${maior.ano} • ${maior.ciclos} ciclo(s) lançado(s)`);
-      set('jh-menor', moeda(menor.soma)); set('jh-menor-sub', `Ano ${menor.ano} • ${menor.ciclos} ciclo(s) lançado(s)`);
-      set('jh-media', moeda(media)); set('jh-media-sub', `${totais.length} ano(s) • ${totalCiclos} ciclo(s) lançado(s)`);
+      set('jh-maior', moeda(maior.soma)); setCor('jh-maior', maior.soma, '#34d399'); set('jh-maior-sub', `Ano ${maior.ano} • ${maior.ciclos} ciclo(s) lançado(s)`);
+      set('jh-menor', moeda(menor.soma)); setCor('jh-menor', menor.soma, '#f87171'); set('jh-menor-sub', `Ano ${menor.ano} • ${menor.ciclos} ciclo(s) lançado(s)`);
+      set('jh-media', moeda(media)); setCor('jh-media', media, '#f8fafc'); set('jh-media-sub', `${totais.length} ano(s) • ${totalCiclos} ciclo(s) lançado(s)`);
     }
 
     function carregarEProcessarDados() {
@@ -2237,10 +2244,10 @@
         const aliqMediaPct = av.jetonBruto > 0 ? (av.descontoIR / av.jetonBruto * 100) : (aliqVig * 100);
         const rendimentoHoraVig = av.horas > 0 ? (receitaLiquidaVig / av.horas) : 0;
 
-        document.getElementById(P + 'kpi-receita-bruta').textContent = formatMoeda(receitaBrutaVig);
+        const elKpiBruta = document.getElementById(P + 'kpi-receita-bruta'); elKpiBruta.textContent = formatMoeda(receitaBrutaVig); elKpiBruta.style.color = corMoedaDash(receitaBrutaVig, '#34d399');
         definirTextoRotulo(P + 'kpi-receita-bruta-sub', textoReceitaBrutaSub(ciclosFechados.length, P === 'tc-'));
 
-        document.getElementById(P + 'kpi-receita-liquida').textContent = formatMoeda(receitaLiquidaVig);
+        const elKpiLiq = document.getElementById(P + 'kpi-receita-liquida'); elKpiLiq.textContent = formatMoeda(receitaLiquidaVig); elKpiLiq.style.color = corMoedaDash(receitaLiquidaVig, '#34d399');
         definirTextoRotulo(P + 'kpi-ir-desc', textoReceitaLiquidaSub(formatarAliquotaIR(100 - aliqMediaPct)));
         definirTextoRotulo(P + 'kpi-total-desconto-ir-sub', P === 'tc-' ? `Alíquota${ciclosAliqDistintas ? ' média' : ''} de ${formatarAliquotaIR(aliqMediaPct)}% Sobre o Jeton Bruto` : `Alíquota de ${formatarAliquotaIR(aliqVig * 100)}% Sobre o Jeton Bruto`);
 
@@ -2250,7 +2257,7 @@
         document.getElementById(P + 'kpi-home-offices').textContent = av.homeOffices;
         definirTextoRotulo(P + 'kpi-home-offices-sub', textoHomeOfficesSub(av.homeOfficesCompulsorio, av.homeOfficesReuniao, av.homeOfficesSolicitado));
 
-        document.getElementById(P + 'kpi-perda-rendimento').textContent = formatMoeda(av.perdaRendimentoHomeOffice);
+        const elKpiPerda = document.getElementById(P + 'kpi-perda-rendimento'); elKpiPerda.textContent = formatMoeda(av.perdaRendimentoHomeOffice); elKpiPerda.style.color = corMoedaDash(av.perdaRendimentoHomeOffice, '#f87171');
         definirTextoRotulo(P + 'kpi-perda-rendimento-sub', textoPerdaRendimentoSub(av.perdaRendimentoCompulsorio, av.perdaRendimentoReuniao, av.perdaRendimentoSolicitado));
 
         const horasHomeOfficeReuniaoVig = Math.floor(av.minutosHomeOfficeReuniao / 60);
@@ -2264,10 +2271,10 @@
         definirTextoRotulo(P + 'kpi-pernoites-count',
           textoDiariasAuxiliosSub(av.auxAlimentacao, av.auxTransporte, av.diariaAlimentacao, av.diariaHospedagem, av.diariaTraslado));
 
-        document.getElementById(P + 'kpi-rendimento-hora').textContent = `${formatMoeda(rendimentoHoraVig)}/h`;
+        const elKpiRend = document.getElementById(P + 'kpi-rendimento-hora'); elKpiRend.textContent = `${formatMoeda(rendimentoHoraVig)}/h`; elKpiRend.style.color = corMoedaDash(rendimentoHoraVig, '#34d399');
         definirTextoRotulo(P + 'kpi-total-horas', textoRendimentoHoraSub(av.horas));
 
-        document.getElementById(P + 'kpi-total-desconto-ir').textContent = formatMoeda(av.descontoIR);
+        const elKpiIR = document.getElementById(P + 'kpi-total-desconto-ir'); elKpiIR.textContent = formatMoeda(av.descontoIR); elKpiIR.style.color = corMoedaDash(av.descontoIR, '#f87171');
 
         const totalRecebivelVig = av.diariasRecebivel + av.auxiliosRecebivel;
         const balancoDiariasVig = -av.diariasNaoRecebivel;
@@ -3252,7 +3259,7 @@
       if (graficosExtras[chaveInstancia]) graficosExtras[chaveInstancia].destroy();
 
       const elValorFinal = document.getElementById(valorFinalId);
-      if (elValorFinal) elValorFinal.textContent = formatMoeda(jeton + auxiliosRecebivel + diariasRecebivel);
+      if (elValorFinal) { const totComp = jeton + auxiliosRecebivel + diariasRecebivel; elValorFinal.textContent = formatMoeda(totComp); elValorFinal.style.color = corMoedaDash(totComp, '#34d399'); }
 
       graficosExtras[chaveInstancia] = new Chart(ctx, {
         type: 'bar',
@@ -3841,7 +3848,7 @@
 
       const fmtHM = (min) => formatarHorasDecimal((Number(min) || 0) / 60);
       const EMERALD = '#34d399', AMBER = '#fbbf24', RED = '#f87171';
-      const corZ = (v, cor) => Math.abs(v) < 0.005 ? '#ffffff' : cor;
+      const corZ = (v, cor) => Math.abs(v) < 0.005 ? '#cbd5e1' : cor;
       const cel = (txt, cor) => `<td style="font-weight: 700;${cor ? ` color: ${cor};` : ''}">${txt}</td>`;
       const T = { escalas: 0, ho: 0, minHO: 0, perda: 0, horas: 0, diAux: 0, naoRec: 0, rec: 0, jeton: 0, bruta: 0, ir: 0, liq: 0 };
 
@@ -3863,16 +3870,16 @@
           <td>${c.escalas}</td>
           <td>${v.ho}</td>
           <td>${fmtHM(v.minHO)}</td>
-          ${cel(formatMoeda(v.perda), RED)}
+          ${cel(formatMoeda(v.perda), corZ(v.perda, RED))}
           <td>${formatarHorasDecimal(c.horas)}</td>
-          ${cel(formatMoeda(c.rendimentoHora) + '/h', EMERALD)}
+          ${cel(formatMoeda(c.rendimentoHora) + '/h', corZ(c.rendimentoHora, EMERALD))}
           ${cel(formatMoeda(v.diAux), corDiariaAuxiliar(v.diAux))}
           ${cel(formatMoeda(v.rec), corZ(v.rec, AMBER))}
           ${cel(formatMoeda(v.naoRec), corZ(v.naoRec, RED))}
-          ${cel(formatMoeda(c.jetonBruto), EMERALD)}
-          ${cel(formatMoeda(v.bruta), EMERALD)}
-          ${cel(formatMoeda(v.ir), RED)}
-          ${cel(formatMoeda(c.receitaLiquida), EMERALD)}
+          ${cel(formatMoeda(c.jetonBruto), corZ(c.jetonBruto, EMERALD))}
+          ${cel(formatMoeda(v.bruta), corZ(v.bruta, EMERALD))}
+          ${cel(formatMoeda(v.ir), corZ(v.ir, RED))}
+          ${cel(formatMoeda(c.receitaLiquida), corZ(c.receitaLiquida, EMERALD))}
           <td><span class="badge ${badgeClass}">${statusText}</span></td>
         `;
         tbody.appendChild(tr);
@@ -3886,16 +3893,16 @@
             <td style="font-weight: 900;">${T.escalas}</td>
             <td style="font-weight: 900;">${T.ho}</td>
             <td style="font-weight: 900;">${fmtHM(T.minHO)}</td>
-            ${cel(formatMoeda(T.perda), RED)}
+            ${cel(formatMoeda(T.perda), corZ(T.perda, RED))}
             <td style="font-weight: 900;">${formatarHorasDecimal(T.horas)}</td>
-            ${cel(formatMoeda(rendTotal) + '/h', EMERALD)}
+            ${cel(formatMoeda(rendTotal) + '/h', corZ(rendTotal, EMERALD))}
             ${cel(formatMoeda(T.diAux), corDiariaAuxiliar(T.diAux))}
             ${cel(formatMoeda(T.rec), corZ(T.rec, AMBER))}
             ${cel(formatMoeda(T.naoRec), corZ(T.naoRec, RED))}
-            ${cel(formatMoeda(T.jeton), EMERALD)}
-            ${cel(formatMoeda(T.bruta), EMERALD)}
-            ${cel(formatMoeda(T.ir), RED)}
-            ${cel(formatMoeda(T.liq), EMERALD)}
+            ${cel(formatMoeda(T.jeton), corZ(T.jeton, EMERALD))}
+            ${cel(formatMoeda(T.bruta), corZ(T.bruta, EMERALD))}
+            ${cel(formatMoeda(T.ir), corZ(T.ir, RED))}
+            ${cel(formatMoeda(T.liq), corZ(T.liq, EMERALD))}
             <td></td>
           </tr>`;
       }

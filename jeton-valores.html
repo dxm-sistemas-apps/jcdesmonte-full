@@ -520,6 +520,11 @@
       return num.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
     }
 
+    function corValorMoeda(val, corPadrao) {
+      const num = parseFloat(val);
+      return (!isFinite(num) || Math.abs(num) < 0.005) ? 'text-slate-300' : corPadrao;
+    }
+
     function formatNumeroFloat(val) {
       const num = parseFloat(val);
       return isNaN(num) ? 0 : num;
@@ -774,7 +779,7 @@
             <span class="text-sm font-black text-blue-400 uppercase">${c.label}</span>
             ${jaLancado(c) ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-400">Já lançado</span>' : ''}
           </div>
-          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: <span class="text-white font-bold">${c.rec}</span>${d ? ` &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(d.total)}</span>` : ''}</div>
+          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: <span class="text-white font-bold">${c.rec}</span>${d ? ` &nbsp;•&nbsp; Jeton JETCONTROL: <span class="${corValorMoeda(d.total, 'text-emerald-400')} font-bold">${formatMoeda(d.total)}</span>` : ''}</div>
         </button>`;
       }).join('');
       const fundo = document.createElement('div');
@@ -816,7 +821,7 @@
             <span class="text-sm font-black text-blue-400 uppercase">${nome}</span>
             ${jaLancado(d) ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-400">Já lançado</span>' : ''}
           </div>
-          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: ${c.recebimentoEm || '-'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(d.totalJeton)}</span></div>
+          <div class="text-[11px] text-slate-400 uppercase mt-1">Recebimento: ${c.recebimentoEm || '-'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="${corValorMoeda(d.totalJeton, 'text-emerald-400')} font-bold">${formatMoeda(d.totalJeton)}</span></div>
         </button>`;
       }).join('') || '<div class="text-center text-slate-500 italic uppercase text-xs py-6">Nenhum ciclo fechado registrado.</div>';
 
@@ -831,7 +836,7 @@
         <div class="p-4 space-y-2 overflow-y-auto">
           <button type="button" id="itemCicloVigente" class="w-full text-left bg-brand-600/20 hover:bg-brand-600/30 border border-brand-500/40 rounded-xl p-3 transition">
             <div class="text-sm font-black text-white uppercase">Ciclo vigente (em andamento)</div>
-            <div class="text-[11px] text-slate-300 uppercase mt-1">${vigente.ciclo || 'Sem ciclo aberto'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="text-emerald-400 font-bold">${formatMoeda(vigente.totalJeton)}</span></div>
+            <div class="text-[11px] text-slate-300 uppercase mt-1">${vigente.ciclo || 'Sem ciclo aberto'} &nbsp;•&nbsp; Jeton JETCONTROL: <span class="${corValorMoeda(vigente.totalJeton, 'text-emerald-400')} font-bold">${formatMoeda(vigente.totalJeton)}</span></div>
           </button>
           <div class="text-[10px] font-bold uppercase text-slate-500 pt-2">Ciclos já fechados</div>
           ${linhas}
@@ -1079,11 +1084,11 @@
               <td class="px-3 py-2.5 font-bold text-blue-400 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
               <td class="px-3 py-2.5 text-slate-300">${d.mesRecebimento || '-'}</td>
               <td class="px-3 py-2.5 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
-              <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
-              <td class="px-3 py-2.5 text-emerald-400 font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
-              <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
-              <td class="px-3 py-2.5 text-cyan-400 font-bold">${formatMoeda(calcLiq(d.contracheque, d.irpf))}</td>
-              <td class="px-3 py-2.5 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
+              <td class="px-3 py-2.5 ${corValorMoeda(d.jetcontrol, 'text-emerald-400')} font-bold">${formatMoeda(d.jetcontrol)}</td>
+              <td class="px-3 py-2.5 ${corValorMoeda(calcLiq(d.jetcontrol, d.irpf), 'text-emerald-400')} font-bold">${formatMoeda(calcLiq(d.jetcontrol, d.irpf))}</td>
+              <td class="px-3 py-2.5 ${corValorMoeda(d.contracheque, 'text-cyan-400')} font-bold">${formatMoeda(d.contracheque)}</td>
+              <td class="px-3 py-2.5 ${corValorMoeda(calcLiq(d.contracheque, d.irpf), 'text-cyan-400')} font-bold">${formatMoeda(calcLiq(d.contracheque, d.irpf))}</td>
+              <td class="px-3 py-2.5 ${corValorMoeda(d.dgad, 'text-amber-400')} font-bold">${formatMoeda(d.dgad)}</td>
               <td class="px-3 py-2.5 font-black ${diffColor}">${formatMoeda(diff)}</td>
               <td class="px-3 py-2.5"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${st.cor}">${st.texto}</span></td>
               <td class="px-3 py-2.5 whitespace-nowrap">
@@ -1126,11 +1131,11 @@
                     <td class="px-3 py-3 text-white font-black">TOTAL</td>
                     <td class="px-3 py-3"></td>
                     <td class="px-3 py-3"></td>
-                    <td class="px-3 py-3 text-emerald-400 font-black">${formatMoeda(totais.jc)}</td>
-                    <td class="px-3 py-3 text-emerald-400 font-black">${formatMoeda(totais.jcL)}</td>
-                    <td class="px-3 py-3 text-cyan-400 font-black">${formatMoeda(totais.cc)}</td>
-                    <td class="px-3 py-3 text-cyan-400 font-black">${formatMoeda(totais.ccL)}</td>
-                    <td class="px-3 py-3 text-amber-400 font-black">${formatMoeda(totais.dg)}</td>
+                    <td class="px-3 py-3 ${corValorMoeda(totais.jc, 'text-emerald-400')} font-black">${formatMoeda(totais.jc)}</td>
+                    <td class="px-3 py-3 ${corValorMoeda(totais.jcL, 'text-emerald-400')} font-black">${formatMoeda(totais.jcL)}</td>
+                    <td class="px-3 py-3 ${corValorMoeda(totais.cc, 'text-cyan-400')} font-black">${formatMoeda(totais.cc)}</td>
+                    <td class="px-3 py-3 ${corValorMoeda(totais.ccL, 'text-cyan-400')} font-black">${formatMoeda(totais.ccL)}</td>
+                    <td class="px-3 py-3 ${corValorMoeda(totais.dg, 'text-amber-400')} font-black">${formatMoeda(totais.dg)}</td>
                     <td class="px-3 py-3 font-black ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
                     <td class="px-3 py-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${getStatusTotal(totais).cor}">${getStatusTotal(totais).texto}</span></td>
                     <td class="px-3 py-3"></td>
@@ -1185,19 +1190,19 @@
             <div class="space-y-3 text-xs">
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÊS DE MAIOR VALOR:</span>
-                <span class="text-emerald-400 font-black text-sm">
+                <span class="${corValorMoeda(maxJC, 'text-emerald-400')} font-black text-sm">
                   ${formatMoeda(maxJC)} (${lista[jc.indexOf(maxJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR:</span>
-                <span class="text-blue-400 font-black text-sm">
+                <span class="${corValorMoeda(minJC, 'text-emerald-400')} font-black text-sm">
                   ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">VALOR MÉDIO ANUAL:</span>
-                <span class="text-brand-400 font-black text-sm">${formatMoeda(avgJC)}</span>
+                <span class="${corValorMoeda(avgJC, 'text-emerald-400')} font-black text-sm">${formatMoeda(avgJC)}</span>
               </div>
             </div>
           </div>
@@ -1250,15 +1255,15 @@
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 bg-slate-900/60 rounded-xl border border-slate-800">
           <div class="p-3 text-center sm:border-r border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Maior Jeton Anual</p>
-            <p class="text-base font-black text-emerald-400 mt-1">${formatMoeda(max.sum)} (${max.year})</p>
+            <p class="text-base font-black ${corValorMoeda(max.sum, 'text-emerald-400')} mt-1">${formatMoeda(max.sum)} (${max.year})</p>
           </div>
           <div class="p-3 text-center sm:border-r border-slate-800">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Menor Jeton Anual</p>
-            <p class="text-base font-black text-blue-400 mt-1">${formatMoeda(min.sum)} (${min.year})</p>
+            <p class="text-base font-black ${corValorMoeda(min.sum, 'text-blue-400')} mt-1">${formatMoeda(min.sum)} (${min.year})</p>
           </div>
           <div class="p-3 text-center">
             <p class="text-[11px] font-bold text-slate-400 uppercase">Média Geral Anual</p>
-            <p class="text-base font-black text-brand-400 mt-1">${formatMoeda(avg)}</p>
+            <p class="text-base font-black ${corValorMoeda(avg, 'text-brand-400')} mt-1">${formatMoeda(avg)}</p>
           </div>
         </div>
       `;
@@ -1309,9 +1314,9 @@
                         <td class="p-2 font-bold text-blue-400 whitespace-nowrap">${celulaCicloNumerado(numCiclos.get(d), d.ciclo)}</td>
                         <td class="p-2 font-semibold text-slate-300">${d.mesRecebimento || '-'}</td>
                         <td class="p-2 text-red-400 font-bold">${textoIrpf(d.irpf)}</td>
-                        <td class="p-2 text-emerald-400 font-bold">${formatMoeda(d.jetcontrol)}</td>
-                        <td class="p-2 text-cyan-400 font-bold">${formatMoeda(d.contracheque)}</td>
-                        <td class="p-2 text-amber-400 font-bold">${formatMoeda(d.dgad)}</td>
+                        <td class="p-2 ${corValorMoeda(d.jetcontrol, 'text-emerald-400')} font-bold">${formatMoeda(d.jetcontrol)}</td>
+                        <td class="p-2 ${corValorMoeda(d.contracheque, 'text-cyan-400')} font-bold">${formatMoeda(d.contracheque)}</td>
+                        <td class="p-2 ${corValorMoeda(d.dgad, 'text-amber-400')} font-bold">${formatMoeda(d.dgad)}</td>
                         <td class="p-2 font-black ${diffColor}">${formatMoeda(diff)}</td>
                         <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${st.cor}">${st.texto}</span></td>
                       </tr>
@@ -1321,9 +1326,9 @@
                     <td class="p-2 text-white">TOTAL</td>
                     <td class="p-2"></td>
                     <td class="p-2"></td>
-                    <td class="p-2 text-emerald-400">${formatMoeda(totais.jc)}</td>
-                    <td class="p-2 text-cyan-400">${formatMoeda(totais.cc)}</td>
-                    <td class="p-2 text-amber-400">${formatMoeda(totais.dg)}</td>
+                    <td class="p-2 ${corValorMoeda(totais.jc, 'text-emerald-400')}">${formatMoeda(totais.jc)}</td>
+                    <td class="p-2 ${corValorMoeda(totais.cc, 'text-cyan-400')}">${formatMoeda(totais.cc)}</td>
+                    <td class="p-2 ${corValorMoeda(totais.dg, 'text-amber-400')}">${formatMoeda(totais.dg)}</td>
                     <td class="p-2 ${totais.diff < 0 ? 'text-red-400' : totais.diff > 0 ? 'text-cyan-400' : 'text-slate-300'}">${formatMoeda(totais.diff)}</td>
                     <td class="p-2"><span class="px-1.5 py-0.5 rounded text-[9px] font-bold ${getStatusTotal(totais).cor}">${getStatusTotal(totais).texto}</span></td>
                   </tr>

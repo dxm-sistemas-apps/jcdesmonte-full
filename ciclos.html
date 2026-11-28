@@ -482,18 +482,54 @@
       const n = Number(v) || 0;
       return Math.abs(n) < 0.005 ? 'text-slate-300' : corPadrao;
     }
-    // Reaplica text-slate-300 a qualquer valor R$ 0,00 (ou R$ 0,00 /H) dentro de snapshots salvos
+    // Reaplica text-slate-300 a qualquer valor R$ 0,00 e text-emerald-400 a valores > R$ 0,00
+    // (exceto descontos, auxílios e diárias) dentro de snapshots salvos
     function recolorirValoresZerados(html) {
       if (!html) return html;
       const t = document.createElement('div');
       t.innerHTML = html;
+      const idsEmerald = new Set(['recValorTotalJeton', 'recValorMedioEscala', 'recValorMedioAtividade', 'recValorMedioHora', 'recValorRealJeton']);
       t.querySelectorAll('span, td').forEach(el => {
         if (el.children.length) return;
         const txt = el.textContent.trim();
         if (/^-?R\$\s*0,00(\s*\/H)?$/i.test(txt)) {
           el.classList.remove('text-amber-400', 'text-red-400', 'text-emerald-400', 'text-cyan-400', 'text-white');
           el.classList.add('text-slate-300');
+          return;
         }
+        if (/^R\$\s*[\d.]+,\d{2}(\s*\/H)?$/i.test(txt)) {
+          const val = moedaParaNumero(txt);
+          if (val > 0.004) {
+            const paiTxt = (el.parentElement ? el.parentElement.textContent : '').toUpperCase();
+            const ehExcecao = /DESCONTO|PERDA|DI[ÁA]RIA|AUX[ÍI]LIO|DGAD|BALAN[ÇC]O|CONTRACHEQUE/.test(paiTxt);
+            if (idsEmerald.has(el.id) || (!ehExcecao && el.classList.contains('text-white'))) {
+              el.classList.remove('text-white', 'text-slate-300', 'text-cyan-400', 'text-blue-400');
+              el.classList.add('text-emerald-400');
+            }
+          }
+        }
+      });
+      // Garante emerald-400 nos valores de JETON dos cards de períodos em snapshots antigos
+      t.querySelectorAll('p').forEach(p => {
+        const st = p.querySelector(':scope > strong');
+        if (!st || !/^JETON/i.test(st.textContent.trim())) return;
+        if (p.querySelector(':scope > span.text-emerald-400, :scope > span.text-slate-300')) return;
+        Array.from(p.childNodes).forEach(node => {
+          if (node.nodeType !== 3) return;
+          const m = node.nodeValue.match(/(R\$\s*[\d.]+,\d{2})/);
+          if (!m) return;
+          const val = moedaParaNumero(m[1]);
+          const cls = val > 0.004 ? 'text-emerald-400 font-bold' : 'text-slate-300 font-bold';
+          const sp = document.createElement('span');
+          sp.className = cls;
+          sp.textContent = m[1];
+          const partes = node.nodeValue.split(m[1]);
+          const frag = document.createDocumentFragment();
+          if (partes[0]) frag.appendChild(document.createTextNode(partes[0]));
+          frag.appendChild(sp);
+          if (partes.slice(1).join(m[1])) frag.appendChild(document.createTextNode(partes.slice(1).join(m[1])));
+          node.parentNode.replaceChild(frag, node);
+        });
       });
       return t.innerHTML;
     }

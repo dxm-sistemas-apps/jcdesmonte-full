@@ -249,7 +249,7 @@
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
           </div>
-          <span id="val-jetonSimples" class="text-xl font-black text-emerald-500">R$ 100,00</span>
+          <span id="val-jetonSimples" class="text-xl font-black text-emerald-400">R$ 100,00</span>
         </div>
 
         <!-- Jeton Dobrado -->
@@ -261,7 +261,7 @@
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
           </div>
-          <span id="val-jetonDobrado" class="text-xl font-black text-emerald-500">R$ 220,00</span>
+          <span id="val-jetonDobrado" class="text-xl font-black text-emerald-400">R$ 220,00</span>
         </div>
 
         <!-- Diária de Alimentação -->
@@ -297,7 +297,7 @@
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
           </div>
-          <span id="val-diariaTraslado" class="text-xl font-black text-amber-400">R$ 0,00</span>
+          <span id="val-diariaTraslado" class="text-xl font-black text-slate-300">R$ 0,00</span>
         </div>
 
       </div>
@@ -485,15 +485,24 @@
       "JULHO", "AGOSTO", "SETEMBRO", "OUTUBRO", "NOVEMBRO", "DEZEMBRO"
     ];
 
+    function aplicarValorIndex(id, valorStr, corPositiva) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.innerText = `R$ ${valorStr}`;
+      const num = parseFloat(String(valorStr || '0').replace(/\./g, '').replace(',', '.')) || 0;
+      el.classList.remove('text-emerald-500', 'text-emerald-400', 'text-amber-400', 'text-slate-300');
+      el.classList.add(Math.abs(num) < 0.005 ? 'text-slate-300' : corPositiva);
+    }
+
     function carregarValores() {
       const salvos = JSON.parse(localStorage.getItem(STORAGE_KEY_VALORES)) || VALORES_PADRAO;
-      document.getElementById('val-alimentacao').innerText = `R$ ${salvos.alimentacao || VALORES_PADRAO.alimentacao}`;
-      document.getElementById('val-transporte').innerText = `R$ ${salvos.transporte || VALORES_PADRAO.transporte}`;
-      document.getElementById('val-jetonSimples').innerText = `R$ ${salvos.jetonSimples || VALORES_PADRAO.jetonSimples}`;
-      document.getElementById('val-jetonDobrado').innerText = `R$ ${salvos.jetonDobrado || VALORES_PADRAO.jetonDobrado}`;
-      document.getElementById('val-diariaAlimentacao').innerText = `R$ ${salvos.diariaAlimentacao || VALORES_PADRAO.diariaAlimentacao}`;
-      document.getElementById('val-diariaHospedagem').innerText = `R$ ${salvos.diariaHospedagem || VALORES_PADRAO.diariaHospedagem}`;
-      document.getElementById('val-diariaTraslado').innerText = `R$ ${salvos.diariaTraslado || VALORES_PADRAO.diariaTraslado}`;
+      aplicarValorIndex('val-alimentacao', salvos.alimentacao || VALORES_PADRAO.alimentacao, 'text-amber-400');
+      aplicarValorIndex('val-transporte', salvos.transporte || VALORES_PADRAO.transporte, 'text-amber-400');
+      aplicarValorIndex('val-jetonSimples', salvos.jetonSimples || VALORES_PADRAO.jetonSimples, 'text-emerald-400');
+      aplicarValorIndex('val-jetonDobrado', salvos.jetonDobrado || VALORES_PADRAO.jetonDobrado, 'text-emerald-400');
+      aplicarValorIndex('val-diariaAlimentacao', salvos.diariaAlimentacao || VALORES_PADRAO.diariaAlimentacao, 'text-amber-400');
+      aplicarValorIndex('val-diariaHospedagem', salvos.diariaHospedagem || VALORES_PADRAO.diariaHospedagem, 'text-amber-400');
+      aplicarValorIndex('val-diariaTraslado', salvos.diariaTraslado || VALORES_PADRAO.diariaTraslado, 'text-amber-400');
     }
 
     async function editarValor(chave, nomeCampo) {

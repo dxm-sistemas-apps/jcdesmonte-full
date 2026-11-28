@@ -354,9 +354,9 @@
           ${itemResumoCor('Escalas arquivadas', (r.escalasArquivadas ?? 0) + ' ESCALA(S) ARQUIVADA(S)', 'text-white', 'arquivadas', true)}
           ${itemResumoCor('Ciclo', '...', 'text-white', 'ciclo', true)}
           ${itemResumoCor('Mês recebimento', '...', 'text-white', 'mesRecebimento')}
-          ${itemResumoCor('Jeton bruto total', moeda(r.jetonTotal), 'text-emerald-400')}
-          ${itemResumoCor('Desconto IR (22%)', moeda((Number(r.jetonTotal) || 0) * 0.22), 'text-red-400')}
-          ${itemResumoCor('Jeton líquido', moeda((Number(r.jetonTotal) || 0) * 0.78), 'text-emerald-400')}
+          ${itemResumoCor('Jeton bruto total', moeda(r.jetonTotal), (Number(r.jetonTotal) || 0) > 0.004 ? 'text-emerald-400' : 'text-slate-300')}
+          ${itemResumoCor('Desconto IR (22%)', moeda((Number(r.jetonTotal) || 0) * 0.22), (Number(r.jetonTotal) || 0) > 0.004 ? 'text-red-400' : 'text-slate-300')}
+          ${itemResumoCor('Jeton líquido', moeda((Number(r.jetonTotal) || 0) * 0.78), (Number(r.jetonTotal) || 0) > 0.004 ? 'text-emerald-400' : 'text-slate-300')}
           ${itemResumo('Itens de dados', r.itens ?? 0)}
           ${itemResumo('Tamanho', tamanho(r.tamanho || 0))}
           ${itemResumoDestaque('★ Conciliação de Jetons', textoJeton)}

@@ -1196,7 +1196,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÊS DE MENOR VALOR:</span>
-                <span class="${corValorMoeda(minJC, 'text-emerald-200')} font-black text-sm">
+                <span class="${corValorMoeda(minJC, 'text-blue-400')} font-black text-sm">
                   ${formatMoeda(minJC)} (${lista[jc.indexOf(minJC)]?.mesRecebimento || '-'})
                 </span>
               </div>
@@ -1209,7 +1209,7 @@
 
           <div class="bg-brand-card rounded-2xl border border-slate-800 p-6 shadow-xl space-y-4">
             <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
-              <i class="fa-solid fa-percent text-amber-400 text-xl"></i>
+              <i class="fa-solid fa-percent text-red-400 text-xl"></i>
               <h3 class="text-sm font-bold text-white uppercase tracking-wider">ALÍQUOTA IR - ${anoAtual}</h3>
             </div>
             <div class="space-y-3 text-xs">
@@ -1223,7 +1223,7 @@
               </div>
               <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-xl border border-slate-800">
                 <span class="text-slate-400 font-semibold">MÉDIA ANUAL:</span>
-                <span class="text-brand-400 font-black text-sm">${txtIrpfStat(() => irpf.reduce((a, b) => a + b, 0) / irpf.length)}</span>
+                <span class="text-brand-400 font-black text-sm">${(irpf.reduce((a, b) => a + b, 0) / irpf.length).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2, roundingMode: 'trunc' })}</span>
               </div>
             </div>
           </div>

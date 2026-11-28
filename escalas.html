@@ -356,11 +356,11 @@
       </div>
     </section>
 
-    <!-- RECEITAS DO CICLO -->
+    <!-- RECEITAS E DESPESAS DO CICLO -->
     <section id="secaoReceitasCiclo" class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
       <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
         <i class="fa-solid fa-wallet text-emerald-500 text-xl"></i>
-        <h2 class="text-lg font-bold uppercase tracking-wide text-white">Receitas do Ciclo</h2>
+        <h2 class="text-lg font-bold uppercase tracking-wide text-white">RECEITAS E DESPESAS DO CICLO</h2>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -3118,7 +3118,7 @@
       atualizarEstatisticasEReceitasCiclo();
       verificarDataDeFechamentoExistente();
 
-      // Rola até o início do card "Receitas do Ciclo"
+      // Rola até o início do card "RECEITAS E DESPESAS DO CICLO"
       const secaoReceitas = document.getElementById('secaoReceitasCiclo');
       if (secaoReceitas) secaoReceitas.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
@@ -3951,7 +3951,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
     }
 
 
-    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
+    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "RECEITAS E DESPESAS DO CICLO" salvo) =====
     function moedaParaNumero(txt) {
       const n = parseFloat(String(txt || '').replace(/[^\d,\-]/g, '').replace(/\./g, '').replace(',', '.'));
       return isFinite(n) ? n : 0;
@@ -4352,7 +4352,7 @@ painel.className = 'absolute z-50 mt-1 left-1/2 -translate-x-1/2 bg-slate-900 bo
         <section class="bg-brand-card rounded-2xl border border-slate-800 p-6 sm:p-8 shadow-xl space-y-6">
           <div class="flex items-center space-x-2 border-b border-slate-800 pb-3">
             <i class="fa-solid fa-wallet text-emerald-500 text-xl"></i>
-            <h2 class="text-lg font-bold uppercase tracking-wide text-white">Receitas do Ciclo</h2>
+            <h2 class="text-lg font-bold uppercase tracking-wide text-white">RECEITAS E DESPESAS DO CICLO</h2>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="bg-slate-900/60 border border-slate-800 p-4 rounded-xl space-y-1"><span class="block text-xs uppercase font-bold text-slate-400">Valor Total de Jeton</span><span id="recValorTotalJeton" class="text-xl font-black ${corValorMoeda(v.valorTotalJeton, 'text-emerald-400')}">${formatarMoeda(v.valorTotalJeton)}</span></div>

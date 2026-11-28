@@ -309,7 +309,7 @@
     }
 
 
-    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "Receitas do Ciclo" salvo) =====
+    // ===== Receita bruta / desconto IR / receita líquida do ciclo (lidos do quadro "RECEITAS E DESPESAS DO CICLO" salvo) =====
     function moedaParaNumero(txt) {
       const n = parseFloat(String(txt || '').replace(/[^\d,\-]/g, '').replace(/\./g, '').replace(',', '.'));
       return isFinite(n) ? n : 0;
@@ -987,7 +987,7 @@ function centralizarCelulasOrganograma(html) {
               <tbody class="divide-y divide-slate-800">
                 <tr><td class="px-4 py-4 align-top font-black text-amber-400 uppercase">1. Organograma das Diárias</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlDiarias)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-emerald-400 uppercase">2. Organograma dos Auxílios</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(removerQuadroInformativoLocais(htmlAuxilios)))}</td></tr>
-                <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. Receitas do Ciclo</td><td class="p-4 align-top">${recolorirValoresZerados(desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas)))}</td></tr>
+                <tr><td class="px-4 py-4 align-top font-black text-cyan-400 uppercase">3. RECEITAS E DESPESAS DO CICLO</td><td class="p-4 align-top">${recolorirValoresZerados(desabilitarCamposEditaveis(normalizarHTML(ciclo.receitas)))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-indigo-400 uppercase">4. Estatísticas do Ciclo</td><td class="p-4 align-top">${desabilitarCamposEditaveis(normalizarHTML(ciclo.estatisticas))}</td></tr>
                 <tr><td class="px-4 py-4 align-top font-black text-slate-200 uppercase">5. Escalas Cadastradas</td><td class="p-4 align-top">${recolorirValoresZerados(sanitizarSnapshotEscalas(normalizarHTML(ciclo.escalas), ciclo.escalasData, aliquotaIRDoCiclo(ciclo).pct))}</td></tr>
               </tbody>
@@ -1647,7 +1647,7 @@ function centralizarCelulasOrganograma(html) {
 
       itens.push(pdfMedirItem(pdfTituloSecao(1, 'Estatísticas do Ciclo', '#4f46e5'), medidor, {keepNext: true}));
       itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.estatisticas, '#4f46e5')), medidor));
-      itens.push(pdfMedirItem(pdfTituloSecao(2, 'Receitas do Ciclo', '#0e7490'), medidor, {keepNext: true}));
+      itens.push(pdfMedirItem(pdfTituloSecao(2, 'RECEITAS E DESPESAS DO CICLO', '#0e7490'), medidor, {keepNext: true}));
       itens.push(...pdfItens(pdfEl(pdfHtmlCartoes(p.receitas, '#0e7490')), medidor));
       itens.push(...pdfItensOrganograma(3, 'Organograma das Diárias', '#b45309', p.diarias, medidor));
       itens.push(...pdfItensOrganograma(4, 'Organograma dos Auxílios', '#047857', p.auxilios, medidor));

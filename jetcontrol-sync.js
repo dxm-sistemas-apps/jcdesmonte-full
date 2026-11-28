@@ -12,11 +12,17 @@
   var CHAVE_FILA = '__jetcontrol_sync_fila__';
   var CHAVE_MARCADOR_RESET = 'sistema_reset_marker';
   var CHAVE_RESET_APLICADO = 'jetcontrol_reset_aplicado_em';
-  // Chaves que ficam SOMENTE neste aparelho (rascunho do formulário). Não vão para a nuvem:
-  // evita a nuvem devolver/apagar um rascunho em andamento e evita o aviso de "pendente" a cada tecla.
-  var CHAVES_SOMENTE_LOCAIS = {};
+  // Chaves que ficam SOMENTE neste aparelho. Não vão para a nuvem:
+  // evita que o marcador local de reset seja enviado para o Firestore e bloqueie outros aparelhos.
+  var CHAVES_SOMENTE_LOCAIS = {
+    'jetcontrol_reset_aplicado_em': true
+  };
+  var TAM_PARTE = 250000;
+  var PREFIXO_PARTES = '__JC_PARTES__:';
+  var SEP_PARTE = '__p__';
+  var RE_DOC_PARTE = /^(.+)__p__(\d+)$/;
   var ATRASO_ENVIO_MS = 700;
-  var TEMPO_LIMITE_MS = 8000;
+  var TEMPO_LIMITE_MS = 20000;
 
   var configurado =
     FIREBASE_PROJECT_ID.indexOf('COLOQUE-AQUI') === -1 &&
@@ -171,27 +177,76 @@
     }, ATRASO_ENVIO_MS);
   }
 
+  function gravarDocumentoFirestore(docId, campos, mascara, keepalive) {
+    var corpo = JSON.stringify({ fields: campos });
+    return fetch(URL_BASE + '/' + encodeURIComponent(docId) + mascara, {
+      method: 'PATCH',
+      headers: cabecalhos({ 'Content-Type': 'application/json' }),
+      body: corpo,
+      keepalive: !!keepalive && corpo.length < 50000
+    }).then(function (resposta) {
+      return !!(resposta && resposta.ok);
+    }).catch(function () {
+      return false;
+    });
+  }
+
   function enviarAgora(chave, valor, apagar, carimbo, keepalive) {
     var agora = carimbo || Date.now();
-    var mascara = apagar
-      ? '?updateMask.fieldPaths=deleted&updateMask.fieldPaths=atualizadoEm'
-      : '?updateMask.fieldPaths=value&updateMask.fieldPaths=atualizadoEm&updateMask.fieldPaths=deleted';
+    var mascaraValor = '?updateMask.fieldPaths=value&updateMask.fieldPaths=atualizadoEm&updateMask.fieldPaths=deleted';
 
-    var campos = apagar
-      ? { deleted: { booleanValue: true }, atualizadoEm: { integerValue: String(agora) } }
-      : {
-          value: { stringValue: valor },
+    if (apagar) {
+      var mascaraApagar = '?updateMask.fieldPaths=deleted&updateMask.fieldPaths=atualizadoEm';
+      var camposApagar = { deleted: { booleanValue: true }, atualizadoEm: { integerValue: String(agora) } };
+      return gravarDocumentoFirestore(chave, camposApagar, mascaraApagar, keepalive).then(function (ok) {
+        if (ok) sairDaFila(chave, agora);
+      });
+    }
+
+    var texto = (valor === null || valor === undefined) ? '' : String(valor);
+
+    // Chave cabe em um único documento do Firestore (abaixo do limite de 1 MB)
+    if (texto.length <= TAM_PARTE) {
+      var camposUnico = {
+        value: { stringValue: texto },
+        atualizadoEm: { integerValue: String(agora) },
+        deleted: { booleanValue: false }
+      };
+      return gravarDocumentoFirestore(chave, camposUnico, mascaraValor, keepalive).then(function (ok) {
+        if (ok) sairDaFila(chave, agora);
+      });
+    }
+
+    // Chave grande (ex.: jetcontrol_ciclos_fechados > 250 KB): fatia em partes e grava o manifesto ao final
+    var partes = [];
+    for (var pos = 0; pos < texto.length; pos += TAM_PARTE) {
+      partes.push(texto.slice(pos, pos + TAM_PARTE));
+    }
+
+    var cadeia = Promise.resolve(true);
+    partes.forEach(function (parte, idx) {
+      cadeia = cadeia.then(function (okAnterior) {
+        if (!okAnterior) return false;
+        var camposParte = {
+          value: { stringValue: parte },
           atualizadoEm: { integerValue: String(agora) },
           deleted: { booleanValue: false }
         };
+        return gravarDocumentoFirestore(chave + SEP_PARTE + idx, camposParte, mascaraValor, false);
+      });
+    });
 
-    return fetch(URL_BASE + '/' + encodeURIComponent(chave) + mascara, {
-      method: 'PATCH',
-      headers: cabecalhos({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ fields: campos }),
-      keepalive: !!keepalive
-    }).then(function (resposta) {
-      if (resposta && resposta.ok) sairDaFila(chave, agora);
+    return cadeia.then(function (todasPartesOk) {
+      if (!todasPartesOk) return false;
+      var manifesto = PREFIXO_PARTES + JSON.stringify({ n: partes.length, t: agora });
+      var camposManifesto = {
+        value: { stringValue: manifesto },
+        atualizadoEm: { integerValue: String(agora) },
+        deleted: { booleanValue: false }
+      };
+      return gravarDocumentoFirestore(chave, camposManifesto, mascaraValor, false);
+    }).then(function (ok) {
+      if (ok) sairDaFila(chave, agora);
     }).catch(function () {});
   }
 
@@ -274,16 +329,47 @@
         corteReset = ultimoResetAplicadoAqui;
       }
 
+      // 1.5. Coleta de partes de chaves fatiadas (<chave>__p__<indice>)
+      var mapaPartes = {};
+      documentos.forEach(function (doc) {
+        var partesDoNome = doc.name.split('/');
+        var nomeDoc = partesDoNome[partesDoNome.length - 1];
+        var m = nomeDoc.match(RE_DOC_PARTE);
+        if (!m) return;
+        var base = m[1];
+        var idx = parseInt(m[2], 10);
+        if (!mapaPartes[base]) mapaPartes[base] = {};
+        mapaPartes[base][idx] = decodificarDocumento(doc.fields);
+      });
+
       // 2. Processamento dos Documentos da Nuvem
       var filaAtual = lerFila();
       documentos.forEach(function (doc) {
         var partesDoNome = doc.name.split('/');
         var chave = partesDoNome[partesDoNome.length - 1];
         if (chave === CHAVE_MARCADOR_RESET) return;
-        if (CHAVES_SOMENTE_LOCAIS[chave]) return; // nunca aplica rascunho vindo da nuvem
+        if (RE_DOC_PARTE.test(chave)) return; // partes são montadas pelo documento principal
+        if (CHAVES_SOMENTE_LOCAIS[chave]) return; // nunca aplica chave somente local vinda da nuvem
         chavesQueAJaEstaoNaNuvem[chave] = true;
 
         var info = decodificarDocumento(doc.fields);
+
+        // Remonta o valor completo quando o documento principal for um manifesto de partes
+        if (!info.apagado && info.valor !== null && info.valor.indexOf(PREFIXO_PARTES) === 0) {
+          var metaPartes = null;
+          try { metaPartes = JSON.parse(info.valor.slice(PREFIXO_PARTES.length)); } catch (e) {}
+          if (!metaPartes || !metaPartes.n || metaPartes.n < 1) return;
+          var partesDaChave = mapaPartes[chave] || {};
+          var blocos = [];
+          for (var p = 0; p < metaPartes.n; p++) {
+            var parte = partesDaChave[p];
+            if (!parte || parte.apagado || parte.valor === null) return; // envio ainda incompleto; aguarda próximo ciclo
+            if (metaPartes.t && parte.atualizadoEm !== metaPartes.t && parte.atualizadoEm !== info.atualizadoEm) return;
+            blocos.push(parte.valor);
+          }
+          info.valor = blocos.join('');
+        }
+
         var itemFila = filaAtual[chave] || pendentes[chave] || null;
         var carimboLocal = Math.max(meta[chave] || 0, itemFila ? (itemFila.carimbo || 0) : 0);
         var valorAntesDaAtualizacao = originalGetItem.call(localStorage, chave);
@@ -331,6 +417,9 @@
             houveMudancaReal = true;
           }
           meta[chave] = info.atualizadoEm;
+        } else if (valorAntesDaAtualizacao !== null && carimboLocal > info.atualizadoEm && !itemFila) {
+          // Dado local é mais recente que o da nuvem (ex.: envio anterior falhou por limite de tamanho): reenvia agora.
+          agendarEnvio(chave, valorAntesDaAtualizacao, false);
         }
       });
 
@@ -338,6 +427,7 @@
       for (var i = 0; i < localStorage.length; i++) {
         var chaveLocal = localStorage.key(i);
         if (chaveLocal && chaveLocal !== CHAVE_META && chaveLocal !== CHAVE_FILA &&
+            !CHAVES_SOMENTE_LOCAIS[chaveLocal] &&
             chaveLocal.indexOf(PREFIXO_SINCRONIZADO) === 0 &&
             !chavesQueAJaEstaoNaNuvem[chaveLocal]) {
           if (corteReset > 0 && (meta[chaveLocal] || 0) <= corteReset) continue;
